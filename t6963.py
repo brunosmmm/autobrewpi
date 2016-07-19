@@ -145,7 +145,7 @@ class T6963(object):
             params = params[0:2]
 
         for param in params:
-            self._lcd_data(int(param))
+            self._lcd_data(ord(param))
 
         self._lcd_command(int(command))
 
