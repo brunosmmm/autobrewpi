@@ -1,0 +1,64 @@
+{
+    "load_fonts": {
+        "4x6" : {
+            "path" : "fonts/4x6.cfont",
+            "dsize": 8
+        },
+        "5x8" : {
+            "path" : "fonts/5x8.cfont",
+            "dsize": 8
+        },
+        "5x12": {
+            "path": "fonts/5x12.cfont",
+            "dsize": 8
+        },
+        "6x8" : {
+            "path": "fonts/6x8.cfont",
+            "dsize": 8
+        },
+        "6x10": {
+            "path": "fonts/6x10.cfont",
+            "dsize": 8
+        },
+        "7x12": {
+            "path": "fonts/7x12.cfont",
+            "dsize": 8
+        },
+        "8x8" : {
+            "path": "fonts/8x8.cfont",
+            "dsize": 8
+        },
+        "8x12": {
+            "path": "fonts/8x12.cfont",
+            "dsize": 8
+        },
+        "8x14": {
+            "path": "fonts/8x14.cfont",
+            "dsize": 8
+        },
+        "10x16": {
+            "path": "fonts/10x16.cfont",
+            "dsize": 16
+        },
+        "12x16": {
+            "path": "fonts/12x16.cfont",
+            "dsize": 16
+        },
+        "12x20": {
+            "path": "fonts/12x20.cfont",
+            "dsize": 16
+        },
+        "16x26": {
+            "path": "fonts/16x26.cfont",
+            "dsize": 16
+        },
+        "22x36": {
+            "path": "fonts/22x36.cfont",
+            "dsize": 24
+        },
+        "24x40": {
+            "path": "fonts/24x40.cfont",
+            "dsize": 24
+        }
+    }
+}
