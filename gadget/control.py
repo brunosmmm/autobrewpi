@@ -71,7 +71,7 @@ class GadgetVariableSpace(StoppableThread):
     def _parse_objects(self):
         obj_list = self._hcli.get_slave_object_list(self._guid)
 
-        obj_idx = 0
+        obj_idx = 1
         for obj in obj_list:
             obj_name = obj['description']
             permissions = obj['permissions']
