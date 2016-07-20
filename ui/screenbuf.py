@@ -1,5 +1,6 @@
 from ctypes import CDLL
 from fonts.fontmgr import FontManager
+from ui.element import UIElement
 
 SCREENBUF_SO_PATH = './lcd/screen.so'
 
@@ -103,7 +104,7 @@ class ScreenBuffer(object):
                 if row_data[i] & (1<<j):
                     self.set_pixel_value(x+j, y+i, color)
 
-    def draw_font_string(self, x, y, font_name, msg, color):
+    def draw_font_string(self, x, y, font_name, msg, hjust, vjust, color):
 
         try:
             font_w = self._fmgr.get_font_width(font_name)
@@ -111,8 +112,24 @@ class ScreenBuffer(object):
         except:
             return
 
+        offset_h = 0
+        if hjust == 'right':
+            offset_h = 0
+        elif hjust == 'left':
+            offset_h = -font_w*len(msg)
+        elif hjust == 'center':
+            offset_h = -font_w*len(msg)/2
+
+        offset_v = 0
+        if vjust == 'top':
+            offset_v = 0
+        elif vjust == 'center':
+            offset_v = -font_h/2
+        elif vjust == 'bottom':
+            offset_v = -font_h
+
         for i in range(0, len(msg)):
-            self.draw_font_char(x+i*font_w, y, font_name, msg[i], color)
+            self.draw_font_char(offset_h+x+i*font_w, offset_v+y, font_name, msg[i], color)
 
     def draw_circle(self, x, y, radius, fill, color):
 
@@ -152,3 +169,19 @@ class ScreenBuffer(object):
 
     def get_fonts(self):
         return self._fmgr._fonts.keys()
+
+    def draw_ui_element(self, element):
+
+        if not isinstance(element, UIElement):
+            raise TypeError('not a UIElement object')
+
+        for dwi in element._get_drawing_instructions():
+
+            if dwi.kind == 'line':
+                self.draw_line(**dwi.kwargs)
+            elif dwi.kind == 'rect':
+                self.draw_rectangle(**dwi.kwargs)
+            elif dwi.kind == 'text':
+                self.draw_font_string(**dwi.kwargs)
+            elif dwi.kind == 'circle':
+                self.draw_circle(**dwi.kwargs)
