@@ -1,13 +1,16 @@
 from ctypes import CDLL
 from fonts.fontmgr import FontManager
 from ui.element import UIElement
+from ui.screen import Screen
+from util.thread import StoppableThread
+import time
 
 SCREENBUF_SO_PATH = './lcd/screen.so'
 
-class ScreenBuffer(object):
+class ScreenBuffer(StoppableThread):
 
-    def __init__(self, width, height):
-
+    def __init__(self, width, height, refresh_interval=0.5):
+        super(ScreenBuffer, self).__init__()
         # properties
         self._width = width
         self._height = height
@@ -18,6 +21,25 @@ class ScreenBuffer(object):
         # display controller
         self._lcd = CDLL(SCREENBUF_SO_PATH)
         self._lcd.SCREEN_Init()
+
+        #screen manager
+        self._screens = {}
+        self.active_screen = None
+
+        #auto refresh
+        self.refresh_interval = refresh_interval
+
+        #control flow
+        self._drawing = False
+        self._old = False
+
+    def add_screen(self, screen_id, screen_obj):
+        screen_obj._parent = self
+        screen_obj._screen_id = screen_id
+        self._screens[screen_id] = screen_obj
+
+    def remove_screen(self, screen_id):
+        del self._screens[screen_id]
 
     def set_pixel_value(self, x, y, value):
         self._lcd.SCREEN_PSet(x, y, value)
@@ -175,7 +197,9 @@ class ScreenBuffer(object):
         if not isinstance(element, UIElement):
             raise TypeError('not a UIElement object')
 
-        for dwi in element._get_drawing_instructions():
+        self._drawing = True
+
+        for dwi in element._draw_proxy():
 
             if dwi.kind == 'line':
                 self.draw_line(**dwi.kwargs)
@@ -185,3 +209,45 @@ class ScreenBuffer(object):
                 self.draw_font_string(**dwi.kwargs)
             elif dwi.kind == 'circle':
                 self.draw_circle(**dwi.kwargs)
+
+        self._drawing = False
+
+    def erase_screen(self):
+        self._drawing = True
+        for i in range(0, self._width):
+            for j in range(0, self._height):
+                self.set_pixel_value(i, j, 0)
+
+        self._drawing = False
+
+    def activate_screen(self, screen_id, erase=True):
+
+        if erase:
+            self.erase_screen()
+
+        self.draw_ui_element(self._screens[screen_id])
+        self.active_screen = screen_id
+        self._old = True
+
+    def screen_needs_redrawing(self, screen_id):
+
+        if screen_id != self.active_screen:
+            return
+
+        self.activate_screen(screen_id)
+
+    def run(self):
+
+        while True:
+
+            if self.is_stopped():
+                exit(0)
+
+            while self._drawing:
+                pass
+
+            if self._old:
+                self.put_buffer()
+                self._old = False
+
+            time.sleep(self.refresh_interval)

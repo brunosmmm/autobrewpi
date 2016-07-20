@@ -7,6 +7,11 @@ class Button(Label, ButtonBehavior):
     def __init__(self, **kwargs):
         super(Button, self).__init__(**kwargs)
 
+    def set_state(self, state):
+        if self.state != state:
+            super(Button, self).set_state(state)
+            self._needs_redrawing()
+
     def _get_drawing_instructions(self):
 
         drawing_list = [
