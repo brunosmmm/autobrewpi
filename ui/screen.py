@@ -24,6 +24,6 @@ class Screen(UIElement):
         group_list = []
 
         for child in self._children:
-            group_list.append(child._draw_proxy())
+            group_list.extend(child._draw_proxy())
 
         return group_list
