@@ -21,9 +21,9 @@ class Screen(UIElement):
 
     def _get_drawing_instructions(self):
 
-        instr_list = []
+        group_list = []
 
         for child in self._children:
-            instr_list.extend(child._draw_proxy())
+            group_list.append(child._draw_proxy())
 
-        return instr_list
+        return group_list

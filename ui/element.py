@@ -1,3 +1,4 @@
+from ui.instr import DrawInstructionGroup
 
 class UIElement(object):
     def __init__(self, *args, **kwargs):
@@ -13,6 +14,10 @@ class UIElement(object):
             self.visible = kwargs.pop('visible')
         else:
             self.visible = True
+        if 'draw_prio' in kwargs:
+            self.draw_prio = kwargs.pop('draw_prio')
+        else:
+            self.draw_prio = 0
         self.x = kwargs.pop('x')
         self.y = kwargs.pop('y')
         super(UIElement, self).__init__(*args, **kwargs)
@@ -27,7 +32,7 @@ class UIElement(object):
         if self.visible:
             return self._get_drawing_instructions()
         else:
-            return []
+            return DrawInstructionGroup()
 
     def _get_drawing_instructions(self):
-        return []
+        return DrawInstructionGroup()

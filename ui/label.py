@@ -1,5 +1,5 @@
 from ui.element import UIElement
-from ui.instr import DrawInstruction
+from ui.instr import DrawInstruction, DrawInstructionGroup
 
 class Label(UIElement):
 
@@ -25,12 +25,16 @@ class Label(UIElement):
         self.text = text
 
     def _get_drawing_instructions(self):
+        dwg = DrawInstructionGroup(self.draw_prio)
+        dwg.add_instructions(
+            DrawInstruction('text',
+                            x=self.x,
+                            y=self.y,
+                            font_name=self.font,
+                            msg=self.text,
+                            hjust=self.hjust,
+                            vjust=self.vjust,
+                            color=True)
+            )
 
-        return [DrawInstruction('text',
-                                x=self.x,
-                                y=self.y,
-                                font_name=self.font,
-                                msg=self.text,
-                                hjust=self.hjust,
-                                vjust=self.vjust,
-                                color=True)]
+        return dwg

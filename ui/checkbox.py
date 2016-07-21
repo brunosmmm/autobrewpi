@@ -1,5 +1,5 @@
 from ui.behaviors import ButtonBehavior
-from ui.instr import DrawInstruction
+from ui.instr import DrawInstruction, DrawInstructionGroup
 from ui.element import UIElement
 
 class CheckBox(UIElement, ButtonBehavior):
@@ -14,18 +14,19 @@ class CheckBox(UIElement, ButtonBehavior):
     def _get_drawing_instructions(self):
 
         #build drawing instructions
-        drawing_list = [
+        dwg = DrawInstructionGroup(self.draw_prio)
+        dwg.add_instructions(
             DrawInstruction('rect',
                             x1=self.x,
                             y1=self.y,
                             x2=self.x+self.w,
                             y2=self.y+self.h,
                             color=True,
-                            fill=False),
-        ]
+                            fill=False)
+        )
 
         if self.state == 'pressed':
-            drawing_list.extend([
+            dwg.add_instructions(
                 DrawInstruction('line',
                                 x1=self.x,
                                 y1=self.y,
@@ -38,6 +39,6 @@ class CheckBox(UIElement, ButtonBehavior):
                                 y1=self.y,
                                 y2=self.y+self.h,
                                 color=True)
-                ])
+                )
 
-        return drawing_list
+        return dwg

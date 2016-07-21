@@ -1,5 +1,5 @@
 from ui.checkbox import CheckBox
-from ui.instr import DrawInstruction
+from ui.instr import DrawInstruction, DrawInstructionGroup
 
 class RadioButton(CheckBox):
     def __init__(self, **kwargs):
@@ -11,8 +11,8 @@ class RadioButton(CheckBox):
         super(RadioButton, self).__init__(**kwargs)
 
     def _get_drawing_instructions(self):
-
-        drawing_list = [
+        dwg = DrawInstructionGroup(self.draw_prio)
+        dwg.add_instructions(
             DrawInstruction('circle',
                             x=self.x+self.w/2,
                             y=self.y+self.h/2,
@@ -20,13 +20,15 @@ class RadioButton(CheckBox):
                             fill=False,
                             color=True
             )
-        ]
+        )
 
         if self.state == 'pressed':
-            drawing_list.append(DrawInstruction('circle',
-                                                x=self.x+self.w/2,
-                                                y=self.y+self.h/2,
-                                                radius=self.w/2-3,
-                                                fill=True,
-                                                color=True))
-        return drawing_list
+            dwg.add_instructions(
+                DrawInstruction('circle',
+                                x=self.x+self.w/2,
+                                y=self.y+self.h/2,
+                                radius=self.w/2-3,
+                                fill=True,
+                                color=True)
+                )
+        return dwg

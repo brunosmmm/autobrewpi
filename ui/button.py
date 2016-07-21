@@ -1,7 +1,7 @@
 from ui.element import UIElement
 from ui.behaviors import ButtonBehavior
 from ui.label import Label
-from ui.instr import DrawInstruction
+from ui.instr import DrawInstruction, DrawInstructionGroup
 
 class Button(Label, ButtonBehavior):
     def __init__(self, **kwargs):
@@ -14,7 +14,8 @@ class Button(Label, ButtonBehavior):
 
     def _get_drawing_instructions(self):
 
-        drawing_list = [
+        dwg = DrawInstructionGroup(self.draw_prio)
+        dwg.add_instructions(
             DrawInstruction('rect',
                             x1=self.x,
                             y1=self.y,
@@ -30,6 +31,6 @@ class Button(Label, ButtonBehavior):
                             hjust='center',
                             vjust='center',
                             color=(self.state == 'normal'))
-        ]
+        )
 
-        return drawing_list
+        return dwg

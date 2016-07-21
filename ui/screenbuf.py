@@ -199,16 +199,25 @@ class ScreenBuffer(StoppableThread):
 
         self._drawing = True
 
-        for dwi in element._draw_proxy():
+        drawing_groups = element._draw_proxy()
 
-            if dwi.kind == 'line':
-                self.draw_line(**dwi.kwargs)
-            elif dwi.kind == 'rect':
-                self.draw_rectangle(**dwi.kwargs)
-            elif dwi.kind == 'text':
-                self.draw_font_string(**dwi.kwargs)
-            elif dwi.kind == 'circle':
-                self.draw_circle(**dwi.kwargs)
+        if not isinstance(drawing_groups, list):
+            drawing_groups = [drawing_groups]
+
+        #organize drawing list by priority
+        drawing_groups = sorted(drawing_groups, key=lambda group: group._prio)
+
+        for group in drawing_groups:
+            drawing_list = group._instrlist
+            for dwi in drawing_list:
+                if dwi.kind == 'line':
+                    self.draw_line(**dwi.kwargs)
+                elif dwi.kind == 'rect':
+                    self.draw_rectangle(**dwi.kwargs)
+                elif dwi.kind == 'text':
+                    self.draw_font_string(**dwi.kwargs)
+                elif dwi.kind == 'circle':
+                    self.draw_circle(**dwi.kwargs)
 
         self._drawing = False
 
