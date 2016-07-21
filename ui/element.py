@@ -32,7 +32,7 @@ class UIElement(object):
         if self.visible:
             return self._get_drawing_instructions()
         else:
-            return DrawInstructionGroup()
+            return [DrawInstructionGroup()]
 
     def _get_drawing_instructions(self):
-        return DrawInstructionGroup()
+        return [DrawInstructionGroup()]

@@ -37,4 +37,4 @@ class Label(UIElement):
                             color=True)
             )
 
-        return dwg
+        return [dwg]

@@ -31,4 +31,4 @@ class RadioButton(CheckBox):
                                 fill=True,
                                 color=True)
                 )
-        return dwg
+        return [dwg]

@@ -33,4 +33,4 @@ class Button(Label, ButtonBehavior):
                             color=(self.state == 'normal'))
         )
 
-        return dwg
+        return [dwg]

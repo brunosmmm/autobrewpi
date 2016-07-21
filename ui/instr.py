@@ -5,7 +5,7 @@ class DrawInstruction(object):
         self.kwargs = kwargs
 
 class DrawInstructionGroup(object):
-    def __init__(self, draw_prio=1000):
+    def __init__(self, draw_prio=0):
         self._prio = draw_prio
         self._instrlist = []
 
@@ -14,3 +14,6 @@ class DrawInstructionGroup(object):
 
     def add_instructions(self, *args):
         self._instrlist.extend(args)
+
+    def set_priority(self, priority):
+        self._prio = priority

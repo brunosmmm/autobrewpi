@@ -41,4 +41,4 @@ class CheckBox(UIElement, ButtonBehavior):
                                 color=True)
                 )
 
-        return dwg
+        return [dwg]
