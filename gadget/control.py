@@ -40,7 +40,7 @@ class GadgetVariableSpace(StoppableThread):
 
     _initialized = False
 
-    def __init__(self, gadget_uid, scan_interval=1.0):
+    def __init__(self, gadget_uid, scan_interval=2.0):
 
         super(GadgetVariableSpace, self).__init__()
 
@@ -92,6 +92,8 @@ class GadgetVariableSpace(StoppableThread):
                 try:
                     value = self._hcli.read_slave_object(self._gaddr, var._idx)
                     var._value = value
+                    if var._old:
+                        var._old = False
                 except Exception:
                     #could not read
                     var._old = True
