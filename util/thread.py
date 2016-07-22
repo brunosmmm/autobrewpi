@@ -5,8 +5,8 @@ import uuid
 class StoppableThread(threading.Thread):
     """A stoppable thread
     """
-    def __init__(self):
-        super(StoppableThread, self).__init__()
+    def __init__(self, *args, **kwargs):
+        super(StoppableThread, self).__init__(*args, **kwargs)
         self.stop_flag = threading.Event()
 
     def stop(self):
@@ -20,7 +20,7 @@ class CallbackStoppableThread(StoppableThread):
     """A stoppable thread that calls a callback
        when stopped
     """
-    def __init__(self, callback):
+    def __init__(self, callback, **kwargs):
         super(CallbackStoppableThread, self).__init__()
         self.callback = callback
         self.uuid = uuid.uuid1()
