@@ -23,6 +23,7 @@ class Label(UIElement):
 
     def set_text(self, text):
         self.text = text
+        self._needs_redrawing()
 
     def _get_drawing_instructions(self):
         dwg = DrawInstructionGroup(self.draw_prio)
