@@ -8,7 +8,7 @@ import time
 
 class MCP23016(object):
 
-    _MAXIMUM_RETRIES = 10
+    _MAXIMUM_RETRIES = 100
     _REGISTER_NAMES = {
         'GP0': 0x00,
         'GP1': 0x01,
@@ -23,7 +23,7 @@ class MCP23016(object):
         'IOCON0': 0x0A
     }
 
-    def __init__(self, **kwargs):
+    def __init__(self, *args, **kwargs):
         if 'i2c_bus' in kwargs:
             self._busnum = kwargs.pop('i2c_bus')
         else:
@@ -36,8 +36,7 @@ class MCP23016(object):
             fast = kwargs.pop('fast')
         else:
             fast = True
-
-        self._addr = address
+        super(MCP23016, self).__init__(*args, **kwargs)
         self._bus = smbus.SMBus(self._busnum)
 
         self._GP0VAL = 0x00
@@ -56,6 +55,7 @@ class MCP23016(object):
             try:
                 data = self._bus.read_byte_data(self._addr, reg_num)
             except IOError:
+                time.sleep(0.01)
                 retry_count += 1
 
         if data is None:
@@ -74,6 +74,7 @@ class MCP23016(object):
                 self._bus.write_byte_data(self._addr, reg_num, value)
                 done = True
             except IOError:
+                time.sleep(0.01)
                 retry_count += 1
 
         if done is False:
@@ -85,7 +86,7 @@ class MCP23016(object):
             current_config = self._read_register('IODIR0')
             current_config |= (1<<pin_num)
             self._write_register('IODIR0', current_config)
-        elif pin_num < 16:
+        elif pin_num > 7 and pin_num < 16:
             current_config = self._read_register('IODIR1')
             current_config |= (1<<(pin_num-8))
             self._write_register('IODIR1', current_config)
@@ -119,7 +120,6 @@ class MCP23016(object):
         self._GP1VAL = self._read_register('GP1')
 
     def read_pin(self, pin_num, refresh=False):
-
         if refresh is True:
             self._read_pins()
 
@@ -129,7 +129,7 @@ class MCP23016(object):
             else:
                 return False
 
-        elif pin_num < 16:
+        elif pin_num > 7 and pin_num < 16:
             if self._GP1VAL & (1<<(pin_num-8)):
                 return True
             else:
@@ -168,7 +168,7 @@ class MCP23016(object):
             else:
                 current_config &= ~(1<<pin_num)
             self._write_register('GP0', current_config)
-        elif pin_num < 16:
+        elif pin_num > 7 and pin_num < 16:
             current_config = self._read_register('GP1')
             if value:
                 current_config |= (1<<(pin_num-8))
@@ -220,19 +220,21 @@ class MCP23016(object):
 
 
 class MCP23016Auto(MCP23016, StoppableThread):
-    def __init__(self, i2c_bus=1, address=0x20, fast=True, cycle_interval=0.1):
-        kwargs = {'i2c_bus':i2c_bus, 'address':address, 'fast':fast}
-        super(MCP23016Auto, self).__init__(**kwargs)
+    def __init__(self, *args, **kwargs):
+        if 'cycle_interval' in kwargs:
+            self._interval = kwargs.pop('cycle_interval')
+        else:
+            self._interval = 0.1
+        super(MCP23016Auto, self).__init__(*args, **kwargs)
 
         self._io_queue = deque()
-        self._interval = cycle_interval
         self._outdated = False
 
     def read_pins(self):
-        super(MCP23016Auto, self).read_pins(refresh=False)
+        return super(MCP23016Auto, self).read_pins(refresh=False)
 
-    def read_pin(self, *args):
-        super(MCP23016Auto, self).read_pin(*args, refresh=False)
+    def read_pin(self, pin_num):
+        return super(MCP23016Auto, self).read_pin(pin_num, refresh=False)
 
     def get_flags(self):
         return {'outdated': self._outdated}
@@ -249,7 +251,7 @@ class MCP23016Auto(MCP23016, StoppableThread):
     def run(self):
         while True:
 
-            if self.is_stopped:
+            if self.is_stopped():
                 exit(0)
 
             #refresh state
