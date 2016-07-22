@@ -10,6 +10,8 @@
 static unsigned char ScreenBuf_FRONT[SCREEN_WIDTH/6][SCREEN_HEIGHT], ScreenBuf_BACK[SCREEN_WIDTH/6][SCREEN_HEIGHT];
 static unsigned char ScreenFlags;
 
+static void _lcd_erase(void);
+
 void SCREEN_Init(void)
 {
 
@@ -27,7 +29,7 @@ void SCREEN_Init(void)
     // DISPLAY MODE
     LCD_display_mode(DM_GRAPHICS);
 
-    SCREEN_Erase();
+    _lcd_erase();
 }
 
 void SCREEN_PSet(unsigned int x, unsigned int y, unsigned char col)
@@ -107,6 +109,11 @@ void SCREEN_Draw(void)
 }
 
 void SCREEN_Erase(void)
+{
+    memset(ScreenBuf_BACK, 0, SCREEN_HEIGHT*SCREEN_WIDTH/6);
+}
+
+void _lcd_erase(void)
 {
     unsigned int i;
     LCD_set_address_pointer( LCD_getBaseGraphic() );
