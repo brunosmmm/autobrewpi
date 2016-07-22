@@ -267,6 +267,7 @@ class MCP23016Auto(MCP23016, StoppableThread):
                         value = super(MCP23016Auto, self).read_pin(req['params']['pin_num'], refresh=True)
                         if req['params']['callback'] is not None:
                             req['params']['callback'](value)
+
                     elif req['request_kind'] == 'set_values':
                         super(MCP23016Auto, self).write_pins(req['params']['values'])
                 except (IOError, ValueError):
@@ -292,7 +293,7 @@ class MCP23016Auto(MCP23016, StoppableThread):
         if direction not in ('output', 'input'):
             raise ValueError('direction must be either "input" or "output"')
 
-        self._check_pin_num()
+        self._check_pin_num(pin_num)
 
         self._io_queue.appendleft({
             'request_kind': 'set_direction',
@@ -304,7 +305,7 @@ class MCP23016Auto(MCP23016, StoppableThread):
 
     def write_pin(self, pin_num, value):
 
-        self._check_pin_num()
+        self._check_pin_num(pin_num)
 
         self._io_queue.appendleft({
             'request_kind': 'set_value',
@@ -316,7 +317,7 @@ class MCP23016Auto(MCP23016, StoppableThread):
 
     def write_pins(self, value_list):
 
-        self.io_queue.appendleft({
+        self._io_queue.appendleft({
             'request_kind': 'set_values',
             'params': {
                 'values': value_list
