@@ -33,6 +33,9 @@ class ScreenBuffer(StoppableThread):
         self._drawing = False
         self._old = False
 
+        #flags
+        self._needs_redrawing = None
+
     def add_screen(self, screen_id, screen_obj):
         screen_obj._parent = self
         screen_obj._screen_id = screen_id
@@ -223,9 +226,8 @@ class ScreenBuffer(StoppableThread):
 
     def erase_screen(self):
         self._drawing = True
-        for i in range(0, self._width):
-            for j in range(0, self._height):
-                self.set_pixel_value(i, j, 0)
+
+        self._lcd.SCREEN_Erase()
 
         self._drawing = False
 
@@ -243,7 +245,7 @@ class ScreenBuffer(StoppableThread):
         if screen_id != self.active_screen:
             return
 
-        self.activate_screen(screen_id)
+        self._needs_redrawing = screen_id
 
     def run(self):
 
@@ -251,6 +253,10 @@ class ScreenBuffer(StoppableThread):
 
             if self.is_stopped():
                 exit(0)
+
+            if self._needs_redrawing is not None:
+                self.activate_screen(self._needs_redrawing)
+                self._needs_redrawing = None
 
             while self._drawing:
                 time.sleep(self.refresh_interval)
