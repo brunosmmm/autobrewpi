@@ -253,7 +253,7 @@ class ScreenBuffer(StoppableThread):
                 exit(0)
 
             while self._drawing:
-                pass
+                time.sleep(self.refresh_interval)
 
             if self._old:
                 self.put_buffer()
