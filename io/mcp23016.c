@@ -1,7 +1,9 @@
 #include "mcp23016.h"
 #include <wiringPiI2C.h>
+#include <wiringPi.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 //#define MCP_DEBUG
 
 #define MAXIMUM_RETRIES 100
@@ -11,11 +13,29 @@ static int fd = 0;
 
 static unsigned char MCP_writeRegister(unsigned char regNum, unsigned char value);
 static unsigned char MCP_readRegister(unsigned char regNum);
+static void MCP_updatePins(void);
+static MCP_IOCHANGE state_change;
 
-void MCP_Init(unsigned char address, unsigned char fast)
+static void _iochange_isr(void)
+{
+    unsigned char pin_states[16];
+
+    if (state_change)
+    {
+        MCP_readPins(0x01, pin_states);
+        (state_change)(pin_states);
+    }
+}
+
+void MCP_Init(unsigned char address, unsigned char fast, MCP_IOCHANGE statechange)
 {
     GP0VAL = 0x00;
     GP1VAL = 0x00;
+
+    //interrupt
+    state_change = statechange;
+    wiringPiSetupGpio();
+    wiringPiISR(MCP_INT_PIN, INT_EDGE_FALLING, _iochange_isr);
 
     //i2c
     fd = wiringPiI2CSetup(address);
@@ -40,9 +60,9 @@ static unsigned char MCP_writeRegister(unsigned char regNum, unsigned char value
     unsigned int i;
     int result;
 
-    #ifdef MCP_DEBUG
-    printf("MCP: writing register %d, value is 0x%x\n", regNum, value);
-    #endif
+//    #ifdef MCP_DEBUG
+//    printf("MCP: writing register %d, value is 0x%x\n", regNum, value);
+//    #endif
 
     for (i = 0; i < MAXIMUM_RETRIES; i++)
     {
@@ -88,9 +108,9 @@ static unsigned char MCP_readRegister(unsigned char regNum)
         return 0xff;
     }
 
-    #ifdef MCP_DEBUG
-    printf("MCP: read register %d, value is 0x%x\n", regNum, result);
-    #endif
+//    #ifdef MCP_DEBUG
+//    printf("MCP: read register %d, value is 0x%x\n", regNum, result);
+//    #endif
 
     return result;
 }
@@ -155,10 +175,12 @@ void MCP_setDirection(unsigned char pinNum, unsigned char direction)
     }
 }
 
-void MCP_updatePins(void)
+static void MCP_updatePins(void)
 {
+    piLock(0);
     GP0VAL = MCP_readRegister(0x00);
     GP1VAL = MCP_readRegister(0x01);
+    piUnlock(0);
 }
 
 unsigned char MCP_readPin(unsigned char pinNum, unsigned char refresh)
@@ -265,7 +287,6 @@ PyObject * MCP_PyreadPins(unsigned char refresh)
 
 void  MCP_readPins(unsigned char refresh, unsigned char* result)
 {
-
     if (refresh)
     {
         MCP_updatePins();
@@ -278,6 +299,7 @@ void  MCP_readPins(unsigned char refresh, unsigned char* result)
 void MCP_writePin(unsigned char pinNum, unsigned char value)
 {
     unsigned char current_value = 0x00;
+    piLock(0);
     if ((pinNum < 8))
     {
         current_value = MCP_readRegister(0x00);
@@ -307,6 +329,7 @@ void MCP_writePin(unsigned char pinNum, unsigned char value)
             MCP_writeRegister(0x01, current_value);
         }
     }
+    piUnlock(0);
 }
 
 void MCP_writePins(unsigned char * pinValues)
@@ -350,7 +373,9 @@ void MCP_writePins(unsigned char * pinValues)
         }
     }
 
+    piLock(0);
     MCP_writeRegister(0x00, curr_gp0);
     MCP_writeRegister(0x01, curr_gp1);
+    piUnlock(0);
 
 }
