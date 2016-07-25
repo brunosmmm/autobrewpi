@@ -2,7 +2,7 @@ from util.thread import StoppableThread
 import time
 
 class Keypad(StoppableThread):
-    def __init__(self, col_num, row_num, get_cols, set_rows, cycle_interval=0.1):
+    def __init__(self, col_num, row_num, get_cols, set_rows, cycle_interval=0.02):
         super(Keypad, self).__init__()
 
         self._interval = cycle_interval

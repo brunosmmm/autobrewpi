@@ -224,7 +224,7 @@ class MCP23016Auto(MCP23016, StoppableThread):
         if 'cycle_interval' in kwargs:
             self._interval = kwargs.pop('cycle_interval')
         else:
-            self._interval = 0.1
+            self._interval = 0.01
         super(MCP23016Auto, self).__init__(*args, **kwargs)
 
         self._io_queue = deque()
