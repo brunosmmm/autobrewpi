@@ -3,9 +3,33 @@ import struct
 import time
 import zmq
 
+_INPUT_EVENTS = {
+    'encoder.cw' : ('ENCODER', 0x01),
+    'encoder.ccw': ('ENCODER', 0x02),
+    'encoder.press': ('ENCODER', 0x00),
+    'encoder.release': ('ENCODER', 0x03),
+    'keypad.press': ('KEYPAD', 0x00),
+    'keypad.release': ('KEYPAD', 0x01)
+}
+
+class InvalidEventError(Exception):
+    pass
+
 class ABInputClient(StoppableThread):
     def __init__(self):
         super(ABInputClient, self).__init__()
+
+        self.attached_callbacks = {}
+
+    def attach_callback(self, event, callback):
+
+        if event not in _INPUT_EVENTS:
+            raise InvalidEventError('invalid event!')
+
+        if event not in self.attached_callbacks:
+            self.attached_callbacks[event] = []
+
+        self.attached_callbacks[event].append(callback)
 
     def run(self):
 
@@ -14,8 +38,6 @@ class ABInputClient(StoppableThread):
         socket.connect('tcp://localhost:5556')
         socket.setsockopt_string(zmq.SUBSCRIBE, u'KEYPAD')
         socket.setsockopt_string(zmq.SUBSCRIBE, u'ENCODER')
-
-        print 'icli: connected'
 
         while True:
 
@@ -28,7 +50,15 @@ class ABInputClient(StoppableThread):
 
                 unit, kind, data = string.split(' ')
 
-                print 'received: unit={}; type = {}; data = {}'.format(unit, kind, data)
+                for event_type, conditions in _INPUT_EVENTS.iteritems():
+                    if conditions[0] == unit and conditions[1] == int(kind):
+                        try:
+                            for callback in self.attached_callbacks[event_type]:
+                                if callback is not None:
+                                    callback(data)
+                        except KeyError:
+                            pass
+
             except zmq.ZMQError:
                 pass
 
