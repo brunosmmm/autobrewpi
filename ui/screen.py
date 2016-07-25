@@ -27,3 +27,6 @@ class Screen(UIElement):
             group_list.extend(child._draw_proxy())
 
         return group_list
+
+    def _input_event(self, evt):
+        pass

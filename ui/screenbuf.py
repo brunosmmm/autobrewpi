@@ -10,7 +10,7 @@ SCREENBUF_SO_PATH = './lcd/screen.so'
 
 class ScreenBuffer(StoppableThread):
 
-    def __init__(self, width, height, refresh_interval=0.5):
+    def __init__(self, width, height, input_client, refresh_interval=0.05):
         super(ScreenBuffer, self).__init__()
         # properties
         self._width = width
@@ -18,6 +18,9 @@ class ScreenBuffer(StoppableThread):
 
         #font manager
         self._fmgr = FontManager()
+
+        #input client
+        self._icli = input_client
 
         # display controller
         self._lcd = CDLL(SCREENBUF_SO_PATH)
@@ -42,6 +45,44 @@ class ScreenBuffer(StoppableThread):
 
         #flags
         self._needs_redrawing = None
+
+        #attach input client callbacks
+        self._icli.attach_callback('keypad.press', self._keypad_keypress)
+        self._icli.attach_callback('keypad.release', self._keypad_keyrelease)
+        self._icli.attach_callback('encoder.cw', self._encoder_rotate_cw)
+        self._icli.attach_callback('encoder.ccw', self._encoder_rotate_ccw)
+        self._icli.attach_callback('encoder.press', self._encoder_press)
+        self._icli.attach_callback('encoder.release', self._encoder_release)
+
+    def _keypad_keypress(self, data):
+        if self.active_screen is not None:
+            self._screens[self.active_screen]._input_event({'event': 'keypad.press',
+                                                            'data': data})
+
+    def _keypad_keyrelease(self, data):
+        if self.active_screen is not None:
+            self._screens[self.active_screen]._input_event({'event': 'keypad.release',
+                                                            'data': data})
+
+    def _encoder_rotate_cw(self, data):
+        if self.active_screen is not None:
+            self._screens[self.active_screen]._input_event({'event': 'encoder.cw',
+                                                            'data': None})
+
+    def _encoder_rotate_ccw(self, data):
+        if self.active_screen is not None:
+            self._screens[self.active_screen]._input_event({'event': 'encoder.ccw',
+                                                            'data': None})
+
+    def _encoder_press(self, data):
+        if self.active_screen is not None:
+            self._screens[self.active_screen]._input_event({'event': 'encoder.press',
+                                                            'data': None})
+
+    def _encoder_release(self, data):
+        if self.active_screen is not None:
+            self._screens[self.active_screen]._input_event({'event': 'encoder.release',
+                                                            'data': None})
 
     def add_screen(self, screen_id, screen_obj):
         screen_obj._parent = self
@@ -270,7 +311,7 @@ class ScreenBuffer(StoppableThread):
                 self._needs_redrawing = None
 
             while self._drawing:
-                time.sleep(self.refresh_interval)
+                time.sleep(0.01)
 
             if self._old:
                 self.put_buffer()
