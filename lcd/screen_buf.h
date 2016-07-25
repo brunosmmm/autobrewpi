@@ -13,5 +13,6 @@ void SCREEN_PSet(unsigned int x, unsigned int y, unsigned char col);
 void SCREEN_Flip(void);
 void SCREEN_Draw(void);
 void SCREEN_Erase(void);
+void SCREEN_Copy(unsigned char* source);
 
 #endif /* SCREEN_BUF_H */

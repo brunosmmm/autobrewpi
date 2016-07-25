@@ -4,6 +4,7 @@
 #include "lcd_screen.h"
 #include "lcd_graphics.h"
 #include <stdio.h>
+#include <unistd.h>
 
 #define SCREEN_MEM_SIZE SCREEN_WIDTH*SCREEN_HEIGHT/6
 
@@ -84,6 +85,11 @@ void SCREEN_Flip(void)
     memcpy(ScreenBuf_FRONT, temp, SCREEN_MEM_SIZE);
 }
 
+void SCREEN_Copy(unsigned char* source)
+{
+    memcpy(ScreenBuf_BACK, source, SCREEN_MEM_SIZE);
+}
+
 void SCREEN_Draw(void)
 {
     unsigned int x, y;
@@ -103,6 +109,9 @@ void SCREEN_Draw(void)
             {
                 LCD_auto_write(ScreenBuf_FRONT[x][y]);
             }
+
+            //throttle optionally
+            //usleep(10);
         }
     }
     LCD_auto_write_stop();
@@ -110,7 +119,7 @@ void SCREEN_Draw(void)
 
 void SCREEN_Erase(void)
 {
-    memset(ScreenBuf_BACK, 0, SCREEN_HEIGHT*SCREEN_WIDTH/6);
+    memset(ScreenBuf_BACK, 0, SCREEN_MEM_SIZE);
 }
 
 void _lcd_erase(void)
