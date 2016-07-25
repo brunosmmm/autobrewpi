@@ -98,7 +98,7 @@ class GadgetVariableSpace(StoppableThread):
                     #could not read
                     var._old = True
 
-            time.sleep(0.01)
+            time.sleep(0.1)
 
     def __setattr__(self, name, value):
         if self._initialized:

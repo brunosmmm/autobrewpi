@@ -1,5 +1,6 @@
 from pyjsonrpc import HttpClient
 from collections import deque
+import time
 
 class HbusJsonServerError(Exception):
     pass
@@ -69,6 +70,8 @@ class HbusClient(object):
             status = self._unpack_response(self._cli.readfinished())['value']
             while status is False:
                 status = self._unpack_response(self._cli.readfinished())['value']
+
+                time.sleep(0.01)
 
             data = self._unpack_response(self._cli.retrievelastdata())['value']
             return data
