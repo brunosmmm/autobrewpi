@@ -13,6 +13,7 @@ class ABInputClient(StoppableThread):
         socket = context.socket(zmq.SUB)
         socket.connect('tcp://localhost:5556')
         socket.setsockopt_string(zmq.SUBSCRIBE, u'KEYPAD')
+        socket.setsockopt_string(zmq.SUBSCRIBE, u'ENCODER')
 
         print 'icli: connected'
 
@@ -24,11 +25,10 @@ class ABInputClient(StoppableThread):
             #communicate!
             try:
                 string = socket.recv_string(flags=zmq.NOBLOCK)
-                print 'received some stuff'
 
-                _, kind, data = string.split(' ')
+                unit, kind, data = string.split(' ')
 
-                print 'received: type = {}; data = {}'.format(kind, data)
+                print 'received: unit={}; type = {}; data = {}'.format(unit, kind, data)
             except zmq.ZMQError:
                 pass
 
