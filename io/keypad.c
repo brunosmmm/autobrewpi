@@ -80,6 +80,7 @@ static void _detect_key(unsigned char * col_state)
         {
             if (active_key_row == active_row)
             {
+                event.unit = ABU_UNIT_KEYPAD;
                 event.type = ABU_EVT_KEYRELEASE;
                 event.data = keypad_keys[active_key_row][active_key_col];
                 ABUSER_trigger_evt(event);
@@ -102,6 +103,7 @@ static void _detect_key(unsigned char * col_state)
         active_key_row = active_row;
 
         //trigger event
+        event.unit = ABU_UNIT_KEYPAD;
         event.type = ABU_EVT_KEYPRESS;
         event.data = keypad_keys[active_row][active_col];
 
@@ -127,12 +129,12 @@ void KEYPAD_Init(void)
 
 }
 
-void KEYPAD_Cycle(void)
+static void _keypad_internal_cycle(unsigned char async, unsigned char * states)
 {
     unsigned char col_state[KEYPAD_COLS];
     _set_rows();
 
-    usleep(10000);
+    usleep(10);
 
     _get_cols(col_state);
 
@@ -145,4 +147,14 @@ void KEYPAD_Cycle(void)
         active_row = 0;
     }
 
+}
+
+void KEYPAD_Cycle(void)
+{
+    _keypad_internal_cycle(0x00, 0x00);
+}
+
+void KEYPAD_SetPinStates(unsigned char * states)
+{
+    _keypad_internal_cycle(0x01, states);
 }
