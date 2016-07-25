@@ -1,5 +1,6 @@
 from gadget.hbusjson import HbusClient
 from util.thread import StoppableThread
+from vspace import VSpaceDriver, VSpaceInput, VSpaceOutput, VSpaceParameter
 import time
 from collections import deque
 import re
@@ -59,12 +60,18 @@ class GadgetVariableSpace(StoppableThread):
         gadget_info = self._hcli.get_slave_info(self._guid)
         self._gaddr = gadget_info['currentaddress']
 
+        #connection matrix
+        self._output_allocation = {}
+
         #variable space
         self._varspace = {}
 
         #parse
         self._parse_objects()
         self._scan_values()
+
+        #drivers
+        self._drivers = {}
 
         self._initialized = True
 
@@ -79,6 +86,8 @@ class GadgetVariableSpace(StoppableThread):
             can_write = True if permissions & 0x02 else False
 
             self._varspace[obj_name] = GadgetVariableProxy(obj_idx, can_read, can_write)
+            if (can_write):
+                self._output_allocation[obj_name] = None
 
             obj_idx += 1
 
@@ -113,6 +122,15 @@ class GadgetVariableSpace(StoppableThread):
                 return self._varspace[name].get_value()
         return super(GadgetVariableSpace, self).__getattr__(name)
 
+    def register_driver(self, driver_class, instance_name):
+        driver_object = driver_class()
+        driver_object._gvarspace = self
+
+        self._drivers[instance_name] = driver_object
+
+    def get_available_var_by_type(self, var_type):
+        pass
+
     def run(self):
 
         while True:
@@ -132,6 +150,13 @@ class GadgetVariableSpace(StoppableThread):
                     except Exception:
                         #could not set value
                         raise GadgetVariableError('could not set variable value')
+
+            #execute driver cycles
+            for driver in self._drivers.values():
+                try:
+                    driver.cycle()
+                except Exception:
+                    raise
 
             #scan values continuously
             self._scan_values()
