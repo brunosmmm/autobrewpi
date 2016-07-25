@@ -53,6 +53,37 @@ static unsigned int _read_queue_len(void)
     return ABU_EVT_QUEUE_SIZE - read_ptr + write_ptr;
 }
 
+static char * _get_unit_name(unsigned char unit)
+{
+    switch(unit)
+    {
+    case ABU_UNIT_KEYPAD:
+        return ABU_UNITNAME_KEYPAD;
+    case ABU_UNIT_ENCODER:
+        return ABU_UNITNAME_ENCODER;
+    default:
+        return 0x00;
+    }
+}
+
+static unsigned int _strlen(char * str)
+{
+    unsigned int count = 0;
+
+    if (!str)
+    {
+        return 0;
+    }
+
+    while(*str)
+    {
+        str++;
+        count++;
+    }
+
+    return count;
+}
+
 void* ABUSER_serve(void* data)
 {
     void* context = zmq_ctx_new();
@@ -81,8 +112,8 @@ void* ABUSER_serve(void* data)
         {
             //do stuff!!
             event = _read_queue();
-            sprintf(message, "KEYPAD %d %c", event.type, event.data);
-            zmq_send (publisher, message, 10, 0);
+            sprintf(message, "%s %d %c", _get_unit_name(event.unit), event.type, event.data);
+            zmq_send (publisher, message, _strlen(message), 0);
         }
 
         usleep(10000);
