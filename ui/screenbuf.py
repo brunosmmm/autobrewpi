@@ -1,8 +1,9 @@
-from ctypes import CDLL
+from ctypes import CDLL, c_ubyte
 from fonts.fontmgr import FontManager
 from ui.element import UIElement
 from ui.screen import Screen
 from util.thread import StoppableThread
+from array import array
 import time
 
 SCREENBUF_SO_PATH = './lcd/screen.so'
@@ -32,6 +33,12 @@ class ScreenBuffer(StoppableThread):
         #control flow
         self._drawing = False
         self._old = False
+
+        #local buffer
+        self._screenbuf = array('B', [])
+        for i in range(0, height):
+            for j in range(0, width/6):
+                self._screenbuf.append(0x00)
 
         #flags
         self._needs_redrawing = None
@@ -221,6 +228,10 @@ class ScreenBuffer(StoppableThread):
                     self.draw_font_string(**dwi.kwargs)
                 elif dwi.kind == 'circle':
                     self.draw_circle(**dwi.kwargs)
+
+        #copy screen
+        #ptr = (c_ubyte * len(self._screenbuf))(*self._screenbuf)
+        #self._lcd.SCREEN_Copy(ptr)
 
         self._drawing = False
 
