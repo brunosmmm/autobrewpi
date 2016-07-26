@@ -8,6 +8,20 @@ IO_VARIABLE_TYPES = [
     'BYTE'
 ]
 
+def _check_variable_dtype(self, wanted_type, value):
+    error = False
+
+    if wanted_type == 'BOOLEAN':
+        if not isinstance(bool, value):
+            error = True
+    elif wanted_type == 'BYTE':
+        if not isinstance(int, value):
+            error = True
+    # todo: check others
+
+    if error:
+        raise TypeError('invalid python type for variable type {}'.format(wanted_type))
+
 class VSpaceInput(object):
     def __init__(self, var_type, initial_value = None):
         self._dtype = var_type
@@ -15,6 +29,9 @@ class VSpaceInput(object):
         self._value_changed = False
 
     def set_value(self, value):
+
+        _check_variable_dtype(self._dtype, value)
+
         if value != self._value:
             self._value_changed = True
         self._value = value
@@ -39,6 +56,12 @@ class VSpaceOutput(object):
         #ideally this differs from an input in the way
         #the values are updated and propagated
         self._stored_value = initial_value
+
+    def set_value(self, value):
+
+        _check_variable_dtype(self._dtype, value)
+
+        self._stored_value = value
 
 class VSpaceDriver(object):
 
@@ -74,7 +97,7 @@ class VSpaceDriver(object):
     def _output_value_change(self, variable_name, new_value):
         """Update an output. This is called by the driver code to signal an update
         """
-        self._outputs[variable_name]._stored_value = new_value
+        self._outputs[variable_name].set_value(new_value)
         #trigger change
         #self._gvarspace.something()
 
