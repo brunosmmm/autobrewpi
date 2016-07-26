@@ -26,6 +26,8 @@ class GadgetVariableProxy(object):
         self._old = False
 
         self._value = None
+        self._input_port = None
+        self._output_port = None
 
     def set_value(self, value):
         if self._wr:
@@ -37,12 +39,32 @@ class GadgetVariableProxy(object):
 
         return None
 
+    def can_read(self):
+        return self._rd
+
+    def can_write(self):
+        return self._wr
+
+    def set_output_port_id(self, pid):
+        self._output_port = pid
+
+    def set_input_port_id(self, pid):
+        self._input_port = pid
+
+    def get_output_port_id(self):
+        return self._output_port
+
+    def get_input_port_id(self):
+        return self._input_port
+
+
 class VSpacePortDescriptor(object):
     def __init__(self, direction, port_id, linked_instance, instance_port_name):
         self._dir = direction
         self._pid = port_id
         self._inst = linked_instance
         self._inst_pname = instance_port_name
+        self._gvarspace = None
 
         self._connection_list = set()
 
@@ -51,8 +73,8 @@ class VSpacePortDescriptor(object):
             if len(self._connection_list) > 0:
                 raise IOError('cannot connect two ports to an input')
 
-            if connect_to._dir == 'input':
-                raise IOError('cannot connect input to input')
+        if connect_to._dir == 'input':
+            raise IOError('cannot connect input to input')
 
         elif self._dir == 'output':
             if connect_to._dir == 'output':
@@ -61,7 +83,7 @@ class VSpacePortDescriptor(object):
         else:
             raise IOError('unknown error!')
 
-        #add to list
+            #add to list
         self._connection_list.add(connect_to._pid)
 
     def disconnect_port(self, connected_to):
@@ -103,7 +125,7 @@ class GadgetVariableSpace(StoppableThread):
         self._gaddr = gadget_info['currentaddress']
 
         #connection matrix
-        self._gadget_output_allocation = {}
+        self._gadget_space_port_matrix = {}
         self._process_space_port_matrix = {}
         self._global_port_counter = 0
 
@@ -130,8 +152,23 @@ class GadgetVariableSpace(StoppableThread):
             can_write = True if permissions & 0x02 else False
 
             self._varspace[obj_name] = GadgetVariableProxy(obj_idx, can_read, can_write)
+            #create port aliases
             if (can_write):
-                self._gadget_output_allocation[obj_name] = None
+                port_id = self._new_port_added()
+                port = VSpacePortDescriptor('input',
+                                            port_id,
+                                            'gadget',
+                                            obj_name)
+                self._gadget_space_port_matrix[port_id] = port
+                self._varspace[obj_name].set_input_port_id(port_id)
+            if (can_read):
+                port_id = self._new_port_added()
+                port = VSpacePortDescriptor('output',
+                                            port_id,
+                                            'gadget',
+                                            obj_name)
+                self._gadget_space_port_matrix[port_id] = port
+                self._varspace[obj_name].set_output_port_id(port_id)
 
             obj_idx += 1
 
@@ -144,6 +181,11 @@ class GadgetVariableSpace(StoppableThread):
             if var._rd:
                 try:
                     value = self._hcli.read_slave_object(self._gaddr, var._idx)
+                    if var._value != value:
+                        #trigger systemwide changes
+                        if var.get_output_port_id() is not None:
+                            _propagate_value(var.get_output_port_id(), value)
+
                     var._value = value
                     if var._old:
                         var._old = False
@@ -207,22 +249,46 @@ class GadgetVariableSpace(StoppableThread):
 
     def connect_pspace_ports(self, port_from, port_to):
         if port_from not in self._process_space_port_matrix:
-            raise IOError('invalid port: {}'.format(port_from))
+            #check if it is a gadget space variable
+            if port_from not in self._gadget_space_port_matrix:
+                raise IOError('invalid port: {}'.format(port_from))
 
         if port_to not in self._process_space_port_matrix:
-            raise IOError('invalid port: {}'.format(port_to))
+            if port_to not in self._gadget_space_port_matrix:
+                raise IOError('invalid port: {}'.format(port_to))
 
-        #try to connect
-        self._process_space_port_matrix[port_from].connect_port(self._process_space_port_matrix[port_to])
+        if port_from in self._process_space_port_matrix:
+            space_from = self._process_space_port_matrix
+        else:
+            space_from = self._gadget_space_port_matrix
+
+        if port_to in self._process_space_port_matrix:
+            space_to = self._process_space_port_matrix
+        else:
+            space_to = self._gadget_space_port_matrix
+
+        space_from[port_from].connect_port(self.space_to[port_to])
 
     def disconnect_pspace_ports(self, port_from, port_to):
         if port_from not in self._process_space_port_matrix:
-            raise IOError('invalid port: {}'.format(port_from))
+            if port_from not in self._gadget_space_port_matrix:
+                raise IOError('invalid port: {}'.format(port_from))
 
         if port_to not in self._process_space_port_matrix:
-            raise IOError('invalid port: {}'.format(port_to))
+            if port_to not in self._gadget_space_port_matrix:
+                raise IOError('invalid port: {}'.format(port_to))
 
-        self._process_space_port_matrix[port_from].disconnect_port(self._process_space_port_matrix[port_to])
+        if port_from in self._process_space_port_matrix:
+            space_from = self._process_space_port_matrix
+        else:
+            space_from = self._gadget_space_port_matrix
+
+        if port_to in self._process_space_port_matrix:
+            space_to = self._process_space_port_matrix
+        else:
+            space_to = self._gadget_space_port_matrix
+
+        space_from[port_from].disconnect_port(space_to[port_to])
 
     def get_available_var_by_type(self, var_type):
         pass
@@ -238,16 +304,34 @@ class GadgetVariableSpace(StoppableThread):
 
         #get connection list and update
         port_global_id = self._drivers[instance_name]._outputs[output_variable].get_global_port_id()
-        for connected_to in self._process_space_port_matrix[port_global_id].get_connected_to():
+        self._propagate_value(port_global_id, new_value)
+
+    def _propagate_value(self, port_global_id, new_value):
+        if port_global_id in self._process_space_port_matrix:
+            space = self._process_space_port_matrix
+        elif port_global_id in self._gadget_space_port_matrix:
+            space = self._gadget_space_port_matrix
+        else:
+            raise IOError('invalid port id: {}'.format(global_port_id))
+
+        for connected_to in space[port_global_id].get_connected_to():
             #propagate
-            port_descriptor = self._process_space_port_matrix[connected_to]
-            self._drivers[port_descriptor.get_linked_instance_name()]._inputs[port_descriptor.get_linked_port_name()].set_value(new_value)
+            if connected_to in self._process_space_port_matrix:
+                port_descriptor = self._process_space_port_matrix[connected_to]
+                self._drivers[port_descriptor.get_linked_instance_name()]._inputs[port_descriptor.get_linked_port_name()].set_value(new_value)
+            elif connected_to in self._gadget_space_port_matrix:
+                #gadget variable, set
+                port_descriptor = self._gadget_space_port_matrix[connected_to]
+                self.__setattr__(port_descriptor.get_linked_port_name(), new_value)
 
     def run(self):
 
         while True:
             if self.is_stopped():
                 exit(0)
+
+            #scan values continuously
+            self._scan_values()
 
             #set values if pending
             while len(self._write_queue) > 0:
@@ -269,9 +353,6 @@ class GadgetVariableSpace(StoppableThread):
                     driver.cycle()
                 except Exception:
                     raise
-
-            #scan values continuously
-            self._scan_values()
 
             #wait
             time.sleep(self._scan_interval)
