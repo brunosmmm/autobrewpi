@@ -69,6 +69,7 @@ class VSpaceDriver(object):
 
     def __init__(self):
         self._gvarspace = None
+        self._instance_name = None
         self._inputs = {}
         self._outputs = {}
 
@@ -99,7 +100,7 @@ class VSpaceDriver(object):
         """
         self._outputs[variable_name].set_value(new_value)
         #trigger change
-        #self._gvarspace.something()
+        self._gvarspace.trigger_output_change(self._instance_name, variable_name)
 
     def get_input_value(self, variable_name):
         return self._inputs[variable_name].get_value()

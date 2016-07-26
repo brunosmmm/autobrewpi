@@ -123,12 +123,20 @@ class GadgetVariableSpace(StoppableThread):
         return super(GadgetVariableSpace, self).__getattr__(name)
 
     def register_driver(self, driver_class, instance_name):
+
+        if instance_name in self._drivers:
+            raise ValueError('instance name already allocated')
+
         driver_object = driver_class()
         driver_object._gvarspace = self
+        driver_object._instance_name = instance_name
 
         self._drivers[instance_name] = driver_object
 
     def get_available_var_by_type(self, var_type):
+        pass
+
+    def trigger_output_change(self, instance_name, output_variable):
         pass
 
     def run(self):
