@@ -206,7 +206,7 @@ class GadgetVariableSpace(StoppableThread):
         if self._initialized:
             if name in self._varspace.keys():
                 return self._varspace[name].get_value()
-        return super(GadgetVariableSpace, self).__getattr__(name)
+        return super(GadgetVariableSpace, self).__getattribute__(name)
 
     def register_driver(self, driver_class, instance_name):
 
@@ -323,6 +323,23 @@ class GadgetVariableSpace(StoppableThread):
                 #gadget variable, set
                 port_descriptor = self._gadget_space_port_matrix[connected_to]
                 self.__setattr__(port_descriptor.get_linked_port_name(), new_value)
+
+    def _debug_dump_port_list(self):
+        print 'Port list dump'
+        print 'Process Space:'
+        for port_id, port_object in self._process_space_port_matrix.iteritems():
+            print '{}: {}.{} ({}), connects to: {}'.format(port_id,
+                                                           port_object.get_linked_instance_name(),
+                                                           port_object.get_linked_port_name(),
+                                                           port_object._dir,
+                                                           port_object._connection_list)
+        print 'Gadget Space:'
+        for port_id, port_object in self._gadget_space_port_matrix.iteritems():
+            print '{}: {}.{} ({}), connects to: {}'.format(port_id,
+                                                           port_object.get_linked_instance_name(),
+                                                           port_object.get_linked_port_name(),
+                                                           port_object._dir,
+                                                           port_object._connection_list)
 
     def run(self):
 
