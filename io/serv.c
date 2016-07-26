@@ -61,6 +61,8 @@ static char * _get_unit_name(unsigned char unit)
         return ABU_UNITNAME_KEYPAD;
     case ABU_UNIT_ENCODER:
         return ABU_UNITNAME_ENCODER;
+    case ABU_UNIT_SWITCHES:
+        return ABU_UNITNAME_SWITCHES;
     default:
         return 0x00;
     }
