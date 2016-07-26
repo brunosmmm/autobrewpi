@@ -4,34 +4,95 @@ IO_VARIABLE_TYPES = [
     'TEMPERATURE',
     'PRESSURE',
     'GENERIC',
-    'BOOLEAN'
+    'BOOLEAN',
+    'BYTE'
 ]
-
-class VSpaceParameter(object):
-    def __init__(self, var_type, initial_value = None):
-        self._dtype = var_type
-        self._value = initial_value
 
 class VSpaceInput(object):
     def __init__(self, var_type, initial_value = None):
         self._dtype = var_type
         self._value = initial_value
+        self._value_changed = False
+
+    def set_value(self, value):
+        if value != self._value:
+            self._value_changed = True
+        self._value = value
+
+    def get_value(self):
+        #clear flags
+        self._value_changed = False
+        return self._value
+
+    def value_changed(self):
+        #also clear flags
+        self._value_changed = False
+        return self._value_changed
+
+class VSpaceParameter(VSpaceInput):
+    def __init__(self, var_type, initial_value = None):
+        super(VSpaceParameter, self).__init__(var_type, initial_value)
 
 class VSpaceOutput(object):
-    def __init__(self, var_type):
+    def __init__(self, var_type, initial_value = None):
         self._dtype = var_type
+        #ideally this differs from an input in the way
+        #the values are updated and propagated
+        self._stored_value = initial_value
 
 class VSpaceDriver(object):
+
+    _AVAILABLE_FLAGS = ('inputs_changed')
+
     def __init__(self):
         self._gvarspace = None
         self._inputs = {}
         self._outputs = {}
 
+        #flags
+        self._flags = set()
+
+    def _set_flag(self, flag):
+        if flag in self._AVAILABLE_FLAGS:
+            self._flags.add(flag)
+
+    def _clear_flag(self, flag):
+        if flag in self._AVAILABLE_FLAGS and flag in self._flags:
+            self._flags.remove(flag)
+
     def get_available_var_by_type(self):
         pass
 
+    #todo rename this, maybe _input_value_change
     def update_local_variable(self, variable_name, new_value):
-        self._inputs[variable_name]._value = new_value
+        """Update an input. This is called by the gadget variable space manager
+        """
+        self._inputs[variable_name].set_value(new_value)
+        #mark changes
+        self._set_flag('inputs_changed')
+
+    def _output_value_change(self, variable_name, new_value):
+        """Update an output. This is called by the driver code to signal an update
+        """
+        self._outputs[variable_name]._stored_value = new_value
+        #trigger change
+        #self._gvarspace.something()
+
+    def get_input_value(self, variable_name):
+        return self._inputs[variable_name].get_value()
+
+    def get_input_changed(self, variable_name):
+        return self._inputs[variable_name].value_changed()
+
+    def set_output_value(self, variable_name, value):
+        self._output_value_change(variable_name, value)
+
+    def get_flags(self):
+        """Reads flags; will get cleared
+        """
+        flags = self._flags
+        self._flags.clear()
+        return flags
 
     def cycle(self):
         pass
