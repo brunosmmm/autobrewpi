@@ -4,6 +4,7 @@ from vspace import VSpaceDriver, VSpaceInput, VSpaceOutput, VSpaceParameter
 import time
 from collections import deque
 import re
+import logging
 
 _GADGET_DRIVER_REGEX = re.compile(r'([a-zA-Z]+)([0-9]+)_([a-zA-Z0-9]+)')
 
@@ -114,6 +115,8 @@ class GadgetVariableSpace(StoppableThread):
 
         super(GadgetVariableSpace, self).__init__()
 
+        self.logger = logging.getLogger('AutoBrew.GVarSpace')
+
         self._hcli = HbusClient()
         self._guid = gadget_uid
         self._scan_interval = scan_interval
@@ -182,20 +185,24 @@ class GadgetVariableSpace(StoppableThread):
 
     def _scan_values(self):
 
-        for var in self._varspace.values():
+        for var_name, var in self._varspace.iteritems():
             if var._rd:
                 try:
                     value = self._hcli.read_slave_object(self._gaddr, var._idx)
                     if var._value != value:
+                        print 'was {}, is {}'.format(var._value, value)
                         #trigger systemwide changes
+                        self.logger.debug('detected a change of value in '
+                                          'gadget variable "{}", propagating...'.format(var_name))
                         if var.get_output_port_id() is not None:
-                            _propagate_value(var.get_output_port_id(), value)
+                            self._propagate_value(var.get_output_port_id(), value)
 
                     var._value = value
                     if var._old:
                         var._old = False
                 except Exception:
                     #could not read
+                    self.logger.debug('failed to read variable "{}"'.format(value_name))
                     var._old = True
 
             time.sleep(0.1)
@@ -342,6 +349,9 @@ class GadgetVariableSpace(StoppableThread):
         if output_variable not in self._drivers[instance_name]._outputs:
             raise KeyError('invalid output name: {}'.format(output_variable))
 
+        self.logger.debug('instance "{}" registered a change'
+                          ' in output "{}", propagating...'.format(instance_name, output_variable))
+
         #todo avoid deadlocks (more like infinite loop) here
 
         #get connection list and update
@@ -359,10 +369,14 @@ class GadgetVariableSpace(StoppableThread):
         for connected_to in space[port_global_id].get_connected_to():
             #propagate
             if connected_to in self._process_space_port_matrix:
+                self.logger.debug('propagating value through '
+                                  'process space port {}'.format(connected_to))
                 port_descriptor = self._process_space_port_matrix[connected_to]
                 self._drivers[port_descriptor.get_linked_instance_name()]._inputs[port_descriptor.get_linked_port_name()].set_value(new_value)
             elif connected_to in self._gadget_space_port_matrix:
                 #gadget variable, set
+                self.logger.debug('propagating value through '
+                                  'gadget space port {}'.format(connected_to))
                 port_descriptor = self._gadget_space_port_matrix[connected_to]
                 self.__setattr__(port_descriptor.get_linked_port_name(), new_value)
 
