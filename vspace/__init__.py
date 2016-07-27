@@ -8,6 +8,9 @@ IO_VARIABLE_TYPES = [
     'BYTE'
 ]
 
+def ParameterLockedError(Exception):
+    pass
+
 def _check_variable_dtype(wanted_type, value):
     error = False
 
@@ -75,6 +78,16 @@ class VSpaceParameter(VSpaceInput):
     def __init__(self, var_type, initial_value = None):
         super(VSpaceParameter, self).__init__(var_type, initial_value)
 
+    def set_value(self, value):
+
+        if self._parent is not None:
+            if self._parent.parameters_locked():
+                raise ParameterLockedError('parameter is locked by driver')
+        else:
+            raise ParameterLockedError('cannot determine parameter lock state!')
+
+        super(VSpaceParameter, self).set_value(value)
+
 class VSpaceOutput(VSpacePort):
     def __init__(self, dtype, initial_value = None):
         super(VSpaceOutput, self).__init__(dtype)
@@ -110,6 +123,19 @@ class VSpaceDriver(object):
 
         #flags
         self._flags = set()
+
+    def __getattr__(self, attr_name):
+        #check if theres such an input
+        if attr_name.lstrip('__') in self._inputs:
+            return self.get_input_value(attr_name.lstrip('__'))
+
+        return super(VSpaceDriver, self).__getattribute__(attr_name)
+
+    def __setattr__(self, attr_name, value):
+        if attr_name.lstrip('__') in self._outputs:
+            self.set_output_value(attr_name.lstrip('__'), value)
+        else:
+            super(VSpaceDriver, self).__setattr__(attr_name, value)
 
     def _set_flag(self, flag):
         if flag in self._AVAILABLE_FLAGS:
@@ -155,6 +181,11 @@ class VSpaceDriver(object):
         flags = self._flags
         self._flags.clear()
         return flags
+
+    def parameters_locked(self):
+        """Returns if parameters are locked
+        """
+        return False
 
     def cycle(self):
         pass
