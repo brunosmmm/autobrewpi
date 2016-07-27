@@ -68,13 +68,13 @@ class VSpacePortDescriptor(object):
 
         self._connection_list = set()
 
-    def connect_port(self, connect_to):
+    def connect_port(self, connect_to, dont_recurse=False):
         if self._dir == 'input':
             if len(self._connection_list) > 0:
                 raise IOError('cannot connect two ports to an input')
 
-        if connect_to._dir == 'input':
-            raise IOError('cannot connect input to input')
+            if connect_to._dir == 'input':
+                raise IOError('cannot connect input to input')
 
         elif self._dir == 'output':
             if connect_to._dir == 'output':
@@ -83,14 +83,19 @@ class VSpacePortDescriptor(object):
         else:
             raise IOError('unknown error!')
 
-            #add to list
+        #add to list
         self._connection_list.add(connect_to._pid)
 
-    def disconnect_port(self, connected_to):
+        #connect other to this (only do it once!!)
+        if dont_recurse is False:
+            connect_to.connect_port(self, dont_recurse=True)
+
+    def disconnect_port(self, connected_to, dont_recurse=False):
         if connected_to._pid in self._connection_list:
             self._connection_list.remove(connected_to._pid)
 
-            connected_to.disconnect_port(self)
+            if dont_recurse is False:
+                connected_to.disconnect_port(self, dont_recurse=True)
 
     def get_connected_to(self):
         return list(self._connection_list)
@@ -267,7 +272,7 @@ class GadgetVariableSpace(StoppableThread):
         else:
             space_to = self._gadget_space_port_matrix
 
-        space_from[port_from].connect_port(self.space_to[port_to])
+        space_from[port_from].connect_port(space_to[port_to])
 
     def disconnect_pspace_ports(self, port_from, port_to):
         if port_from not in self._process_space_port_matrix:
@@ -289,6 +294,24 @@ class GadgetVariableSpace(StoppableThread):
             space_to = self._gadget_space_port_matrix
 
         space_from[port_from].disconnect_port(space_to[port_to])
+
+    def get_driver_ports(self, instance_name):
+        inputs = {}
+        outputs = {}
+
+        if instance_name == 'gadget':
+            space = self._gadget_space_port_matrix
+        else:
+            space = self._process_space_port_matrix
+
+        for port_id, port_object in space.iteritems():
+            if port_object.get_linked_instance_name() == instance_name:
+                if port_object._dir == 'input':
+                    inputs[port_id] = port_object
+                elif port_object._dir == 'output':
+                    outputs[port_id] = port_object
+
+        return {'inputs': inputs, 'outputs': outputs}
 
     def get_available_var_by_type(self, var_type):
         pass
