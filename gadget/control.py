@@ -190,7 +190,6 @@ class GadgetVariableSpace(StoppableThread):
                 try:
                     value = self._hcli.read_slave_object(self._gaddr, var._idx)
                     if var._value != value:
-                        print 'was {}, is {}'.format(var._value, value)
                         #trigger systemwide changes
                         self.logger.debug('detected a change of value in '
                                           'gadget variable "{}", propagating...'.format(var_name))
@@ -202,7 +201,7 @@ class GadgetVariableSpace(StoppableThread):
                         var._old = False
                 except Exception:
                     #could not read
-                    self.logger.debug('failed to read variable "{}"'.format(value_name))
+                    self.logger.debug('failed to read variable "{}"'.format(var_name))
                     var._old = True
 
             time.sleep(0.1)
