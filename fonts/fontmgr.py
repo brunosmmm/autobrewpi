@@ -1,10 +1,13 @@
 from cfparse import CFontParser
 import json
 import re
+import logging
 
 class FontManager(object):
 
     def __init__(self, config_file='fonts/fontcfg.json'):
+
+        self.logger = logging.getLogger('AutoBrew.FontManager')
 
         font_config = None
         self._fonts = {}
@@ -13,8 +16,8 @@ class FontManager(object):
                 font_config = json.load(f)
 
         except IOError as e:
-            #print 'could not load font configuration file: {}'.format(e.message)
-            raise
+            self.logger.warning('could not load font '
+                                'configuration from file: {}'.format(config_file))
 
         if font_config is not None:
             #load fonts
@@ -32,18 +35,19 @@ class FontManager(object):
                             parser = CFontParser(f.readlines(), int(font_desc['dsize']))
                     except IOError:
                         #ignore font, couldnt load
-                        # todo: LOG
-                        print 'could not load font: {}'.format(font_desc['path'])
+                        self.logger.warning('could not load font'
+                                            ': {}, ignoring'.format(font_desc['path']))
+
                         continue
 
                     font_data = parser.get_font_array()
                 else:
-                    print 'regex test failed for {}'.format(font_desc['path'])
+                    self.logger.warning('regex test failed for {}'.format(font_desc['path']))
 
                 if font_data is not None:
-                    print 'loaded font {} (w:{}, h:{})'.format(font_name,
-                                                               font_data.font_w,
-                                                               font_data.font_h)
+                    self.logger.debug('loaded font {} (w:{}, h:{})'.format(font_name,
+                                                                           font_data.font_w,
+                                                                           font_data.font_h))
                     self._fonts[font_name] = font_data
 
     def get_font_char(self, font_name, char_idx):
