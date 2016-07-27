@@ -8,7 +8,7 @@ IO_VARIABLE_TYPES = [
     'BYTE'
 ]
 
-def _check_variable_dtype(self, wanted_type, value):
+def _check_variable_dtype(wanted_type, value):
     error = False
 
     if wanted_type == 'BOOLEAN':
@@ -23,10 +23,11 @@ def _check_variable_dtype(self, wanted_type, value):
         raise TypeError('invalid python type for variable type {}'.format(wanted_type))
 
 class VSpacePort(object):
-    def __init__(self, dtype, global_id=None):
+    def __init__(self, dtype, tags=[], global_id=None):
         self._dtype = dtype
         self._global_id = global_id
         self._parent = None
+        self._tags = set(tags)
 
     def set_parent(self, parent_object):
         self._parent = parent_object
@@ -36,6 +37,15 @@ class VSpacePort(object):
 
     def get_global_port_id(self):
         return self._global_id
+
+    def get_tags(self):
+        return list(self._tags)
+
+    def add_tag(self, tag):
+        self._tags.add(tag)
+
+    def remove_tag(self, tag):
+        self._tags.remove(tag)
 
 class VSpaceInput(VSpacePort):
     def __init__(self, dtype, initial_value = None):
