@@ -213,12 +213,12 @@ class GadgetVariableSpace(StoppableThread):
                 return self._varspace[name].get_value()
         return super(GadgetVariableSpace, self).__getattribute__(name)
 
-    def register_driver(self, driver_class, instance_name):
+    def register_driver(self, driver_class, instance_name, **kwargs):
 
         if instance_name in self._drivers:
             raise ValueError('instance name already allocated')
 
-        driver_object = driver_class()
+        driver_object = driver_class(**kwargs)
         driver_object._gvarspace = self
         driver_object._instance_name = instance_name
 
@@ -312,6 +312,25 @@ class GadgetVariableSpace(StoppableThread):
                     outputs[port_id] = port_object
 
         return {'inputs': inputs, 'outputs': outputs}
+
+    def find_port_id(self, instance_name, port_name, port_direction):
+        if instance_name == 'gadget':
+            if port_direction == 'input':
+                return self._varspace[port_name].get_input_port_id()
+            elif port_direction == 'output':
+                return self._varspace[port_name].get_output_port_id()
+            else:
+                raise ValueError('invalid port name: {}'.format(port_name))
+        elif instance_name in self._drivers:
+            if port_direction == 'input':
+                return self._drivers[instance_name]._inputs[port_name].get_global_port_id()
+            elif port_direction == 'output':
+                return self._drivers[instance_name]._outputs[port_name].get_global_port_id()
+            else:
+                raise ValueError('invalid port name: {}'.format(port_name))
+        else:
+            raise ValueError('invalid instance: {}'.format(instance_name))
+
 
     def get_available_var_by_type(self, var_type):
         pass
