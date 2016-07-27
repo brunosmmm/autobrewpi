@@ -1,0 +1,41 @@
+{
+    "driver_classes": {
+        "HystController": "vspace.hystctl",
+        "ByteComp": "vspace.bytecomp",
+        "ByteExp": "vspace.byteexp"
+    },
+
+    "driver_instances" : {
+        "HystCtl1": "HystController",
+        "HystCtl2": "HystController",
+        "GOutBits": "ByteComp",
+        "GInBits": "ByteExp"
+    },
+
+    "required_connections": [
+        {
+            "port_from": {
+                "instance_name": "GOutBits",
+                "port_name": "ByteOut",
+                "port_direction": "output"
+            },
+            "port_to": {
+                "instance_name": "gadget",
+                "port_name": "Doutp1_STATE",
+                "port_direction": "input"
+            }
+        },
+        {
+            "port_from": {
+                "instance_name": "gadget",
+                "port_name": "Dinp1_STATE",
+                "port_direction": "output"
+            },
+            "port_to": {
+                "instance_name": "GInBits",
+                "port_name": "ByteIn",
+                "port_direction": "input"
+            }
+        }
+    ]
+}
