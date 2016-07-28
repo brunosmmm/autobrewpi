@@ -20,7 +20,7 @@
         "HLTCtlHystType": "HystCtl1.HystType",
         "HLTTemp": "gadget.TmpSens1_TMP",
         "MLTTemp": "gadget.TmpSens2_TMP",
-        "PumpCtl": "ByteComp.Bit0"
+        "PumpCtl": "GOutBits.Bit2"
     },
     "hystctl": {
         "type": "updown",

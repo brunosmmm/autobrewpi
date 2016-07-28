@@ -4,7 +4,7 @@ import re
 import logging
 from datetime import datetime, timedelta
 
-_PORT_REGEX = re.compile(r'([a-zA-Z0-9]+)\.([a-zA-Z0-9]+)')
+_PORT_REGEX = re.compile(r'([a-zA-Z0-9_]+)\.([a-zA-Z0-9_]+)')
 
 class MashController(VSpaceDriver):
 
@@ -38,6 +38,7 @@ class MashController(VSpaceDriver):
         except IOError:
             raise
 
+    def post_init(self):
         #make connections if configuration present
         for port_name, connect_to in self._mash_config['connections'].iteritems():
             if connect_to is None:
@@ -66,7 +67,7 @@ class MashController(VSpaceDriver):
                 except ValueError:
                     self.logger.warning('could not find port {} or instance {}'.format(m.group(2), m.group(1)))
                     continue
-                self._gvarspace.connect_pspace_ports(self._inputs[port_name].get_global_port_id(), connect_to_id)
+                self._gvarspace.connect_pspace_ports(self._outputs[port_name].get_global_port_id(), connect_to_id)
             else:
                 self.logger.warning('unknown mashctl port: {}'.format(port_name))
                 continue
