@@ -224,17 +224,29 @@ class GadgetVariableSpace(StoppableThread):
         if instance_name in self._drivers:
             raise ValueError('instance name already allocated')
 
+        self.logger.debug('registering instance {} with {} inputs and {} outputs'.format(instance_name,
+                                                                                         len(driver_class._inputs),
+                                                                                         len(driver_class._outputs)))
+
         driver_object = driver_class(**kwargs)
         driver_object._gvarspace = self
         driver_object._instance_name = instance_name
 
         self._process_driver_ports(driver_object)
+        self.logger.debug('driver object: {}'.format(driver_object))
 
         self._drivers[instance_name] = driver_object
 
     def _process_driver_ports(self, driver_object):
+        self.logger.debug('processing driver ports')
+        self.logger.debug('Inputs:')
         for inp_name, inp_obj in driver_object._inputs.iteritems():
+            self.logger.debug('input_name: {}'.format(inp_name))
+            #W T F
             port_id = self._new_port_added()
+            self.logger.debug('assigning port number {} to port {}.{}'.format(port_id,
+                                                                              driver_object.get_instance_name(),
+                                                                              inp_name))
             port = VSpacePortDescriptor('input',
                                         port_id,
                                         driver_object.get_instance_name(),
@@ -243,8 +255,13 @@ class GadgetVariableSpace(StoppableThread):
 
             self._process_space_port_matrix[port_id] = port
 
+        self.logger.debug('Outputs:')
         for out_name, out_obj in driver_object._outputs.iteritems():
+            self.logger.debug('output_name: {}'.format(out_name))
             port_id = self._new_port_added()
+            self.logger.debug('assigning port number {} to port {}.{}'.format(port_id,
+                                                                              driver_object.get_instance_name(),
+                                                                              out_name))
             port = VSpacePortDescriptor('output',
                                         port_id,
                                         driver_object.get_instance_name(),
@@ -259,6 +276,7 @@ class GadgetVariableSpace(StoppableThread):
         return current_id
 
     def connect_pspace_ports(self, port_from, port_to):
+        self.logger.debug('connecting port {} to port {}'.format(port_from, port_to))
         if port_from not in self._process_space_port_matrix:
             #check if it is a gadget space variable
             if port_from not in self._gadget_space_port_matrix:
@@ -270,11 +288,17 @@ class GadgetVariableSpace(StoppableThread):
 
         if port_from in self._process_space_port_matrix:
             space_from = self._process_space_port_matrix
+            self.logger.debug('port {}: {}.{}'.format(port_from,
+                                                      space_from[port_from].get_linked_instance_name(),
+                                                      space_from[port_from].get_linked_port_name()))
         else:
             space_from = self._gadget_space_port_matrix
 
         if port_to in self._process_space_port_matrix:
             space_to = self._process_space_port_matrix
+            self.logger.debug('port {}: {}.{}'.format(port_to,
+                                                      space_to[port_to].get_linked_instance_name(),
+                                                      space_to[port_to].get_linked_port_name()))
         else:
             space_to = self._gadget_space_port_matrix
 
