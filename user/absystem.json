@@ -64,6 +64,30 @@
                 "port_name": "CurrTemp",
                 "port_direction": "input"
             }
+        },
+        {
+            "port_from": {
+                "instance_name": "HystCtl1",
+                "port_name": "CtlOut",
+                "port_direction": "output"
+            },
+            "port_to": {
+                "instance_name": "GOutBits",
+                "port_name": "Bit0",
+                "port_direction": "input"
+            }
+        },
+        {
+            "port_from": {
+                "instance_name": "HystCtl2",
+                "port_name": "CtlOut",
+                "port_direction": "output"
+            },
+            "port_to": {
+                "instance_name": "GOutBits",
+                "port_name": "Bit1",
+                "port_direction": "input"
+            }
         }
     ]
 }
