@@ -112,8 +112,11 @@ class VSpaceDriver(object):
     _inputs = {}
     _outputs = {}
 
-    def __init__(self):
-        self._gvarspace = None
+    def __init__(self, **kwargs):
+        if 'gvarspace' in kwargs:
+            self._gvarspace = kwargs['gvarspace']
+        else:
+            self._gvarspace = None
         self._instance_name = None
 
         #make a copy of the input/output declaration to isolate different instances

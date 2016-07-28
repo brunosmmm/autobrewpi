@@ -227,9 +227,9 @@ class GadgetVariableSpace(StoppableThread):
         self.logger.debug('registering instance {} with {} inputs and {} outputs'.format(instance_name,
                                                                                          len(driver_class._inputs),
                                                                                          len(driver_class._outputs)))
-
+        kwargs['gvarspace'] = self
         driver_object = driver_class(**kwargs)
-        driver_object._gvarspace = self
+        #driver_object._gvarspace = self
         driver_object._instance_name = instance_name
 
         self._process_driver_ports(driver_object)
