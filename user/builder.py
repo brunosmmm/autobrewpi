@@ -1,5 +1,6 @@
 import importlib
 import json
+from collections import OrderedDict
 
 class SystemBuilder(object):
     def __init__(self, config_file, gadget_vspace):
@@ -9,7 +10,7 @@ class SystemBuilder(object):
 
         try:
             with open(config_file, 'r') as f:
-                config_contents = json.load(f)
+                config_contents = json.load(f, object_pairs_hook=OrderedDict)
         except IOError:
             raise IOError('could not open configuration file')
 
