@@ -17,8 +17,8 @@ class ByteExp(VSpaceDriver):
         'Bit7': VSpaceOutput('BOOLEAN')
     }
 
-    def __init__(self):
-        super(ByteExp, self).__init__()
+    def __init__(self, **kwargs):
+        super(ByteExp, self).__init__(**kwargs)
 
     def update_local_variable(self, *args, **kwargs):
         super(ByteExp, self).update_local_variable(*args, **kwargs)

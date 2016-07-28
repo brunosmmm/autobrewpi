@@ -17,8 +17,8 @@ class ByteComp(VSpaceDriver):
         'ByteOut': VSpaceOutput('BYTE')
     }
 
-    def __init__(self):
-        super(ByteComp, self).__init__()
+    def __init__(self, **kwargs):
+        super(ByteComp, self).__init__(**kwargs)
 
     def update_local_variable(self, *args, **kwargs):
         super(ByteComp, self).update_local_variable(*args, **kwargs)

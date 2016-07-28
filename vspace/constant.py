@@ -6,8 +6,8 @@ class ConstantValue(VSpaceDriver):
         'ConstOut': VSpaceOutput('GENERIC')
         }
 
-    def __init__(self, const_val):
-        super(ConstantValue, self).__init__()
+    def __init__(self, const_val, **kwargs):
+        super(ConstantValue, self).__init__(**kwargs)
 
         self._const_val = const_val
         self._output_set = False

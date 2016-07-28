@@ -14,8 +14,8 @@ class HystController(VSpaceDriver):
         'CtlOut': VSpaceOutput('BOOLEAN')
     }
 
-    def __init__(self):
-        super(HystController, self).__init__()
+    def __init__(self, **kwargs):
+        super(HystController, self).__init__(**kwargs)
 
         self._current_state = 'idle'
         self._deadzone = False
