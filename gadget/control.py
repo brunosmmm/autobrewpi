@@ -237,6 +237,9 @@ class GadgetVariableSpace(StoppableThread):
 
         self._drivers[instance_name] = driver_object
 
+        #call post-initialization hook
+        driver_object.post_init()
+
     def _process_driver_ports(self, driver_object):
         self.logger.debug('processing driver ports')
         self.logger.debug('Inputs:')
