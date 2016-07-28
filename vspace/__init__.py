@@ -1,3 +1,4 @@
+import copy
 
 IO_VARIABLE_TYPES = [
     'POWER_LEVEL',
@@ -114,6 +115,13 @@ class VSpaceDriver(object):
     def __init__(self):
         self._gvarspace = None
         self._instance_name = None
+
+        #make a copy of the input/output declaration to isolate different instances
+        input_copy = copy.deepcopy(self._inputs)
+        output_copy = copy.deepcopy(self._outputs)
+
+        self._inputs = input_copy
+        self._outputs = output_copy
 
         #link ports to driver
         for port_name, port_object in self._inputs.iteritems():
