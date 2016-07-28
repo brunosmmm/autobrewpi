@@ -16,10 +16,10 @@ def _check_variable_dtype(wanted_type, value):
     error = False
 
     if wanted_type == 'BOOLEAN':
-        if not isinstance(bool, value):
+        if not isinstance(value, bool):
             error = True
     elif wanted_type == 'BYTE':
-        if not isinstance(int, value):
+        if not isinstance(value, int):
             error = True
     # todo: check others
 
@@ -197,6 +197,9 @@ class VSpaceDriver(object):
         """Returns if parameters are locked
         """
         return False
+
+    def post_init(self):
+        pass
 
     def cycle(self):
         pass
