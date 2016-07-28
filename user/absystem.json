@@ -2,14 +2,16 @@
     "driver_classes": {
         "HystController": "vspace.hystctl",
         "ByteComp": "vspace.bytecomp",
-        "ByteExp": "vspace.byteexp"
+        "ByteExp": "vspace.byteexp",
+        "MashController": "brewday.mashctl"
     },
 
     "driver_instances" : {
         "HystCtl1": "HystController",
         "HystCtl2": "HystController",
         "GOutBits": "ByteComp",
-        "GInBits": "ByteExp"
+        "GInBits": "ByteExp",
+        "MashCtl": "MashController"
     },
 
     "required_connections": [
@@ -34,6 +36,32 @@
             "port_to": {
                 "instance_name": "GInBits",
                 "port_name": "ByteIn",
+                "port_direction": "input"
+            }
+        },
+        {
+            "port_from": {
+                "instance_name": "gadget",
+                "port_name": "TmpSens1_TMP",
+                "port_direction": "output"
+            },
+            "port_to":
+            {
+                "instance_name": "HystCtl1",
+                "port_name": "CurrTemp",
+                "port_direction": "input"
+            }
+        },
+        {
+            "port_from": {
+                "instance_name": "gadget",
+                "port_name": "TmpSens2_TMP",
+                "port_direction": "output"
+            },
+            "port_to":
+            {
+                "instance_name": "HystCtl2",
+                "port_name": "CurrTemp",
                 "port_direction": "input"
             }
         }

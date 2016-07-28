@@ -27,9 +27,10 @@ class SystemBuilder(object):
 
         #make hardwired connections
         for connection in config_contents['required_connections']:
-            self._gvspace.connect_pspace_ports(self._gvspace.find_port_id(connection['port_from']['instance_name'],
+            port_from = self._gvspace.find_port_id(connection['port_from']['instance_name'],
                                                                           connection['port_from']['port_name'],
-                                                                          connection['port_from']['port_direction']),
-                                               self._gvspace.find_port_id(connection['port_to']['instance_name'],
+                                                                          connection['port_from']['port_direction'])
+            port_to = self._gvspace.find_port_id(connection['port_to']['instance_name'],
                                                                           connection['port_to']['port_name'],
-                                                                          connection['port_to']['port_direction']))
+                                                                          connection['port_to']['port_direction'])
+            self._gvspace.connect_pspace_ports(port_from, port_to)
