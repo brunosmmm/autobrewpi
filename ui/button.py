@@ -12,6 +12,12 @@ class Button(Label, ButtonBehavior):
             super(Button, self).set_state(state)
             self._needs_redrawing()
 
+    def event(self, event):
+        if event['kind'] == 'press':
+            self.set_state('pressed')
+        elif event['kind'] == 'release':
+            self.set_state('normal')
+
     def _get_drawing_instructions(self):
 
         dwg = DrawInstructionGroup(self.draw_prio)

@@ -36,3 +36,6 @@ class UIElement(object):
 
     def _get_drawing_instructions(self):
         return [DrawInstructionGroup()]
+
+    def event(self, event):
+        pass

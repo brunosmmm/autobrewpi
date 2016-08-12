@@ -10,14 +10,11 @@ SCREENBUF_SO_PATH = './lcd/screen.so'
 
 class ScreenBuffer(StoppableThread):
 
-    def __init__(self, width, height, input_client, refresh_interval=0.05):
+    def __init__(self, width, height, input_client, refresh_interval=0.05, screen_on_hook=None):
         super(ScreenBuffer, self).__init__()
         # properties
         self._width = width
         self._height = height
-
-        #font manager
-        self._fmgr = FontManager()
 
         #input client
         self._icli = input_client
@@ -25,6 +22,12 @@ class ScreenBuffer(StoppableThread):
         # display controller
         self._lcd = CDLL(SCREENBUF_SO_PATH)
         self._lcd.SCREEN_Init()
+
+        if screen_on_hook is not None:
+            screen_on_hook()
+
+        #font manager
+        self._fmgr = FontManager()
 
         #screen manager
         self._screens = {}
@@ -53,6 +56,18 @@ class ScreenBuffer(StoppableThread):
         self._icli.attach_callback('encoder.ccw', self._encoder_rotate_ccw)
         self._icli.attach_callback('encoder.press', self._encoder_press)
         self._icli.attach_callback('encoder.release', self._encoder_release)
+        self._icli.attach_callback('switches.press', self._switch_press)
+        self._icli.attach_callback('switches.release', self._switch_release)
+
+    def _switch_press(self, data):
+        if self.activate_screen is not None:
+            self._screens[self.active_screen]._input_event({'event': 'switches.press',
+                                                            'data': data})
+
+    def _switch_release(self, data):
+        if self.activate_screen is not None:
+            self._screens[self.active_screen]._input_event({'event': 'switches.release',
+                                                            'data': data})
 
     def _keypad_keypress(self, data):
         if self.active_screen is not None:
@@ -177,6 +192,14 @@ class ScreenBuffer(StoppableThread):
                 if row_data[i] & (1<<j):
                     self.set_pixel_value(x+j, y+i, color)
 
+    def draw_bitmap(self, x, y, data):
+        for ix in range(0, data.width):
+            for iy in range(0, data.height):
+                if data.getpixel((ix,iy)) < 255:
+                    self.set_pixel_value(x+ix, y+iy, True)
+                else:
+                    self.set_pixel_value(x+ix, y+iy, False)
+
     def draw_font_string(self, x, y, font_name, msg, hjust, vjust, color):
 
         try:
@@ -269,6 +292,8 @@ class ScreenBuffer(StoppableThread):
                     self.draw_font_string(**dwi.kwargs)
                 elif dwi.kind == 'circle':
                     self.draw_circle(**dwi.kwargs)
+                elif dwi.kind == 'bitmap':
+                    self.draw_bitmap(**dwi.kwargs)
 
         #copy screen
         #ptr = (c_ubyte * len(self._screenbuf))(*self._screenbuf)

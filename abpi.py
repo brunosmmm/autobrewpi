@@ -48,8 +48,12 @@ if __name__ == "__main__":
     logger.info('AutoBrew loading...')
 
     icli = ABInputClient()
-    buf = ScreenBuffer(240, 64, icli)
-    gvspace = GadgetVariableSpace(0xff0001)
+    gvspace = GadgetVariableSpace(0xff000001)
+
+    def _turn_lcd_on():
+        gvspace.send_gadget_command(0x05)
+
+    buf = ScreenBuffer(240, 64, icli, screen_on_hook=_turn_lcd_on)
 
     #build system
     sys = SystemBuilder(config_file='user/absystem.json', gadget_vspace=gvspace)

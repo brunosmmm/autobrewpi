@@ -180,6 +180,9 @@ class GadgetVariableSpace(StoppableThread):
 
             obj_idx += 1
 
+    def send_gadget_command(self, command):
+        self.__Gadget_CTL = int(command)
+
     def get_variable_names(self):
         return self._varspace.keys()
 
@@ -193,15 +196,16 @@ class GadgetVariableSpace(StoppableThread):
                         #trigger systemwide changes
                         self.logger.debug('detected a change of value in '
                                           'gadget variable "{}", propagating...'.format(var_name))
+                        self.logger.debug('was: {}, is: {}'.format(var._value, value))
                         if var.get_output_port_id() is not None:
                             self._propagate_value(var.get_output_port_id(), value)
 
                     var._value = value
                     if var._old:
                         var._old = False
-                except Exception:
+                except Exception as e:
                     #could not read
-                    self.logger.debug('failed to read variable "{}"'.format(var_name))
+                    self.logger.debug('failed to read variable "{}": {}'.format(var_name, e.message))
                     var._old = True
 
             time.sleep(0.1)

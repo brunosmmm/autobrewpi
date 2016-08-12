@@ -9,7 +9,9 @@ _INPUT_EVENTS = {
     'encoder.press': ('ENCODER', 0x00),
     'encoder.release': ('ENCODER', 0x03),
     'keypad.press': ('KEYPAD', 0x00),
-    'keypad.release': ('KEYPAD', 0x01)
+    'keypad.release': ('KEYPAD', 0x01),
+    'switches.press' : ('SWITCHES', 0x00),
+    'switches.release': ('SWITCHES', 0x01)
 }
 
 class InvalidEventError(Exception):
@@ -38,6 +40,7 @@ class ABInputClient(StoppableThread):
         socket.connect('tcp://localhost:5556')
         socket.setsockopt_string(zmq.SUBSCRIBE, u'KEYPAD')
         socket.setsockopt_string(zmq.SUBSCRIBE, u'ENCODER')
+        socket.setsockopt_string(zmq.SUBSCRIBE, u'SWITCHES')
 
         while True:
 
