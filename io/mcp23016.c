@@ -6,7 +6,7 @@
 #include <string.h>
 //#define MCP_DEBUG
 
-#define MAXIMUM_RETRIES 100
+#define MAXIMUM_RETRIES 10
 static unsigned char GP0VAL = 0x00;
 static unsigned char GP1VAL = 0x00;
 static int fd = 0;
@@ -19,12 +19,28 @@ static MCP_IOCHANGE state_change;
 static void _iochange_isr(void)
 {
     unsigned char pin_states[16];
+    unsigned int i = 0;
 
     if (state_change)
     {
         MCP_readPins(0x01, pin_states);
         (state_change)(pin_states);
     }
+
+    #ifdef MCP_DEBUG
+    printf("MCP: Interrupt: pin states = [");
+    for (i = 0; i < 16; i++)
+    {
+        printf("%d", (pin_states[i]) ? 1 : 0);
+        if (i == 15)
+        {
+            printf("]\n");
+        }
+        else{
+            printf(" ");
+        }
+    }
+    #endif
 }
 
 void MCP_Init(unsigned char address, unsigned char fast, MCP_IOCHANGE statechange)

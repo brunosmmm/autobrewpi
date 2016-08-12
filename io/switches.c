@@ -16,24 +16,31 @@ void SWITCHES_Init(void)
     MCP_setDirection(SWITCH_3_PIN, MCP_DIRECTION_IN);
     MCP_setDirection(SWITCH_4_PIN, MCP_DIRECTION_IN);
     MCP_setDirection(SWITCH_5_PIN, MCP_DIRECTION_IN);
+    MCP_setDirection(SWITCH_6_PIN, MCP_DIRECTION_IN);
 
     last_state = 0x00;
 
 }
 
-void SWITCHES_SetPinStates(unsigned char* state)
+static void _sw_internal_cycle(unsigned char async, unsigned char * state)
 {
     unsigned char pin_states[16];
     unsigned char debounced_states;
     unsigned int i;
     ABUEVT event;
 
-    if (!state)
+    if (!async)
     {
-        return;
+        MCP_readPins(0x01, pin_states);
     }
-
-    memcpy(pin_states, state, sizeof(unsigned char)*16);
+    else
+    {
+        if (!state)
+        {
+            return;
+        }
+        memcpy(pin_states, state, sizeof(unsigned char)*16);
+    }
 
     //debounce
     DEBOUNCE_UpdState(&debounce_sw, 0x00, pin_states[SWITCH_1_PIN]);
@@ -41,10 +48,11 @@ void SWITCHES_SetPinStates(unsigned char* state)
     DEBOUNCE_UpdState(&debounce_sw, 0x02, pin_states[SWITCH_3_PIN]);
     DEBOUNCE_UpdState(&debounce_sw, 0x03, pin_states[SWITCH_4_PIN]);
     DEBOUNCE_UpdState(&debounce_sw, 0x04, pin_states[SWITCH_5_PIN]);
+    DEBOUNCE_UpdState(&debounce_sw, 0x05, pin_states[SWITCH_6_PIN]);
     DEBOUNCE_GetStates(&debounce_sw, &debounced_states);
 
     //generate events
-    for (i = 0; i < 5; i++)
+    for (i = 0; i < 6; i++)
     {
         if (debounced_states & (1<<i))
         {
@@ -53,7 +61,7 @@ void SWITCHES_SetPinStates(unsigned char* state)
                 //switch press event
                 event.unit = ABU_UNIT_SWITCHES;
                 event.type = ABU_EVT_SWPRESS;
-                event.data = i;
+                event.data = i + 0x30;
                 ABUSER_trigger_evt(event);
             }
         }
@@ -64,7 +72,7 @@ void SWITCHES_SetPinStates(unsigned char* state)
                 //switch release event
                 event.unit = ABU_UNIT_SWITCHES;
                 event.type = ABU_EVT_SWRELEASE;
-                event.data = i;
+                event.data = i + 0x30;
                 ABUSER_trigger_evt(event);
             }
         }
@@ -72,4 +80,14 @@ void SWITCHES_SetPinStates(unsigned char* state)
 
     //save state
     last_state = debounced_states;
+}
+
+void SWITCHES_SetPinStates(unsigned char* state)
+{
+    _sw_internal_cycle(0x01, state);
+}
+
+void SWITCHES_Cycle(void)
+{
+    _sw_internal_cycle(0x00, 0x00);
 }

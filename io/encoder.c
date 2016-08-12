@@ -16,7 +16,9 @@ void ENCODER_Init(void)
 
     DEBOUNCE_Init(&debounce_ab);
 
+    #ifdef ENCODER_BTN_ENABLED
     MCP_setDirection(ENCODER_BTN_PIN, MCP_DIRECTION_IN);
+    #endif
     MCP_setDirection(ENCODER_A_PIN, MCP_DIRECTION_IN);
     MCP_setDirection(ENCODER_B_PIN, MCP_DIRECTION_IN);
 
@@ -47,6 +49,7 @@ static void _encoder_internal_cycle(unsigned char async, unsigned char * states)
     DEBOUNCE_UpdState(&debounce_ab, 0x01, pin_states[ENCODER_B_PIN]);
     DEBOUNCE_GetStates(&debounce_ab, &debounced_states);
 
+    #ifdef ENCODER_BTN_ENABLED
     //check button
     if (!pin_states[ENCODER_BTN_PIN])
     {
@@ -74,6 +77,7 @@ static void _encoder_internal_cycle(unsigned char async, unsigned char * states)
             ABUSER_trigger_evt(event);
         }
     }
+    #endif
 
     //check encoder position
     if ((!(debounced_states & 0x01)) && a_state)

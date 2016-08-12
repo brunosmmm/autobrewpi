@@ -14,7 +14,7 @@ void _iochange(unsigned char * states)
 {
     memcpy(pin_states, states, sizeof(unsigned char)*16);
     ENCODER_SetPinStates(pin_states);
-    SWITCHES_SetPinStates(pin_states);
+    //SWITCHES_SetPinStates(pin_states);
 }
 
 int main(void)
@@ -35,7 +35,9 @@ int main(void)
     while(1)
     {
 
+        ENCODER_Cycle();
         KEYPAD_Cycle();
+        SWITCHES_Cycle();
 
         usleep(100);
     }
