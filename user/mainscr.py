@@ -15,10 +15,10 @@ class ABMainScreen(Screen):
         #ab_img = Image(path='user/beer.png', x=190, y=2)
 
         #lower buttons
-        self._footb_l = Button(text='MashCtl', font='8x8', x=0, y=self.h-self._foot_btn_height-1, w=self.w/4-1, h=self._foot_btn_height)
+        self._footb_l = Button(text='', font='8x8', x=0, y=self.h-self._foot_btn_height-1, w=self.w/4-1, h=self._foot_btn_height)
         self._footb_ml = Button(text='', font='8x8', x=self.w/4, y=self.h-self._foot_btn_height-1, w=self.w/4-1, h=self._foot_btn_height)
         self._footb_mr = Button(text='', font='8x8', x=self.w/2, y=self.h-self._foot_btn_height-1, w=self.w/4-1, h=self._foot_btn_height)
-        self._footb_r = Button(text='', font='8x8', x=3*self.w/4, y=self.h-self._foot_btn_height-1, w=self.w/4-1, h=self._foot_btn_height)
+        self._footb_r = Button(text='MashCtl', font='8x8', x=3*self.w/4, y=self.h-self._foot_btn_height-1, w=self.w/4-1, h=self._foot_btn_height)
 
         #self.add_element(ab_img)
         self.add_element(ab_name)
@@ -28,22 +28,6 @@ class ABMainScreen(Screen):
         self.add_element(self._footb_r)
 
     def _input_event(self, evt):
-        print evt
-        if evt['event'] == 'switches.press':
-            if evt['data'] == 0:
-                self._footb_l.set_state('pressed')
-            elif evt['data'] == 1:
-                self._footb_ml.set_state('pressed')
-            elif evt['data'] == 2:
-                self._footb_mr.set_state('pressed')
-            elif evt['data'] == 3:
-                self._footb_r.set_state('pressed')
-        elif evt['event'] == 'switches.release':
-            if evt['data'] == 0:
-                self._footb_l.set_state('normal')
-            elif evt['data'] == 1:
-                self._footb_ml.set_state('normal')
-            elif evt['data'] == 2:
-                self._footb_mr.set_state('normal')
-            elif evt['data'] == 3:
-                self._footb_r.set_state('normal')
+        if evt['event'] == 'switches.release':
+            if evt['data'] == '3':
+                self._parent.activate_screen('mash')
