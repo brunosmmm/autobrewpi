@@ -12,6 +12,7 @@ from vspace.constant import ConstantValue
 from vspace.byteexp import ByteExp
 from vspace.bytecomp import ByteComp
 from user.mainscr import ABMainScreen
+from user.mashctlscr import ABMashScreen
 from user.builder import SystemBuilder
 from time import sleep
 from datetime import datetime
@@ -31,6 +32,9 @@ if __name__ == "__main__":
         icli.stop()
         icli.join()
         exit(0)
+
+    def shutdown():
+        _handle_signal()
 
     signal.signal(signal.SIGTERM, _handle_signal)
 
@@ -61,7 +65,9 @@ if __name__ == "__main__":
     gvspace._debug_dump_port_list()
 
     main_screen = ABMainScreen()
+    mash_screen = ABMashScreen(varspace=gvspace)
     buf.add_screen('main', main_screen)
+    buf.add_screen('mash', mash_screen)
 
     #start threads
     buf.start()
