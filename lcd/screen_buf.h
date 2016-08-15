@@ -14,5 +14,6 @@ void SCREEN_Flip(void);
 void SCREEN_Draw(void);
 void SCREEN_Erase(void);
 void SCREEN_Copy(unsigned char* source);
+void SCREEN_Blank(void);
 
 #endif /* SCREEN_BUF_H */

@@ -122,6 +122,11 @@ void SCREEN_Erase(void)
     memset(ScreenBuf_BACK, 0, SCREEN_MEM_SIZE);
 }
 
+void SCREEN_Blank(void)
+{
+    _lcd_erase();
+}
+
 void _lcd_erase(void)
 {
     unsigned int i;
