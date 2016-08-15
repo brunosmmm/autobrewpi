@@ -46,7 +46,7 @@ class GadgetWatcher(VSpaceDriver):
             #reset gadget state on first read
             self.log_info('first update')
             state = self.get_input_value('GadgetState')
-            self.log_info('state is: {}'.format(state))
+            self.log_info('state is: {}'.format(hex(state)))
             if state & self._GADGET_FLAG_PANIC:
                 self.set_output_value('GadgetControl', self._GADGET_CMD_LIFT_PANIC)
             else:
