@@ -107,6 +107,9 @@ class VSpacePortDescriptor(object):
     def get_linked_port_name(self):
         return self._inst_pname
 
+    def get_direction(self):
+        return self._dir
+
 class GadgetVariableSpace(StoppableThread):
 
     _initialized = False
@@ -198,6 +201,7 @@ class GadgetVariableSpace(StoppableThread):
                                           'gadget variable "{}", propagating...'.format(var_name))
                         self.logger.debug('was: {}, is: {}'.format(var._value, value))
                         if var.get_output_port_id() is not None:
+                            #propagate
                             self._propagate_value(var.get_output_port_id(), value)
 
                     var._value = value
@@ -311,6 +315,34 @@ class GadgetVariableSpace(StoppableThread):
 
         space_from[port_from].connect_port(space_to[port_to])
 
+        #make sure which is input and which is output
+        input_port = None
+        output_port = None
+        if space_from[port_from].get_direction() == 'input':
+            input_port = space_from[port_from]
+        elif space_from[port_from].get_direction() == 'output':
+            output_port = space_from[port_from]
+
+        if space_to[port_to].get_direction() == 'input':
+            input_port = space_to[port_to]
+        elif space_to[port_to].get_direction() == 'output':
+            output_port = space_to[port_to]
+
+        #force update
+        if output_port is not None:
+            if output_port.get_linked_instance_name() == 'gadget':
+                value = self._varspace[output_port.get_linked_port_name()].get_value()
+            else:
+                value = self._drivers[output_port.get_linked_instance_name()]._outputs[output_port.get_linked_port_name()].get_stored_value()
+
+            if input_port is not None:
+                if value is not None:
+                    if input_port.get_linked_instance_name() == 'gadget':
+                        self._varspace[input_port.get_linked_port_name()].set_value(value)
+                    else:
+                        self._drivers[input_port.get_linked_instance_name()].update_local_variable(input_port.get_linked_port_name(), value)
+
+
     def disconnect_pspace_ports(self, port_from, port_to):
         if port_from not in self._process_space_port_matrix:
             if port_from not in self._gadget_space_port_matrix:
@@ -402,7 +434,7 @@ class GadgetVariableSpace(StoppableThread):
                 self.logger.debug('propagating value through '
                                   'process space port {}'.format(connected_to))
                 port_descriptor = self._process_space_port_matrix[connected_to]
-                self._drivers[port_descriptor.get_linked_instance_name()]._inputs[port_descriptor.get_linked_port_name()].set_value(new_value)
+                self._drivers[port_descriptor.get_linked_instance_name()].update_local_variable(port_descriptor.get_linked_port_name(), new_value)
             elif connected_to in self._gadget_space_port_matrix:
                 #gadget variable, set
                 self.logger.debug('propagating value through '
@@ -426,6 +458,28 @@ class GadgetVariableSpace(StoppableThread):
                                                            port_object.get_linked_port_name(),
                                                            port_object._dir,
                                                            port_object._connection_list)
+
+    def find_driver_by_classname(self, classname):
+        instance_list = []
+        for instance_name, instance_object in self._drivers.iteritems():
+            if instance_object.__class__.__name__ == classname:
+                instance_list.append(instance_name)
+
+        return instance_list
+
+    def call_driver_method(self, instance_name, method_name, **kwargs):
+        if instance_name in self._drivers:
+            return self._drivers[instance_name].method_name(**kwargs)
+        else:
+            raise KeyError('Invalid instance name: {}'.format(instance_name))
+
+    def driver_log(self, instance_name, log_level, message):
+        if log_level == 'ERR':
+            self.logger.error('{}: {}'.format(instance_name, message))
+        elif log_level == 'WARN':
+            self.logger.warning('{}: {}'.format(instance_name, message))
+        elif log_level == 'INFO':
+            self.logger.info('{}: {}'.format(instance_name, message))
 
     def run(self):
 
