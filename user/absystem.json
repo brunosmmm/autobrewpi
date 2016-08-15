@@ -3,7 +3,9 @@
         "HystController": "vspace.hystctl",
         "ByteComp": "vspace.bytecomp",
         "ByteExp": "vspace.byteexp",
-        "MashController": "brewday.mashctl"
+        "MashController": "brewday.mashctl",
+        "GadgetWatcher": "gadget.gwatch"
+
     },
 
     "driver_instances" : {
@@ -11,7 +13,8 @@
         "HystCtl2": "HystController",
         "GOutBits": "ByteComp",
         "GInBits": "ByteExp",
-        "MashCtl": "MashController"
+        "MashCtl": "MashController",
+        "GWatch": "GadgetWatcher"
     },
 
     "required_connections": [
