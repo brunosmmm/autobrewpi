@@ -75,6 +75,9 @@ class MashController(VSpaceDriver):
         self.default_configuration()
         self.enter_idle()
 
+    def get_state(self):
+        return self._state
+
     def default_configuration(self):
         self.set_output_value('HLTCtlSetPoint', 0)
         self.set_output_value('HLTCtlHystLevel', float(self._mash_config['hystctl']['level']))
