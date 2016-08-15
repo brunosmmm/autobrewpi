@@ -20,11 +20,49 @@ def _check_variable_dtype(wanted_type, value):
             error = True
     elif wanted_type == 'BYTE':
         if not isinstance(value, int):
-            error = True
+            #try to convert
+            try:
+                val = int(value, 2)
+                return
+            except:
+                error = True
+
+            try:
+                val = int(value, 16)
+                return
+            except:
+                error = True
+
+            try:
+                val = int(value)
+                return
+            except:
+                error = True
     # todo: check others
 
     if error:
         raise TypeError('invalid python type for variable type {}'.format(wanted_type))
+
+def _autoconvert_variable_value(wanted_type, value):
+    val = None
+    if wanted_type == 'BYTE':
+        try:
+            val = int(value)
+            return val
+        except:
+            pass
+        try:
+            val = int(value, 2)
+            return val
+        except:
+            pass
+        try:
+            val = int(value, 16)
+            return val
+        except:
+            pass
+
+    return val
 
 class VSpacePort(object):
     def __init__(self, dtype, tags=[], global_id=None):
@@ -60,10 +98,11 @@ class VSpaceInput(VSpacePort):
     def set_value(self, value):
 
         _check_variable_dtype(self._dtype, value)
+        val = _autoconvert_variable_value(self._dtype, value)
 
-        if value != self._value:
+        if val != self._value:
             self._value_changed = True
-        self._value = value
+        self._value = val
 
     def get_value(self):
         #clear flags
@@ -137,8 +176,13 @@ class VSpaceDriver(object):
 
     def __getattr__(self, attr_name):
         #check if theres such an input
-        if attr_name.lstrip('__') in self._inputs:
-            return self.get_input_value(attr_name.lstrip('__'))
+        var_name = attr_name.split('__')[1]
+        if var_name in self._inputs:
+            return self.get_input_value(var_name)
+
+        #check for outputs
+        if var_name in self._outputs:
+            return self.get_output_stored_value(var_name)
 
         return super(VSpaceDriver, self).__getattribute__(attr_name)
 
@@ -177,6 +221,9 @@ class VSpaceDriver(object):
     def get_input_value(self, variable_name):
         return self._inputs[variable_name].get_value()
 
+    def get_output_stored_value(self, variable_name):
+        return self._outputs[variable_name].get_stored_value()
+
     def get_input_changed(self, variable_name):
         return self._inputs[variable_name].value_changed()
 
@@ -203,3 +250,15 @@ class VSpaceDriver(object):
 
     def cycle(self):
         pass
+
+    def log_warn(self, msg):
+        if self._gvarspace is not None:
+            self._gvarspace.driver_log(self._instance_name, 'WARN', msg)
+
+    def log_err(self, msg):
+        if self._gvarspace is not None:
+            self._gvarspace.driver_log(self._instance_name, 'ERR', msg)
+
+    def log_info(self, msg):
+        if self._gvarspace is not None:
+            self._gvarspace.driver_log(self._instance_name, 'INFO', msg)
