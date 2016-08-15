@@ -6,7 +6,9 @@ IO_VARIABLE_TYPES = [
     'PRESSURE',
     'GENERIC',
     'BOOLEAN',
-    'BYTE'
+    'BYTE',
+    'INTEGER',
+    'FLOAT'
 ]
 
 def ParameterLockedError(Exception):
@@ -44,8 +46,8 @@ def _check_variable_dtype(wanted_type, value):
         raise TypeError('invalid python type for variable type {}'.format(wanted_type))
 
 def _autoconvert_variable_value(wanted_type, value):
-    val = None
-    if wanted_type == 'BYTE':
+    val = value
+    if wanted_type in ('BYTE', 'INTEGER'):
         try:
             val = int(value)
             return val
@@ -58,6 +60,12 @@ def _autoconvert_variable_value(wanted_type, value):
             pass
         try:
             val = int(value, 16)
+            return val
+        except:
+            pass
+    elif wanted_type in ('FLOAT', 'TEMPERATURE'):
+        try:
+            val = float(value)
             return val
         except:
             pass
@@ -176,13 +184,16 @@ class VSpaceDriver(object):
 
     def __getattr__(self, attr_name):
         #check if theres such an input
-        var_name = attr_name.split('__')[1]
-        if var_name in self._inputs:
-            return self.get_input_value(var_name)
+        try:
+            var_name = attr_name.split('__')[1]
+            if var_name in self._inputs:
+                return self.get_input_value(var_name)
 
-        #check for outputs
-        if var_name in self._outputs:
-            return self.get_output_stored_value(var_name)
+            #check for outputs
+            if var_name in self._outputs:
+                return self.get_output_stored_value(var_name)
+        except IndexError:
+            pass
 
         return super(VSpaceDriver, self).__getattribute__(attr_name)
 
