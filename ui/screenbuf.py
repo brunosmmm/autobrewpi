@@ -4,10 +4,19 @@ from ui.element import UIElement
 from ui.screen import Screen
 from util.thread import StoppableThread
 from array import array
+from datetime import datetime
 import logging
 import time
+import uuid
 
 SCREENBUF_SO_PATH = './lcd/screen.so'
+
+class RecurrentCall(object):
+    def __init__(self, callback, interval):
+        self.cb = callback
+        self.interval = interval
+
+        self._last_called = datetime.now()
 
 class ScreenBuffer(StoppableThread):
 
@@ -53,6 +62,7 @@ class ScreenBuffer(StoppableThread):
 
         #flags
         self._needs_redrawing = None
+        self._pause_calls = False
 
         #attach input client callbacks
         self._icli.attach_callback('keypad.press', self._keypad_keypress)
@@ -63,6 +73,9 @@ class ScreenBuffer(StoppableThread):
         self._icli.attach_callback('encoder.release', self._encoder_release)
         self._icli.attach_callback('switches.press', self._switch_press)
         self._icli.attach_callback('switches.release', self._switch_release)
+
+        #recurrent call manager
+        self.recurrent_calls = {}
 
     def _switch_press(self, data):
         if self.active_screen is not None:
@@ -331,16 +344,28 @@ class ScreenBuffer(StoppableThread):
         self._drawing = False
 
     def activate_screen(self, screen_id, erase=True):
+        self._pause_calls = True
+        #wait till drawing stops
+        while self._drawing:
+            time.sleep(0.01)
+
         self.logger.debug('activating screen {}'.format(screen_id))
         if self.active_screen is not None:
             self._screens[self.active_screen]._screen_deactivated()
         try:
+            self._active_screen = None
             self._activate_screen(screen_id, erase, blank=True)
             self._screens[screen_id]._screen_activated()
         except KeyError:
             self.logger.error('invalid screen id: {}'.format(screen_id))
 
+        self._pause_calls = False
+
     def _activate_screen(self, screen_id, erase=True, blank=False):
+
+        #wait
+        while self._drawing:
+            time.sleep(0.01)
 
         if erase:
             self.erase_screen(blank)
@@ -355,6 +380,18 @@ class ScreenBuffer(StoppableThread):
             return
 
         self._needs_redrawing = screen_id
+
+    def add_recurrent_call(self, callback, interval):
+
+        rc_obj = RecurrentCall(callback, interval)
+        rc_uuid = str(uuid.uuid1())
+
+        self.recurrent_calls[rc_uuid] = rc_obj
+        return rc_uuid
+
+    def remove_recurrent_call(self, rc_uuid):
+        if rc_uuid in self.recurrent_calls:
+            del self.recurrent_calls[rc_uuid]
 
     def run(self):
 
@@ -373,5 +410,14 @@ class ScreenBuffer(StoppableThread):
             if self._old:
                 self.put_buffer()
                 self._old = False
+
+            #process recurrent calls
+            if self._pause_calls is False:
+                for rc in self.recurrent_calls.values():
+                    td = datetime.now() - rc._last_called
+                    if td.total_seconds > rc.interval:
+                        if rc.cb is not None:
+                            rc.cb()
+                            rc._last_called = datetime.now()
 
             time.sleep(self.refresh_interval)
