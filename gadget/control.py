@@ -469,7 +469,8 @@ class GadgetVariableSpace(StoppableThread):
 
     def call_driver_method(self, instance_name, method_name, **kwargs):
         if instance_name in self._drivers:
-            return self._drivers[instance_name].method_name(**kwargs)
+            method = self._drivers[instance_name].__getattr__(method_name)
+            return method(**kwargs)
         else:
             raise KeyError('Invalid instance name: {}'.format(instance_name))
 
