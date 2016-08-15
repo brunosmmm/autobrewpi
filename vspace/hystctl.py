@@ -28,7 +28,7 @@ class HystController(VSpaceDriver):
         if self.__CtlOut:
             self.__CtlOut = False
 
-    def update_local_variable(variable_name, new_value):
+    def update_local_variable(self, variable_name, new_value):
         """Asynchronously control state
         """
         super(HystController, self).update_local_variable(variable_name, new_value)
