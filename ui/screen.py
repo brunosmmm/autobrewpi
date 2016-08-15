@@ -30,3 +30,12 @@ class Screen(UIElement):
 
     def _input_event(self, evt):
         pass
+
+    def _screen_added(self, **kwargs):
+        pass
+
+    def _screen_activated(self, **kwargs):
+        pass
+
+    def _screen_deactivated(self, **kwargs):
+        pass

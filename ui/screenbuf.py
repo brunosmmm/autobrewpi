@@ -4,6 +4,7 @@ from ui.element import UIElement
 from ui.screen import Screen
 from util.thread import StoppableThread
 from array import array
+import logging
 import time
 
 SCREENBUF_SO_PATH = './lcd/screen.so'
@@ -12,6 +13,10 @@ class ScreenBuffer(StoppableThread):
 
     def __init__(self, width, height, input_client, refresh_interval=0.05, screen_on_hook=None):
         super(ScreenBuffer, self).__init__()
+
+        #logging
+        self.logger = logging.getLogger('AutoBrew.ScreenBuffer')
+
         # properties
         self._width = width
         self._height = height
@@ -60,14 +65,28 @@ class ScreenBuffer(StoppableThread):
         self._icli.attach_callback('switches.release', self._switch_release)
 
     def _switch_press(self, data):
-        if self.activate_screen is not None:
-            self._screens[self.active_screen]._input_event({'event': 'switches.press',
-                                                            'data': data})
+        if self.active_screen is not None:
+
+            #filter manual switch out
+            if data == '4':
+                event = {'event': 'mode.change',
+                         'data': 'manual'}
+            else:
+                event = {'event': 'switches.press',
+                         'data': data}
+
+            self._screens[self.active_screen]._input_event(event)
 
     def _switch_release(self, data):
-        if self.activate_screen is not None:
-            self._screens[self.active_screen]._input_event({'event': 'switches.release',
-                                                            'data': data})
+        if self.active_screen is not None:
+
+            if data == '4':
+                event = {'event': 'mode.change',
+                         'data': 'normal'}
+            else:
+                event = {'event': 'switches.release',
+                         'data': data}
+            self._screens[self.active_screen]._input_event(event)
 
     def _keypad_keypress(self, data):
         if self.active_screen is not None:
@@ -103,6 +122,7 @@ class ScreenBuffer(StoppableThread):
         screen_obj._parent = self
         screen_obj._screen_id = screen_id
         self._screens[screen_id] = screen_obj
+        screen_obj._screen_added()
 
     def remove_screen(self, screen_id):
         del self._screens[screen_id]
@@ -301,17 +321,29 @@ class ScreenBuffer(StoppableThread):
 
         self._drawing = False
 
-    def erase_screen(self):
+    def erase_screen(self, blank=False):
         self._drawing = True
 
         self._lcd.SCREEN_Erase()
+        if blank:
+            self._lcd.SCREEN_Blank()
 
         self._drawing = False
 
     def activate_screen(self, screen_id, erase=True):
+        self.logger.debug('activating screen {}'.format(screen_id))
+        if self.active_screen is not None:
+            self._screens[self.active_screen]._screen_deactivated()
+        try:
+            self._activate_screen(screen_id, erase, blank=True)
+            self._screens[screen_id]._screen_activated()
+        except KeyError:
+            self.logger.error('invalid screen id: {}'.format(screen_id))
+
+    def _activate_screen(self, screen_id, erase=True, blank=False):
 
         if erase:
-            self.erase_screen()
+            self.erase_screen(blank)
 
         self.draw_ui_element(self._screens[screen_id])
         self.active_screen = screen_id
@@ -332,7 +364,7 @@ class ScreenBuffer(StoppableThread):
                 exit(0)
 
             if self._needs_redrawing is not None:
-                self.activate_screen(self._needs_redrawing)
+                self._activate_screen(self._needs_redrawing)
                 self._needs_redrawing = None
 
             while self._drawing:
