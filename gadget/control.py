@@ -126,7 +126,9 @@ class GadgetVariableSpace(StoppableThread):
         self._scan_interval = scan_interval
         self._write_queue = deque()
 
-        #scan server
+        #initial server scan
+        self._hcli.check_slaves()
+        time.sleep(2)
         active_slaves = self._hcli.get_active_slave_list()
 
         if gadget_uid not in active_slaves:
