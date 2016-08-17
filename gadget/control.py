@@ -26,6 +26,8 @@ class GadgetVariableProxy(object):
         self._rd = can_read
         self._wr = can_write
         self._old = False
+        self._read_pending = False
+        self._write_pending = True
 
         self._value = None
         self._input_port = None
@@ -115,7 +117,7 @@ class GadgetVariableSpace(StoppableThread):
 
     _initialized = False
 
-    def __init__(self, gadget_uid, scan_interval=2.0):
+    def __init__(self, gadget_uid, scan_interval=1.0):
 
         super(GadgetVariableSpace, self).__init__()
 
@@ -196,28 +198,44 @@ class GadgetVariableSpace(StoppableThread):
     def get_variable_names(self):
         return self._varspace.keys()
 
+    def _hbus_read_cb(self, data, user_data):
+        #got data!
+        var = self._varspace[user_data]
+        if var._value != data:
+            #trigger systemwide changes
+            self.logger.debug('detected a change of value in '
+                              'gadget variable "{}", propagating...'.format(user_data))
+            self.logger.debug('was: {}, is: {}'.format(var._value, data))
+            if var.get_output_port_id() is not None:
+                #propagate
+                self._propagate_value(var.get_output_port_id(), data)
+        var._value = data
+        if var._old:
+            var._old = False
+        if var._read_pending:
+            var._read_pending = False
+
+    def _gadget_state_read_cb(self, data, user_data):
+        self._hbus_read_cb(data, user_data)
+        if int(data, 2) & 0x08:
+            #tracked value change detected, read all
+            self._scan_values()
+
+    def _scan_variable(self, var_name, rd_callback):
+        var = self._varspace[var_name]
+        if var._rd:
+            try:
+                if var._read_pending:
+                    return
+                self._hcli.read_slave_object(self._gaddr, var._idx, False, rd_callback, var_name)
+                var._read_pending = True
+            except Exception as e:
+                self.logger.debug('failed to read variable "{}": {}'.format(var_name, e.message))
+                var._old = True
+
     def _scan_values(self):
-
         for var_name, var in self._varspace.iteritems():
-            if var._rd:
-                try:
-                    value = self._hcli.read_slave_object(self._gaddr, var._idx)
-                    if var._value != value:
-                        #trigger systemwide changes
-                        self.logger.debug('detected a change of value in '
-                                          'gadget variable "{}", propagating...'.format(var_name))
-                        self.logger.debug('was: {}, is: {}'.format(var._value, value))
-                        if var.get_output_port_id() is not None:
-                            #propagate
-                            self._propagate_value(var.get_output_port_id(), value)
-
-                    var._value = value
-                    if var._old:
-                        var._old = False
-                except Exception as e:
-                    #could not read
-                    self.logger.debug('failed to read variable "{}": {}'.format(var_name, e.message))
-                    var._old = True
+            self._scan_variable(var_name, self._hbus_read_cb)
 
     def __setattr__(self, name, value):
         if self._initialized:
@@ -494,10 +512,10 @@ class GadgetVariableSpace(StoppableThread):
                 self._hcli.stop()
                 exit(0)
 
-            #scan values continuously
+            #scan only state and determine if an update is needed
             if datetime.now() > self._last_scan + timedelta(seconds=self._scan_interval):
                 self._last_scan = datetime.now()
-                self._scan_values()
+                self._scan_variable('Gadget_STATE', self._gadget_state_read_cb)
 
             #set values if pending
             while len(self._write_queue) > 0:
