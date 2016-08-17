@@ -2,6 +2,8 @@ from ui.screen import Screen
 from ui.button import Button
 from ui.label import Label
 from ui.box import Box
+from ui.modal import Modal
+from datetime import datetime
 
 class ABMashScreen(Screen):
 
@@ -31,6 +33,12 @@ class ABMashScreen(Screen):
         self._state_label = Label(text='STATE', font='5x12',
                                   y=self._mashctltitle.y+self._mashctltitle.h+3,
                                   x=2)
+        self._phase_label = Label(text='PHASE', font='5x12',
+                                  y=self._mashctltitle.y+self._mashctltitle.h+17,
+                                  x=2)
+        self._timer_label = Label(text='TIMER', font='5x12',
+                                  y=self._mashctltitle.y+self._mashctltitle.h+31,
+                                  x=2)
 
         self._box_l = Box(x=0,
                           y=self._mashctltitle.y+self._mashctltitle.h+1,
@@ -49,6 +57,28 @@ class ABMashScreen(Screen):
                                      y=self._mashctltitle.y+self._mashctltitle.h+17,
                                      x=self.w/2 + 2)
 
+        #message modal
+        self._msg_modal = Modal(y=10,
+                                x=10,
+                                w=self.w-20,
+                                h=self.h-20)
+        self._modal_label_1 = Label(text='',
+                                    font='5x12',
+                                    x=self._msg_modal.x+2,
+                                    y=self._msg_modal.y+2)
+        self._modal_label_2 = Label(text='',
+                                    font='5x12',
+                                    x=self._msg_modal.x+2,
+                                    y=self._msg_modal.y+16)
+        self._modal_label_3 = Label(text='',
+                                    font='5x12',
+                                    x=self._msg_modal.x+2,
+                                    y=self._msg_modal.y+30)
+
+        self._msg_modal.add_element(self._modal_label_1)
+        self._msg_modal.add_element(self._modal_label_2)
+        self._msg_modal.add_element(self._modal_label_3)
+
         #add stuff
         self.add_element(self._mashctltitle)
         self.add_element(self._footb_l)
@@ -56,17 +86,23 @@ class ABMashScreen(Screen):
         self.add_element(self._footb_mr)
         self.add_element(self._footb_r)
         self.add_element(self._state_label)
+        self.add_element(self._phase_label)
+        self.add_element(self._timer_label)
         self.add_element(self._box_l)
         self.add_element(self._box_r)
 
         self.add_element(self._hlt_temp_label)
         self.add_element(self._mlt_temp_label)
+        self.add_element(self._msg_modal)
 
         #track manual mode
         self._manual = False
 
         #local state tracking
         self._state = 'idle'
+        self._mash_phase = None
+        self._modal_showing = False
+        self._panic_saved_state = None
 
         #find mash controller instance
         self.ctl_inst = self._varspace.find_driver_by_classname('MashController')[0]
@@ -94,19 +130,164 @@ class ABMashScreen(Screen):
     def _enter_active(self):
         #change layout
         self._footb_r.set_text('Parar')
+        self._footb_ml.set_text('Pausa')
         self._state_label.set_text(self._composite_label_text('Estado', 'ativo', 23))
+        if self._state == 'idle':
+            self._phase_label.set_text(self._composite_label_text('Fase Mash', 'preaquecendo', 23))
         self._state = 'active'
 
     def _enter_idle(self):
         self._footb_r.set_text('Sair')
+        self._footb_ml.set_text('Inicia')
         self._state_label.set_text(self._composite_label_text('Estado', 'ocioso', 23))
+        self._phase_label.set_text(self._composite_label_text('Fase Mash', 'parado', 23))
+        self._timer_label.set_text(self._composite_label_text('Timer', 'Nenhum', 23))
         self._state = 'idle'
+
+    def _enter_paused(self):
+        self._footb_ml.set_text('Retoma')
+        self._state_label.set_text(self._composite_label_text('Estado', 'pausa', 23))
+        self._state = 'paused'
+
+    def _enter_panic(self):
+        if self._state == 'panic':
+            return
+        self._footb_ml.set_text('Retoma')
+        self._state_label.set_text(self._composite_label_text('Estado', 'panico', 23))
+        self._panic_saved_state = self._state
+        self._state = 'panic'
+
+    def _confirm_press(self):
+        if self._modal_showing:
+
+            self._hide_msg_modal()
+
+            if self._mash_phase == 'check_water':
+                #next
+                self._enter_active()
+                self._varspace.call_driver_method(self.ctl_inst, 'start_mash')
+                self._mash_phase = 'preheat'
+            elif self._mash_phase == 'preheat_done':
+                self._addgrains()
+            elif self._mash_phase == 'addgrains':
+                self._main_mash()
+            elif self._mash_phase == 'presparge':
+                self._sparge()
+
+
+    def _cancel_press(self):
+        if self._modal_showing:
+            if self._mash_phase == 'check_water':
+                pass
+            self._hide_msg_modal()
+
+    def _show_msg_modal(self, message):
+        lines = message.split('\n')
+
+        while len(lines) < 3:
+            lines.append('')
+
+        if len(lines) > 3:
+            #self.log_err('exceeded number of lines in message, truncating')
+            lines = lines[0:3]
+
+        #allocate lines
+        self._modal_label_1.set_text(lines[0])
+        self._modal_label_2.set_text(lines[1])
+        self._modal_label_3.set_text(lines[2])
+        self._modal_showing = True
+        self._msg_modal.show()
+
+    def _hide_msg_modal(self):
+        self._modal_showing = False
+        self._msg_modal.hide()
+
+    def _mash_start(self):
+        self._varspace.call_driver_method(self.ctl_inst, 'reset')
+        self._mash_phase = 'check_water'
+        self._show_msg_modal('Encha o HLT com agua agora\n'
+                             'Pressione CONFIRMA para continuar')
+
+    def _mash_done(self):
+        self._mash_phase = 'mashout'
+        self._phase_label.set_text(self._composite_label_text('Fase Mash', 'mashout', 23))
+
+    def _mashout_done(self):
+        self._mash_phase = 'presparge'
+        self._phase_label.set_text(self._composite_label_text('Fase Mash', 'pre-sparge', 23))
+        self._timer_label.set_text(self._composite_label_text('Timer', 'Nenhum', 23))
+        self._show_msg_modal('Aguardando para iniciar Sparge\n'
+                             'Pressione CONFIRMA para continuar')
+
+    def _sparge(self):
+        self._mash_phase = 'sparge'
+        self._phase_label.set_text(self._composite_label_text('Fase Mash', 'sparge', 23))
+        self._varspace.call_driver_method(self.ctl_inst, 'enter_sparge')
+
+    def _sparge_done(self):
+        self._mash_phase = None
+        self._enter_idle()
+        self._show_msg_modal('Fim do mash\n'
+                             'Pressione CONFIRMA para continuar')
+
+    def _mash_pause_unpause(self):
+        if self._state == 'paused':
+            self._enter_active()
+            self._varspace.call_driver_method(self.ctl_inst, 'unpause_transfer')
+        elif self._state == 'active':
+            self._varspace.call_driver_method(self.ctl_inst, 'pause_transfer')
+            self._enter_paused()
+
+    def _preheat_done(self):
+        self._mash_phase = 'preheat_done'
+        self._varspace.call_driver_method(self.ctl_inst, 'enter_transfer')
+        self._show_msg_modal('Temperatura atingida\n'
+                             'Transfira agua quente ao MLT agora\n'
+                             'Pressione CONFIRMA para continuar')
+
+    def _addgrains(self):
+        self._mash_phase = 'addgrains'
+        self._phase_label.set_text(self._composite_label_text('Fase Mash', 'ad. graos', 23))
+        self._varspace.call_driver_method(self.ctl_inst, 'enter_addgrains')
+        self._show_msg_modal('Adicione agora os graos\n'
+                             'Pressione CONFIRMA para continuar')
+
+    def _main_mash(self):
+        self._mash_phase = 'mashing'
+        self._phase_label.set_text(self._composite_label_text('Fase Mash', 'mash/recirc', 23))
+        self._varspace.call_driver_method(self.ctl_inst, 'enter_mash')
+        timer_end = self._varspace.call_driver_method(self.ctl_inst, 'get_timer_end')
+        self._timer_label.set_text(self._composite_label_text('Timer',
+                                                              str(timer_end - datetime.now()).split('.')[0],
+                                                              23))
 
     def _input_event(self, evt):
         if evt['event'] == 'switches.release':
+
+            if self._modal_showing:
+                if evt['data'] == '5':
+                    self._confirm_press()
+                    return
+                elif evt['data'] != '4':
+                    self._cancel_press()
+                    return
+
             if evt['data'] == '3':
                 if self._state == 'idle':
                     self._parent.activate_screen('main')
+
+            if evt['data'] == '1':
+                if self._state == 'idle':
+                    self._mash_start()
+                elif self._state == 'active':
+                    self._mash_pause_unpause()
+                elif self._state == 'panic':
+                    self._varspace.call_driver_method('GWatch', 'lift_panic')
+                    #if self._panic_saved_state == 'active':
+                    #    self._enter_active()
+                    #else:
+                    #    self._enter_idle()
+                    #self._panic_saved_state = None
 
         elif evt['event'] == 'mode.change':
             if evt['data'] == 'manual':
@@ -132,9 +313,43 @@ class ABMashScreen(Screen):
         #update to current values
         hlt_temp = self._varspace.call_driver_method(self.ctl_inst, 'get_hlt_temp')
         mlt_temp = self._varspace.call_driver_method(self.ctl_inst, 'get_mlt_temp')
+        state = self._varspace.call_driver_method(self.ctl_inst, 'get_state')
+        panic = self._varspace.call_driver_method('GWatch', 'is_panic')
         self._hlt_temp_label.set_text(self._composite_label_text('HLT Temp',
                                                                  '{} C'.format(hlt_temp)
                                                                  ,23))
         self._mlt_temp_label.set_text(self._composite_label_text('MLT Temp',
                                                                  '{} C'.format(mlt_temp)
                                                                  ,23))
+
+        if panic:
+            self._enter_panic()
+            return
+        else:
+            if self._panic_saved_state == 'active':
+                self._enter_active()
+            elif self._panic_saved_state == 'idle':
+                self._enter_idle()
+            self._panic_saved_state = None
+
+        #check state
+        if self._mash_phase == 'preheat':
+            if state == 'preheat_done':
+                self._preheat_done()
+        elif self._mash_phase == 'mashing':
+            if state == 'mashout':
+                self._mash_done()
+        elif self._mash_phase == 'mashout':
+            if state == 'sparge_wait':
+                self._mashout_done()
+        elif self._mash_phase == 'sparge':
+            if state == 'idle':
+                self._sparge_done()
+
+        if self._mash_phase in ('mashing', 'mashout', 'sparge'):
+            timer_end = self._varspace.call_driver_method(self.ctl_inst, 'get_timer_end')
+            timer_time = timer_end - datetime.now()
+            if timer_time.total_seconds() > 0:
+                self._timer_label.set_text(self._composite_label_text('Timer',
+                                                                      str(timer_time).split('.')[0],
+                                                                      23))
