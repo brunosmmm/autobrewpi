@@ -243,6 +243,7 @@ class HbusClient(object):
                 try:
                     task = rdqueue.get(False)
                 except QueueEmpty:
+                    time.sleep(0.01)
                     continue
 
                 task_kind = task.get_kind()
