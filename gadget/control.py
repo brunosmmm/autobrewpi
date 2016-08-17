@@ -126,6 +126,7 @@ class GadgetVariableSpace(StoppableThread):
         self._scan_interval = scan_interval
         self._write_queue = deque()
 
+        self._hcli.start()
         #initial server scan
         self._hcli.check_slaves()
         time.sleep(2)
@@ -490,6 +491,7 @@ class GadgetVariableSpace(StoppableThread):
 
         while True:
             if self.is_stopped():
+                self._hcli.stop()
                 exit(0)
 
             #scan values continuously
