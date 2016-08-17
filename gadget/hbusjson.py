@@ -90,6 +90,9 @@ class HbusClient(object):
         response = self._cli.writeobject(slave_addr, object_idx, value)
         self._unpack_response(response)
 
+    def check_slaves(self):
+        self._cli.checkslaves()
+
     def _process_queue(self):
 
         #check for outstanding requests
