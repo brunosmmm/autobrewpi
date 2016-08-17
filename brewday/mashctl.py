@@ -10,7 +10,8 @@ class MashController(VSpaceDriver):
 
     _inputs = {
         'HLTTemp': VSpaceInput('TEMPERATURE'),
-        'MLTTemp': VSpaceInput('TEMPERATURE')
+        'MLTTemp': VSpaceInput('TEMPERATURE'),
+        'GPanic': VSpaceInput('BOOLEAN')
     }
 
     _outputs = {
@@ -30,6 +31,8 @@ class MashController(VSpaceDriver):
         self._pause_transfer = False
         self._state_start_timer = None
         self._state_timer_duration = None
+        self._pause_all = False
+        self._saved_state = None
 
         #load persistent data
         try:
@@ -48,7 +51,7 @@ class MashController(VSpaceDriver):
             m = re.match(_PORT_REGEX, connect_to)
 
             if m is None:
-                self.logger.warning('invalid port name in mashctl configuration: {}'.format(port_name))
+                self.log_warn('invalid port name in mashctl configuration: {}'.format(port_name))
                 continue
 
             if port_name in self._inputs:
@@ -56,7 +59,7 @@ class MashController(VSpaceDriver):
                 try:
                     connect_to_id = self._gvarspace.find_port_id(m.group(1), m.group(2), 'output')
                 except ValueError:
-                    self.logger.warning('could not find port {} or instance {}'.format(m.group(2), m.group(1)))
+                    self.log_warn('could not find port {} or instance {}'.format(m.group(2), m.group(1)))
                     continue
                 self._gvarspace.connect_pspace_ports(connect_to_id, self._inputs[port_name].get_global_port_id())
 
@@ -65,18 +68,33 @@ class MashController(VSpaceDriver):
                 try:
                     connect_to_id = self._gvarspace.find_port_id(m.group(1), m.group(2), 'input')
                 except ValueError:
-                    self.logger.warning('could not find port {} or instance {}'.format(m.group(2), m.group(1)))
+                    self.log_warn('could not find port {} or instance {}'.format(m.group(2), m.group(1)))
                     continue
                 self._gvarspace.connect_pspace_ports(self._outputs[port_name].get_global_port_id(), connect_to_id)
             else:
-                self.logger.warning('unknown mashctl port: {}'.format(port_name))
+                self.log_warn('unknown mashctl port: {}'.format(port_name))
                 continue
 
         self.default_configuration()
         self.enter_idle()
 
+    def update_local_variable(self, *args, **kwargs):
+        super(MashController, self).update_local_variable(*args, **kwargs)
+
+        if self.__GPanic:
+            #pause
+            self.pause_all()
+        else:
+            self.unpause_all()
+
     def get_state(self):
         return self._state
+
+    def start_mash(self):
+        self.enter_preheat()
+
+    def reset(self):
+        self.enter_idle()
 
     def get_hlt_temp(self):
         return self.__HLTTemp
@@ -103,7 +121,8 @@ class MashController(VSpaceDriver):
 
     def enter_transfer(self):
         self.logger.debug('entering transfer state')
-        self.set_output_value('PumpCtl', True)
+        if self._mash_config['misc']['transfer_use_pump']:
+            self.set_output_value('PumpCtl', True)
         self._state = 'transfer_hlt_mlt'
 
     def pause_transfer(self):
@@ -114,23 +133,44 @@ class MashController(VSpaceDriver):
         self._pause_transfer = False
         self.__PumpCtl = True
 
+    def pause_all(self):
+        self._saved_state = {'pump': self.__PumpCtl,
+                             'state': self._state}
+        self.__PumpCtl = False
+        self._state = 'paused'
+        self._pause_all = True
+
+    def unpause_all(self):
+        if self._pause_all is False:
+            return
+
+        if self._saved_state is not None:
+            self.__PumpCtl = self._saved_state['pump']
+            self._state = self._saved_state['state']
+
+        self._saved_state = None
+        self._pause_all = False
+
     def enter_addgrains(self):
         self.logger.debug('entering add_grains state')
         self.set_output_value('PumpCtl', False)
         self._state = 'add_grains'
 
     def enter_mash(self):
-        self.logger.info('Starting recirculating mash')
+        self.log_info('Starting recirculating mash')
         self._state_start_timer = datetime.now()
         self._state_timer_duration = timedelta(minutes=int(self._mash_config['mash_states']['mash']['duration']))
         self.__PumpCtl = True
         self._state = 'mash'
 
     def enter_mashout(self):
-        self.logger.info('Starting mashout now')
+        self.log_info('Starting mashout now')
         self._state_start_timer = datetime.now()
         self._state_timer_duration = timedelta(minutes=int(self._mash_config['mash_states']['mashout']['duration']))
+        #update setpoint
+        self.__HLTCtlEnable = False
         self.__HLTCtlSetPoint = float(self._mash_config['mash_states']['mashout']['temp'])
+        self.__HLTCtlEnable = True
         self.__PumpCtl = True
         self._state = 'mashout'
 
@@ -142,7 +182,7 @@ class MashController(VSpaceDriver):
         self._state = 'sparge_wait'
 
     def enter_sparge(self):
-        self.logger.info('Starting sparge phase')
+        self.log_info('Starting sparge phase')
         self.__PumpCtl = True
         self._state_start_timer = datetime.now()
         self._state_timer_duration = timedelta(minutes=int(self._mash_config['mash_states']['sparge']['duration']))
@@ -157,12 +197,19 @@ class MashController(VSpaceDriver):
     def _to_seconds(minutes, seconds):
         return minutes*60 + seconds
 
+    def get_timer_end(self):
+        if self._state in ('mash', 'mashout', 'sparge'):
+            return self._state_start_timer + self._state_timer_duration
+
+        return None
+
     def cycle(self):
+
         if self._state == 'idle':
             pass
         elif self._state == 'preheat':
             if self._target_reached(float(self._mash_config['mash_states']['mash']['temp']), self.__HLTTemp):
-                self.logger.info('Preheat done')
+                self.log_info('Preheat done')
                 self._state = 'preheat_done'
         elif self._state == 'preheat_done':
             #wait
@@ -175,18 +222,21 @@ class MashController(VSpaceDriver):
         elif self._state == 'mash':
             if self._state_start_timer + self._state_timer_duration < datetime.now():
                 #timer reached
-                self.logger.info('Mash finished')
+                self.log_info('Mash finished')
                 self.enter_mashout()
         elif self._state == 'mashout':
             if self._state_start_timer + self._state_timer_duration < datetime.now():
-                self.logger.info('Mashout finished')
+                self.log_info('Mashout finished')
                 self.enter_sparge_wait()
         elif self._state == 'sparge_wait':
                 pass
         elif self._state == 'sparge':
             if self._state_start_timer + self._state_timer_duration < datetime.now():
-                self.logger.info('Mash completed')
+                self.log_info('Mash completed')
                 self.enter_idle()
+        elif self._state == 'paused':
+            if self._state_start_timer is not None:
+                pass
         else:
             self._state = 'idle'
 

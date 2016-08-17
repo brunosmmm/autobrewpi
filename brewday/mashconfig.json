@@ -20,7 +20,8 @@
         "HLTCtlHystType": "HystCtl1.HystType",
         "HLTTemp": "gadget.TmpSens1_TMP",
         "MLTTemp": "gadget.TmpSens2_TMP",
-        "PumpCtl": "GOutBits.Bit2"
+        "PumpCtl": "GOutBits.Bit1",
+        "GPanic": "GWatch.GadgetPanic"
     },
     "hystctl": {
         "type": "updown",
@@ -28,6 +29,7 @@
     },
     "misc":
     {
-        "temp_error": 0.5
+        "temp_error": 0.5,
+        "transfer_use_pump": false
     }
 }
