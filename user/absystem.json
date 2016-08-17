@@ -88,7 +88,7 @@
             },
             "port_to": {
                 "instance_name": "GOutBits",
-                "port_name": "Bit1",
+                "port_name": "Bit2",
                 "port_direction": "input"
             }
         }
