@@ -2,6 +2,7 @@ from gadget.hbusjson import HbusClient
 from util.thread import StoppableThread
 from vspace import VSpaceDriver, VSpaceInput, VSpaceOutput, VSpaceParameter
 import time
+from datetime import datetime, timedelta
 from collections import deque
 import re
 import logging
@@ -150,6 +151,9 @@ class GadgetVariableSpace(StoppableThread):
         #drivers
         self._drivers = {}
 
+        #timers
+        self._last_scan = datetime.now()
+
         self._initialized = True
 
     def _parse_objects(self):
@@ -211,8 +215,6 @@ class GadgetVariableSpace(StoppableThread):
                     #could not read
                     self.logger.debug('failed to read variable "{}": {}'.format(var_name, e.message))
                     var._old = True
-
-            time.sleep(0.1)
 
     def __setattr__(self, name, value):
         if self._initialized:
@@ -489,7 +491,9 @@ class GadgetVariableSpace(StoppableThread):
                 exit(0)
 
             #scan values continuously
-            self._scan_values()
+            if datetime.now() > self._last_scan + timedelta(seconds=self._scan_interval):
+                self._last_scan = datetime.now()
+                self._scan_values()
 
             #set values if pending
             while len(self._write_queue) > 0:
@@ -513,4 +517,5 @@ class GadgetVariableSpace(StoppableThread):
                     raise
 
             #wait
-            time.sleep(self._scan_interval)
+            time.sleep(0.01)
+            #time.sleep(self._scan_interval)
