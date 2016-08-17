@@ -17,13 +17,20 @@ class GadgetWatcher(VSpaceDriver):
     }
 
     _outputs = {
-        'GadgetControl': VSpaceOutput('GENERIC')
+        'GadgetControl': VSpaceOutput('GENERIC'),
+        'GadgetPanic': VSpaceOutput('BOOLEAN', False)
     }
 
     def __init__(self, **kwargs):
         super(GadgetWatcher, self).__init__(**kwargs)
 
         self._waiting_first_update = True
+
+    def is_panic(self):
+        return self.__GadgetPanic
+
+    def lift_panic(self):
+        self.__GadgetControl = self._GADGET_CMD_LIFT_PANIC
 
     def post_init(self):
 
@@ -58,5 +65,6 @@ class GadgetWatcher(VSpaceDriver):
             #power down requested
             pass
         if state & self._GADGET_FLAG_PANIC:
-            #panic!
-            pass
+            self.__GadgetPanic = True
+        else:
+            self.__GadgetPanic = False
