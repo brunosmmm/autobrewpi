@@ -11,7 +11,7 @@ class HystController(VSpaceDriver):
     }
 
     _outputs = {
-        'CtlOut': VSpaceOutput('BOOLEAN')
+        'CtlOut': VSpaceOutput('BOOLEAN', False)
     }
 
     def __init__(self, **kwargs):
@@ -21,6 +21,7 @@ class HystController(VSpaceDriver):
         self._deadzone = False
 
     def _element_on(self):
+        #self.log_info('turning element on, current state is {}'.format(self.__CtlOut))
         if self.__CtlOut is False:
             self.__CtlOut = True
 
@@ -35,9 +36,11 @@ class HystController(VSpaceDriver):
 
         if variable_name == 'Enabled':
             if new_value:
+                self.log_info('enabling control, setpoint = {}'.format(self.__SetPoint))
                 if self._current_state == 'idle':
                     self._current_state = 'control'
             else:
+                self.log_info('disabling control')
                 self._current_state = 'idle'
                 self._element_off()
                 self._deadzone = False
@@ -66,10 +69,12 @@ class HystController(VSpaceDriver):
             output_enable_condition = True if self.__CurrTemp < (self.__SetPoint + self.__HystLevel) else False
             output_restart_condition = True if self.__CurrTemp < (self.__SetPoint - self.__HystLevel) else False
         else:
+            self.log_err('unknown hysteresis type: {}'.format(self.__HystType))
             return
 
         if self._current_state == 'control':
             if output_enable_condition:
+                #self.log_info('output enable condition is true')
                 if self._deadzone is False:
                     self._element_on()
                 else:
