@@ -11,7 +11,7 @@ IO_VARIABLE_TYPES = [
     'FLOAT'
 ]
 
-def ParameterLockedError(Exception):
+class ParameterLockedError(Exception):
     pass
 
 def _check_variable_dtype(wanted_type, value):
@@ -198,10 +198,16 @@ class VSpaceDriver(object):
         return super(VSpaceDriver, self).__getattribute__(attr_name)
 
     def __setattr__(self, attr_name, value):
-        if attr_name.lstrip('__') in self._outputs:
-            self.set_output_value(attr_name.lstrip('__'), value)
-        else:
-            super(VSpaceDriver, self).__setattr__(attr_name, value)
+        try:
+            var_name = attr_name.split('__')[1]
+            if var_name in self._outputs:
+                self.set_output_value(var_name, value)
+                return
+        except IndexError:
+            pass
+
+        super(VSpaceDriver, self).__setattr__(attr_name, value)
+
 
     def _set_flag(self, flag):
         if flag in self._AVAILABLE_FLAGS:
