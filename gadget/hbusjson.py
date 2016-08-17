@@ -1,12 +1,11 @@
 from pyjsonrpc import HttpClient
 from collections import deque
-from multiprocessing import Process, Queue
+from multiprocessing import Process, Queue, Event
 from Queue import Empty as QueueEmpty
 import time
 import uuid
 from util.thread import StoppableThread
 import signal
-import psutil
 
 class HbusJsonServerError(Exception):
     pass
@@ -56,15 +55,17 @@ class ResponseDispatcher(StoppableThread):
     def run(self):
 
         while True:
-
             if self.is_stopped():
-                exit(0)
+                return
 
-            resp = self._queue.get()
-            if resp.uuid in self._cbwait:
-                if self._cbwait[resp.uuid] is not None:
-                    self._cbwait[resp.uuid](resp.resp, resp.ud)
-                del self._cbwait[resp.uuid]
+            try:
+                resp = self._queue.get(False)
+                if resp.uuid in self._cbwait:
+                    if self._cbwait[resp.uuid] is not None:
+                        self._cbwait[resp.uuid](resp.resp, resp.ud)
+                        del self._cbwait[resp.uuid]
+            except QueueEmpty:
+                pass
 
             time.sleep(0.01)
 
@@ -82,6 +83,9 @@ class HbusClient(object):
 
         self._waitqueue = {}
 
+        #stop flag
+        self._stop_flag = Event()
+
         #subprocess
         self._task = Process(target=self._process_queue,
                              args=(self._rdqueue,
@@ -89,7 +93,8 @@ class HbusClient(object):
                                    self._respqueue,
                                    self._asyncrespqueue,
                                    server_addr,
-                                   server_port))
+                                   server_port,
+                                   self._stop_flag))
 
         self._dispatcher = ResponseDispatcher(self._asyncrespqueue)
 
@@ -97,14 +102,10 @@ class HbusClient(object):
         self._task.start()
         self._dispatcher.start()
 
-        #parent = psutil.Process()
-        #for child in parent.children():
-        #    child.nice(-5)
-
     def stop(self):
-        self._wrqueue.put(HbusClientRequest('stop', None))
         self._dispatcher.stop()
         self._dispatcher.join()
+        self._stop_flag.set()
         self._task.join()
 
     @staticmethod
@@ -219,7 +220,7 @@ class HbusClient(object):
         client.checkslaves()
 
     @staticmethod
-    def _process_queue(rdqueue, wrqueue, resp_queue, async_queue, server_addr, server_port):
+    def _process_queue(rdqueue, wrqueue, resp_queue, async_queue, server_addr, server_port, stop_flag):
 
         signal.signal(signal.SIGINT, signal.SIG_IGN)
         client = HttpClient('http://{}:{}'.format(server_addr, server_port))
@@ -228,6 +229,8 @@ class HbusClient(object):
             #check for outstanding requests
             try:
 
+                if stop_flag.is_set():
+                    return
                 #write separately for more responsiveness
                 try:
                     wrtask = wrqueue.get(False)
@@ -236,6 +239,8 @@ class HbusClient(object):
                         HbusClient._write_slave_object(client, *wrtask.get_params())
                     elif task_kind == 'check':
                         HbusClient._check_slaves(client)
+                    elif task_kind == 'stop':
+                        return
                 except QueueEmpty:
                     #proceed to read tasks if empty
                     pass
@@ -252,9 +257,7 @@ class HbusClient(object):
                     rqueue = async_queue
                 else:
                     rqueue = resp_queue
-                if task_kind == 'stop':
-                    exit(0)
-                elif task_kind == 'buslist':
+                if task_kind == 'buslist':
                     rqueue.put(HbusClientResponse(HbusClient._get_active_busses(client), task.uuid, task._cb, task._ud))
                 elif task_kind == 'slavelist':
                     rqueue.put(HbusClientResponse(HbusClient._get_active_slave_list(client), task_uuid, task._cb, task._ud))
