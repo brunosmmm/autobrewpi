@@ -1,8 +1,12 @@
 from pyjsonrpc import HttpClient
 from collections import deque
 from multiprocessing import Process, Queue
+from Queue import Empty as QueueEmpty
 import time
 import uuid
+from util.thread import StoppableThread
+import signal
+import psutil
 
 class HbusJsonServerError(Exception):
     pass
@@ -11,10 +15,12 @@ class HbusClientRequest(object):
 
     _REQUEST_KINDS = ('readobj', 'writeobj', 'stop')
 
-    def __init__(self, kind, parameters, callback=None):
+    def __init__(self, kind, parameters, callback=None, user_data=None):
         self._cb = callback
+        self._ud = user_data
         self.kind = kind
         self.uuid = uuid.uuid1()
+        self.is_async = False
 
         if parameters is None:
             self.param = []
@@ -31,28 +37,74 @@ class HbusClientRequest(object):
         return self._cb
 
 class HbusClientResponse(object):
-    def __init__(self, response, uuid):
+    def __init__(self, response, uuid, callback=None, user_data=None):
         self.resp = response
+        self.cb = callback
+        self.ud = user_data
         self.uuid = uuid
+
+class ResponseDispatcher(StoppableThread):
+    def __init__(self, async_queue):
+        super(ResponseDispatcher, self).__init__()
+        self._queue = async_queue
+
+        self._cbwait = {}
+
+    def add_callback(self, req_uuid, cb):
+        self._cbwait[req_uuid] = cb
+
+    def run(self):
+
+        while True:
+
+            if self.is_stopped():
+                exit(0)
+
+            resp = self._queue.get()
+            if resp.uuid in self._cbwait:
+                if self._cbwait[resp.uuid] is not None:
+                    self._cbwait[resp.uuid](resp.resp, resp.ud)
+                del self._cbwait[resp.uuid]
+
+            time.sleep(0.01)
 
 class HbusClient(object):
 
     def __init__(self, server_addr='localhost', server_port=7080):
 
         #request queue
-        self._queue = Queue()
+        self._wrqueue = Queue()
+        self._rdqueue = Queue()
+
+        #results from read operations
         self._respqueue = Queue()
+        self._asyncrespqueue = Queue()
 
         self._waitqueue = {}
 
         #subprocess
-        self._task = Process(target=self._process_queue, args=(self._queue, self._respqueue, server_addr, server_port))
+        self._task = Process(target=self._process_queue,
+                             args=(self._rdqueue,
+                                   self._wrqueue,
+                                   self._respqueue,
+                                   self._asyncrespqueue,
+                                   server_addr,
+                                   server_port))
+
+        self._dispatcher = ResponseDispatcher(self._asyncrespqueue)
 
     def start(self):
         self._task.start()
+        self._dispatcher.start()
+
+        #parent = psutil.Process()
+        #for child in parent.children():
+        #    child.nice(-5)
 
     def stop(self):
-        self._queue.put(HbusClientRequest('stop', None))
+        self._wrqueue.put(HbusClientRequest('stop', None))
+        self._dispatcher.stop()
+        self._dispatcher.join()
         self._task.join()
 
     @staticmethod
@@ -69,7 +121,7 @@ class HbusClient(object):
 
     def _put_req_and_wait(self, req):
 
-        self._queue.put(req)
+        self._rdqueue.put(req)
         resp = self._respqueue.get(timeout=1)
         while resp.uuid != req.uuid:
             self._respqueue.put(resp)
@@ -78,8 +130,13 @@ class HbusClient(object):
         return resp.resp
 
     def _put_async_req(self, req):
-        self._queue.put(req)
-        self._waitqueue[req.uuid] = req._cb
+        req.is_async = True
+        self._dispatcher.add_callback(req.uuid, req._cb)
+        req._cb = None
+        self._rdqueue.put(req)
+
+    def _put_and_continue(self, req):
+        self._wrqueue.put(req)
 
     def get_active_busses(self):
         return self._put_req_and_wait(HbusClientRequest('buslist', None))
@@ -125,11 +182,11 @@ class HbusClient(object):
 
         return response['list']
 
-    def read_slave_object(self, slave_addr, object_idx, block=True, callback=None):
+    def read_slave_object(self, slave_addr, object_idx, block=True, callback=None, user_data=None):
         if block:
             return self._put_req_and_wait(HbusClientRequest('read', (slave_addr, object_idx)))
         else:
-            self._put_async_req(HbusClientRequest('read', (slave_addr, object_idx), callback))
+            self._put_async_req(HbusClientRequest('read', (slave_addr, object_idx), callback, user_data))
 
     @staticmethod
     def _read_slave_object(client, slave_addr, object_idx):
@@ -146,7 +203,7 @@ class HbusClient(object):
         return data
 
     def write_slave_object(self, slave_addr, object_idx, value):
-        self._queue.put(HbusClientRequest('write', (slave_addr, object_idx, value)))
+        self._put_and_continue(HbusClientRequest('write', (slave_addr, object_idx, value)))
 
     @staticmethod
     def _write_slave_object(client, slave_addr, object_idx, value):
@@ -155,38 +212,58 @@ class HbusClient(object):
         HbusClient._unpack_response(response)
 
     def check_slaves(self):
-        self._queue.put(HbusClientRequest('check', None))
+        self._put_and_continue(HbusClientRequest('check', None))
 
     @staticmethod
     def _check_slaves(client):
         client.checkslaves()
 
     @staticmethod
-    def _process_queue(queue, resp_queue, server_addr, server_port):
+    def _process_queue(rdqueue, wrqueue, resp_queue, async_queue, server_addr, server_port):
 
+        signal.signal(signal.SIGINT, signal.SIG_IGN)
         client = HttpClient('http://{}:{}'.format(server_addr, server_port))
 
         while True:
             #check for outstanding requests
-            task = queue.get()
+            try:
 
-            task_kind = task.get_kind()
-            task_uuid = task.uuid
-            if task_kind == 'stop':
-                break
-            elif task_kind == 'buslist':
-                resp_queue.put(HbusClientResponse(HbusClient._get_active_busses(client), task.uuid))
-            elif task_kind == 'slavelist':
-                resp_queue.put(HbusClientResponse(HbusClient._get_active_slave_list(client), task_uuid))
-            elif task_kind == 'slaveinfo':
-                resp_queue.put(HbusClientResponse(HbusClient._get_slave_info(client, *task.get_params()), task_uuid))
-            elif task_kind == 'slaveobjlist':
-                resp_queue.put(HbusClientResponse(HbusClient._get_slave_object_list(client, *task.get_params()), task_uuid))
-            elif task_kind == 'read':
-                resp_queue.put(HbusClientResponse(HbusClient._read_slave_object(client, *task.get_params()), task_uuid))
-            elif task_kind == 'write':
-                HbusClient._write_slave_object(client, *task.get_params())
-            elif task_kind == 'check':
-                HbusClient._check_slaves(client)
+                #write separately for more responsiveness
+                try:
+                    wrtask = wrqueue.get(False)
+                    task_kind = wrtask.get_kind()
+                    if task_kind == 'write':
+                        HbusClient._write_slave_object(client, *wrtask.get_params())
+                    elif task_kind == 'check':
+                        HbusClient._check_slaves(client)
+                except QueueEmpty:
+                    #proceed to read tasks if empty
+                    pass
+
+                try:
+                    task = rdqueue.get(False)
+                except QueueEmpty:
+                    continue
+
+                task_kind = task.get_kind()
+                task_uuid = task.uuid
+                if task.is_async:
+                    rqueue = async_queue
+                else:
+                    rqueue = resp_queue
+                if task_kind == 'stop':
+                    exit(0)
+                elif task_kind == 'buslist':
+                    rqueue.put(HbusClientResponse(HbusClient._get_active_busses(client), task.uuid, task._cb, task._ud))
+                elif task_kind == 'slavelist':
+                    rqueue.put(HbusClientResponse(HbusClient._get_active_slave_list(client), task_uuid, task._cb, task._ud))
+                elif task_kind == 'slaveinfo':
+                    rqueue.put(HbusClientResponse(HbusClient._get_slave_info(client, *task.get_params()), task_uuid, task._cb, task._ud))
+                elif task_kind == 'slaveobjlist':
+                    rqueue.put(HbusClientResponse(HbusClient._get_slave_object_list(client, *task.get_params()), task_uuid, task._cb, task._ud))
+                elif task_kind == 'read':
+                    rqueue.put(HbusClientResponse(HbusClient._read_slave_object(client, *task.get_params()), task_uuid, task._cb, task._ud))
+            except KeyboardInterrupt:
+                pass
 
             time.sleep(0.01)
