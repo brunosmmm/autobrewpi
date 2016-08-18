@@ -1,4 +1,4 @@
-from ctypes import CDLL, c_ubyte
+from ctypes import CDLL, c_ubyte, c_uint
 from fonts.fontmgr import FontManager
 from ui.element import UIElement
 from ui.screen import Screen
@@ -147,65 +147,10 @@ class ScreenBuffer(StoppableThread):
         self._lcd.SCREEN_Draw()
 
     def draw_line(self, x1, y1, x2, y2, color):
-
-        dx = abs(x2 - x1)
-        dy = abs(y2 - y1)
-
-        addx = 1
-        addy = 1
-        if x1 > x2:
-            addx = -1
-
-        if y1 > y2:
-            addy = -1
-
-        if dx >= dy:
-            dy *= 2
-            P = dy - dx
-            diff = P - dx
-
-            for i in range(0, dx+1):
-                self.set_pixel_value(x1, y1, color)
-
-                if P < 0:
-                    P += dy
-                    x1 += addx
-                else:
-                    P += diff
-                    x1 += addx
-                    y1 += addy
-        else:
-            dx *= 2
-            P = dx - dy
-            diff = P - dy
-
-            for i in range(0, dy+1):
-                self.set_pixel_value(x1, y1, color)
-
-                if P < 0:
-                    P += dx
-                    y1 += addy
-                else:
-                    P += diff
-                    x1 += addx
-                    y1 += addy
+        self._lcd.SCREEN_Line(x1, y1, x2, y2, color)
 
     def draw_rectangle(self, x1, y1, x2, y2, fill, color):
-
-        if fill:
-            xmin = min(x1, x2)
-            xmax = max(x1, x2)
-            ymin = min(y1, y2)
-            ymax = max(y1, y2)
-
-            for i in range(xmin, xmax+1):
-                for j in range(ymin, ymax+1):
-                    self.set_pixel_value(i, j, color)
-        else:
-            self.draw_line(x1, y1, x2, y1, color)
-            self.draw_line(x1, y2, x2, y2, color)
-            self.draw_line(x1, y1, x1, y2, color)
-            self.draw_line(x2, y1, x2, y2, color)
+        self._lcd.SCREEN_Rectangle(x1, y1, x2, y2, fill, color)
 
     def draw_bar(self, x1, y1, x2, y2, width, color):
         pass
@@ -220,10 +165,9 @@ class ScreenBuffer(StoppableThread):
             return
 
         row_data = char_data.tolist()
-        for i in range(0, font_h):
-            for j in range(0, font_w):
-                if row_data[i] & (1<<j):
-                    self.set_pixel_value(x+j, y+i, color)
+        row_data_array = (c_uint*len(row_data))(*row_data)
+        self._lcd.SCREEN_Char(x, y, row_data_array, font_w, font_h, color)
+
 
     def draw_bitmap(self, x, y, data):
         for ix in range(0, data.width):
@@ -261,34 +205,7 @@ class ScreenBuffer(StoppableThread):
             self.draw_font_char(offset_h+x+i*font_w, offset_v+y, font_name, msg[i], color)
 
     def draw_circle(self, x, y, radius, fill, color):
-
-        a = 0
-        b = radius
-        P = 1 - radius
-
-        while (a <= b):
-            if fill:
-                self.draw_line(x-a, y+b, x+a, y+b, color)
-                self.draw_line(x-a, y-b, x+a, y-b, color)
-                self.draw_line(x-b, y+a, x+b, y+a, color)
-                self.draw_line(x-b, y-a, x+b, y-a, color)
-            else:
-                self.set_pixel_value(a+x, b+y, color)
-                self.set_pixel_value(b+x, a+y, color)
-                self.set_pixel_value(x-a, b+y, color)
-                self.set_pixel_value(x-b, a+y, color)
-                self.set_pixel_value(b+x, y-a, color)
-                self.set_pixel_value(a+x, y-b, color)
-                self.set_pixel_value(x-a, y-b, color)
-                self.set_pixel_value(x-b, y-a, color)
-
-            if P < 0:
-                P += 3 + 2*a
-                a += 1
-            else:
-                P += 5 + 2*(a - b)
-                a += 1
-                b -= 1
+        self._lcd.SCREEN_Circle(x, y, radius, fill, color)
 
     def get_height(self):
         return self._height
@@ -327,10 +244,6 @@ class ScreenBuffer(StoppableThread):
                     self.draw_circle(**dwi.kwargs)
                 elif dwi.kind == 'bitmap':
                     self.draw_bitmap(**dwi.kwargs)
-
-        #copy screen
-        #ptr = (c_ubyte * len(self._screenbuf))(*self._screenbuf)
-        #self._lcd.SCREEN_Copy(ptr)
 
         self._drawing = False
 
