@@ -9,12 +9,12 @@
     },
 
     "driver_instances" : {
+        "GWatch": "GadgetWatcher",
         "HystCtl1": "HystController",
         "HystCtl2": "HystController",
         "GOutBits": "ByteComp",
         "GInBits": "ByteExp",
-        "MashCtl": "MashController",
-        "GWatch": "GadgetWatcher"
+        "MashCtl": "MashController"
     },
 
     "required_connections": [
