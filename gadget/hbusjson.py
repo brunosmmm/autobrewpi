@@ -127,6 +127,7 @@ class HbusClient(object):
         while resp.uuid != req.uuid:
             self._respqueue.put(resp)
             resp = self._respqueue.get()
+            time.sleep(0.01)
 
         return resp.resp
 
