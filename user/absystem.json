@@ -4,14 +4,15 @@
         "ByteComp": "vspace.bytecomp",
         "ByteExp": "vspace.byteexp",
         "MashController": "brewday.mashctl",
-        "GadgetWatcher": "gadget.gwatch"
+        "GadgetWatcher": "gadget.gwatch",
+        "Pt100Table": "vspace.pt100"
 
     },
 
     "driver_instances" : {
         "GWatch": "GadgetWatcher",
+        "HLTSens": "Pt100Table",
         "HystCtl1": "HystController",
-        "HystCtl2": "HystController",
         "GOutBits": "ByteComp",
         "GInBits": "ByteExp",
         "MashCtl": "MashController"
@@ -44,8 +45,8 @@
         },
         {
             "port_from": {
-                "instance_name": "gadget",
-                "port_name": "TmpSens1_TMP",
+                "instance_name": "HLTSens",
+                "port_name": "Temperature",
                 "port_direction": "output"
             },
             "port_to":
@@ -55,16 +56,16 @@
                 "port_direction": "input"
             }
         },
-        {
+                {
             "port_from": {
                 "instance_name": "gadget",
-                "port_name": "TmpSens2_TMP",
+                "port_name": "TmpSens1_TMP",
                 "port_direction": "output"
             },
             "port_to":
             {
-                "instance_name": "HystCtl2",
-                "port_name": "CurrTemp",
+                "instance_name": "HLTSens",
+                "port_name": "Resistance",
                 "port_direction": "input"
             }
         },
@@ -77,18 +78,6 @@
             "port_to": {
                 "instance_name": "GOutBits",
                 "port_name": "Bit0",
-                "port_direction": "input"
-            }
-        },
-        {
-            "port_from": {
-                "instance_name": "HystCtl2",
-                "port_name": "CtlOut",
-                "port_direction": "output"
-            },
-            "port_to": {
-                "instance_name": "GOutBits",
-                "port_name": "Bit2",
                 "port_direction": "input"
             }
         }

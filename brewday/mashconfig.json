@@ -18,7 +18,7 @@
         "HLTCtlSetPoint": "HystCtl1.SetPoint",
         "HLTCtlHystLevel": "HystCtl1.HystLevel",
         "HLTCtlHystType": "HystCtl1.HystType",
-        "HLTTemp": "gadget.TmpSens1_TMP",
+        "HLTTemp": "HLTSens.Temperature",
         "MLTTemp": "gadget.TmpSens2_TMP",
         "PumpCtl": "GOutBits.Bit1",
         "GPanic": "GWatch.GadgetPanic"
