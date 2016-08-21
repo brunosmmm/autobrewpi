@@ -1,4 +1,4 @@
-from pyjsonrpc import HttpClient
+from pyjsonrpc import HttpClient, JsonRpcError
 from collections import deque
 from multiprocessing import Process, Queue, Event
 from Queue import Empty as QueueEmpty
@@ -258,16 +258,20 @@ class HbusClient(object):
                     rqueue = async_queue
                 else:
                     rqueue = resp_queue
-                if task_kind == 'buslist':
-                    rqueue.put(HbusClientResponse(HbusClient._get_active_busses(client), task.uuid, task._cb, task._ud))
-                elif task_kind == 'slavelist':
-                    rqueue.put(HbusClientResponse(HbusClient._get_active_slave_list(client), task_uuid, task._cb, task._ud))
-                elif task_kind == 'slaveinfo':
-                    rqueue.put(HbusClientResponse(HbusClient._get_slave_info(client, *task.get_params()), task_uuid, task._cb, task._ud))
-                elif task_kind == 'slaveobjlist':
-                    rqueue.put(HbusClientResponse(HbusClient._get_slave_object_list(client, *task.get_params()), task_uuid, task._cb, task._ud))
-                elif task_kind == 'read':
-                    rqueue.put(HbusClientResponse(HbusClient._read_slave_object(client, *task.get_params()), task_uuid, task._cb, task._ud))
+                try:
+                    if task_kind == 'buslist':
+                        rqueue.put(HbusClientResponse(HbusClient._get_active_busses(client), task.uuid, task._cb, task._ud))
+                    elif task_kind == 'slavelist':
+                        rqueue.put(HbusClientResponse(HbusClient._get_active_slave_list(client), task_uuid, task._cb, task._ud))
+                    elif task_kind == 'slaveinfo':
+                        rqueue.put(HbusClientResponse(HbusClient._get_slave_info(client, *task.get_params()), task_uuid, task._cb, task._ud))
+                    elif task_kind == 'slaveobjlist':
+                        rqueue.put(HbusClientResponse(HbusClient._get_slave_object_list(client, *task.get_params()), task_uuid, task._cb, task._ud))
+                    elif task_kind == 'read':
+                        rqueue.put(HbusClientResponse(HbusClient._read_slave_object(client, *task.get_params()), task_uuid, task._cb, task._ud))
+                except JsonRpcError:
+                    #try again later
+                    rdqueue.put(task)
             except KeyboardInterrupt:
                 pass
 
