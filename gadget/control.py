@@ -218,9 +218,14 @@ class GadgetVariableSpace(StoppableThread):
 
     def _gadget_state_read_cb(self, data, user_data):
         self._hbus_read_cb(data, user_data)
-        if int(data, 2) & 0x08:
-            #tracked value change detected, read all
-            self._scan_values()
+        if int(data) & 0x08:
+            #tracked value change detected, read new values
+            change_flags = int(data) >> 8
+            read_list = []
+            for i in range(0, 16):
+                if change_flags & (1<<i):
+                    read_list.append(i+1)
+            self._scan_values(read_list)
 
     def _scan_variable(self, var_name, rd_callback):
         var = self._varspace[var_name]
@@ -234,9 +239,10 @@ class GadgetVariableSpace(StoppableThread):
                 self.logger.debug('failed to read variable "{}": {}'.format(var_name, e.message))
                 var._old = True
 
-    def _scan_values(self):
+    def _scan_values(self, obj_idx_list=None):
         for var_name, var in self._varspace.iteritems():
-            self._scan_variable(var_name, self._hbus_read_cb)
+            if obj_idx_list is None or var._idx in obj_idx_list:
+                self._scan_variable(var_name, self._hbus_read_cb)
 
     def __setattr__(self, name, value):
         if self._initialized:
