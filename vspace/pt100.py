@@ -35,9 +35,12 @@ class Pt100Table(VSpaceDriver):
         if self._table is None:
             return
 
-        original_xs = numpy.arange(self._start_temp, self._start_temp+len(self._table))
-        interp_data = interpolate.interp1d(self._table, original_xs)
-        #new_xs = numpy.arange(self._start_temp, self._start_temp+len(self._table), 0.01)
-        curr_res = self.__Resistance
+        try:
+            original_xs = numpy.arange(self._start_temp, self._start_temp+len(self._table))
+            interp_data = interpolate.interp1d(self._table, original_xs)
+            #new_xs = numpy.arange(self._start_temp, self._start_temp+len(self._table), 0.01)
+            curr_res = self.__Resistance
 
-        self.__Temperature = numpy.around(interp_data(curr_res), 2)
+            self.__Temperature = numpy.around(interp_data(curr_res), 2)
+        except Exception as e:
+            self.log_err('could not calculate temperature: {}'.format(e.message))
