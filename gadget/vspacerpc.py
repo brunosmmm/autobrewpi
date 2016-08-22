@@ -52,6 +52,19 @@ def make_json_server(rpc_request_fn):
             return {'status': 'ok',
                     'data': self._rpc_req('matrix')}
 
+        @pyjsonrpc.rpcmethod
+        def call_driver_method(self, instance_name, method_name, **kwargs):
+            try:
+                val = self._rpc_req('call',
+                                    instance_name,
+                                    method_name,
+                                    **kwargs)
+            except Exception:
+                return {'status': 'error'}
+
+            return {'status': 'ok',
+                    'data': val}
+
     return VSpaceRPCServer
 
 class VSpaceRPCController(StoppableThread):
