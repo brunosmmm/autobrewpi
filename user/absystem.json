@@ -5,7 +5,8 @@
         "ByteExp": "vspace.byteexp",
         "MashController": "brewday.mashctl",
         "GadgetWatcher": "gadget.gwatch",
-        "Pt100Table": "vspace.pt100"
+        "Pt100Table": "vspace.pt100",
+        "DataLogger": "gadget.datalog"
 
     },
 
@@ -15,7 +16,8 @@
         "HystCtl1": "HystController",
         "GOutBits": "ByteComp",
         "GInBits": "ByteExp",
-        "MashCtl": "MashController"
+        "MashCtl": "MashController",
+        "DataLog": "DataLogger"
     },
 
     "required_connections": [
@@ -78,6 +80,18 @@
             "port_to": {
                 "instance_name": "GOutBits",
                 "port_name": "Bit0",
+                "port_direction": "input"
+            }
+        },
+        {
+            "port_from": {
+                "instance_name": "HLTSens",
+                "port_name": "Temperature",
+                "port_direction": "output"
+            },
+            "port_to": {
+                "instance_name": "DataLog",
+                "port_name": "DataInput1",
                 "port_direction": "input"
             }
         }
