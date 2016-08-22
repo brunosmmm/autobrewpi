@@ -6,8 +6,10 @@
         "MashController": "brewday.mashctl",
         "GadgetWatcher": "gadget.gwatch",
         "Pt100Table": "vspace.pt100",
-        "DataLogger": "gadget.datalog"
-
+        "DataLogger": "gadget.datalog",
+        "VirtualOutput": "vspace.voutport",
+        "VirtualInput": "vspace.vinport",
+        "LogicBlock": "vspace.blogic"
     },
 
     "driver_instances" : {
@@ -16,6 +18,8 @@
         "HystCtl1": "HystController",
         "GOutBits": "ByteComp",
         "GInBits": "ByteExp",
+        "PumpSwitch": "VirtualInput",
+        "ManualPumpCtl": "VirtualOutput",
         "MashCtl": "MashController",
         "DataLog": "DataLogger"
     },
@@ -92,6 +96,18 @@
             "port_to": {
                 "instance_name": "DataLog",
                 "port_name": "DataInput1",
+                "port_direction": "input"
+            }
+        },
+        {
+            "port_from": {
+                "instance_name": "GInBits",
+                "port_name": "Bit0",
+                "port_direction": "output"
+            },
+            "port_to": {
+                "instance_name": "PumpSwitch",
+                "port_name": "Input",
                 "port_direction": "input"
             }
         }

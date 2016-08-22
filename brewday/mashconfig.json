@@ -21,7 +21,8 @@
         "HLTTemp": "HLTSens.Temperature",
         "MLTTemp": "gadget.TmpSens2_TMP",
         "PumpCtl": "GOutBits.Bit1",
-        "GPanic": "GWatch.GadgetPanic"
+        "GPanic": "GWatch.GadgetPanic",
+        "ManualPump": "ManualPumpCtl.Output"
     },
     "hystctl": {
         "type": "updown",

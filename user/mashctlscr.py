@@ -17,7 +17,7 @@ class ABMashScreen(Screen):
         super(ABMashScreen, self).__init__(x=0, y=0, w=240, h=64, **kwargs)
 
         #upper 'title'
-        self._mashctltitle = Button(text='Mash Ctl',
+        self._mashctltitle = Button(text=self._composite_label_text('Mash Ctl', ' ', 29),
                                     font='8x8',
                                     x=0,
                                     y=0,
@@ -97,6 +97,7 @@ class ABMashScreen(Screen):
 
         #track manual mode
         self._manual = False
+        self._manual_changed = True
 
         #local state tracking
         self._state = 'idle'
@@ -290,6 +291,7 @@ class ABMashScreen(Screen):
                     #self._panic_saved_state = None
 
         elif evt['event'] == 'mode.change':
+            self._manual_changed = True
             if evt['data'] == 'manual':
                 self._manual = True
             elif evt['data'] == 'normal':
@@ -311,6 +313,17 @@ class ABMashScreen(Screen):
 
     def update_screen(self):
         #update to current values
+        if self._manual:
+            self._mashctltitle.set_text(self._composite_label_text('Mash Ctl', 'MANUAL', 29))
+            if self._varspace.call_driver_method('PumpSwitch', 'get_value'):
+                self._varspace.call_driver_method('ManualPumpCtl', 'set_value', value=True)
+            else:
+                self._varspace.call_driver_method('ManualPumpCtl', 'set_value', value=False)
+        else:
+            self._mashctltitle.set_text(self._composite_label_text('Mash Ctl', ' ', 29))
+            self._varspace.call_driver_method('ManualPumpCtl', 'set_value', value=False)
+        #self._manual_changed = False
+
         hlt_temp = self._varspace.call_driver_method(self.ctl_inst, 'get_hlt_temp')
         mlt_temp = self._varspace.call_driver_method(self.ctl_inst, 'get_mlt_temp')
         state = self._varspace.call_driver_method(self.ctl_inst, 'get_state')

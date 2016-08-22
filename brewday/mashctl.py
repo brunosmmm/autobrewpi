@@ -11,6 +11,7 @@ class MashController(VSpaceDriver):
     _inputs = {
         'HLTTemp': VSpaceInput('TEMPERATURE'),
         'MLTTemp': VSpaceInput('TEMPERATURE'),
+        'ManualPump': VSpaceInput('BOOLEAN'),
         'GPanic': VSpaceInput('BOOLEAN')
     }
 
@@ -33,6 +34,7 @@ class MashController(VSpaceDriver):
         self._state_timer_duration = None
         self._pause_all = False
         self._saved_state = None
+        self._pump_state = False
 
         #load persistent data
         try:
@@ -78,8 +80,25 @@ class MashController(VSpaceDriver):
         self.default_configuration()
         self.enter_idle()
 
-    def update_local_variable(self, *args, **kwargs):
-        super(MashController, self).update_local_variable(*args, **kwargs)
+    @property
+    def _pump_on(self):
+        return self._pump_state
+
+    @_pump_on.setter
+    def _pump_on(self, value):
+        if value or self.__ManualPump:
+            self.__PumpCtl = True
+            self._pump_state = True
+        else:
+            self.__PumpCtl = False
+            self._pump_state = False
+
+    def update_local_variable(self, variable_name, new_value):
+        super(MashController, self).update_local_variable(variable_name, new_value)
+
+        if variable_name == 'ManualPump':
+            if (self._pump_on or self.__ManualPump) != self.__PumpCtl:
+                self.__PumpCtl = self._pump_on or self.__ManualPump
 
         if self.__GPanic:
             #pause
@@ -130,16 +149,16 @@ class MashController(VSpaceDriver):
 
     def pause_transfer(self):
         self._pause_transfer = True
-        self.__PumpCtl = False
+        self._pump_on = False
 
     def unpause_transfer(self):
         self._pause_transfer = False
-        self.__PumpCtl = True
+        self._pump_on = True
 
     def pause_all(self):
         self._saved_state = {'pump': self.__PumpCtl,
                              'state': self._state}
-        self.__PumpCtl = False
+        self._pump_on = False
         self._state = 'paused'
         self._pause_all = True
 
@@ -148,7 +167,7 @@ class MashController(VSpaceDriver):
             return
 
         if self._saved_state is not None:
-            self.__PumpCtl = self._saved_state['pump']
+            self._pump_on = self._saved_state['pump']
             self._state = self._saved_state['state']
 
         self._saved_state = None
@@ -163,7 +182,7 @@ class MashController(VSpaceDriver):
         self.log_info('Starting recirculating mash')
         self._state_start_timer = datetime.now()
         self._state_timer_duration = timedelta(minutes=int(self._mash_config['mash_states']['mash']['duration']))
-        self.__PumpCtl = True
+        self._pump_on = True
         self._state = 'mash'
 
     def enter_mashout(self):
@@ -174,19 +193,19 @@ class MashController(VSpaceDriver):
         self.__HLTCtlEnable = False
         self.__HLTCtlSetPoint = float(self._mash_config['mash_states']['mashout']['temp'])
         self.__HLTCtlEnable = True
-        self.__PumpCtl = True
+        self._pump_on = True
         self._state = 'mashout'
 
     def enter_sparge_wait(self):
         self.logger.debug('entering sparge_wait state')
         #disable heating element
         self.__HLTCtlEnable = False
-        self.__PumpCtl = False
+        self._pump_on = False
         self._state = 'sparge_wait'
 
     def enter_sparge(self):
         self.log_info('Starting sparge phase')
-        self.__PumpCtl = True
+        self._pump_on = True
         self._state_start_timer = datetime.now()
         self._state_timer_duration = timedelta(minutes=int(self._mash_config['mash_states']['sparge']['duration']))
         self._state = 'sparge'

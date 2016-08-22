@@ -116,7 +116,8 @@ class HbusClient(object):
             raise IOError('malformed response')
 
         if response['status'] not in ('ok', 'deferred'):
-            raise HbusJsonServerError('error: {}'.format(response['error']))
+            #raise HbusJsonServerError('error: {}'.format(response['error']))
+            return None
 
         response.pop('status')
         return response
@@ -147,6 +148,9 @@ class HbusClient(object):
 
     def get_active_busses(self):
         return self._put_req_and_wait(HbusClientRequest('buslist', None))
+
+    def get_master_state(self):
+        return self._put_req_and_wait(HbusClientRequest('masterstate', None))
 
     @staticmethod
     def _get_active_busses(client):
@@ -226,6 +230,11 @@ class HbusClient(object):
         client.checkslaves()
 
     @staticmethod
+    def _get_master_state(client):
+        response = client.masterstate()
+        return HbusClient._unpack_response(response)['value']
+
+    @staticmethod
     def _process_queue(rdqueue, wrqueue, resp_queue, async_queue, server_addr, server_port, stop_flag):
 
         signal.signal(signal.SIGINT, signal.SIG_IGN)
@@ -276,6 +285,8 @@ class HbusClient(object):
                         rqueue.put(HbusClientResponse(HbusClient._get_slave_object_list(client, *task.get_params()), task_uuid, task._cb, task._ud))
                     elif task_kind == 'read':
                         rqueue.put(HbusClientResponse(HbusClient._read_slave_object(client, *task.get_params()), task_uuid, task._cb, task._ud))
+                    elif task_kind == 'masterstate':
+                        rqueue.put(HbusClientResponse(HbusClient._get_master_state(client, *task.get_params()), task_uuid, task._cb, task._ud))
                 except (JsonRpcError, URLError):
                     #try again later
                     rdqueue.put(task)

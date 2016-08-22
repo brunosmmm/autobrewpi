@@ -131,7 +131,12 @@ class GadgetVariableSpace(StoppableThread):
         self._write_queue = deque()
 
         self._hcli.start()
-        #initial server scan
+        #initial server scan, wait for master to be available
+        master_state = self._hcli.get_master_state()
+        while master_state != 5:
+            time.sleep(5)
+            master_state = self._hcli.get_master_state()
+
         tries = 0
         while (tries < 20):
             self._hcli.check_slaves()

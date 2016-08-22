@@ -1,4 +1,4 @@
-from vspace import VSpaceDriver, VSpaceInput, VSpaceOutput, VSpaceParameter
+from vspace import VSpaceDriver, VSpaceInput, VSpaceOutput, VSpaceParameter, rpccallable
 
 class ByteExp(VSpaceDriver):
 
@@ -19,6 +19,10 @@ class ByteExp(VSpaceDriver):
 
     def __init__(self, **kwargs):
         super(ByteExp, self).__init__(**kwargs)
+
+    @rpccallable
+    def get_current_state(self):
+        return self.__ByteIn
 
     def update_local_variable(self, *args, **kwargs):
         super(ByteExp, self).update_local_variable(*args, **kwargs)
