@@ -1,6 +1,7 @@
 from gadget.hbusjson import HbusClient
 from util.thread import StoppableThread
 from vspace import VSpaceDriver, VSpaceInput, VSpaceOutput, VSpaceParameter
+from gadget.vspacerpc import VSpaceRPCController
 import time
 from datetime import datetime, timedelta
 from collections import deque
@@ -160,7 +161,16 @@ class GadgetVariableSpace(StoppableThread):
         #timers
         self._last_scan = datetime.now()
 
+        #RPC server
+        self._rpcsrv = VSpaceRPCController(self.rpc_request)
+        self._rpcsrv.start()
+
         self._initialized = True
+
+    def stop(self):
+        self._rpcsrv.stop()
+        self._rpcsrv.join()
+        super(GadgetVariableSpace, self).stop()
 
     def _parse_objects(self):
         obj_list = self._hcli.get_slave_object_list(self._guid)
@@ -345,6 +355,12 @@ class GadgetVariableSpace(StoppableThread):
 
         space_from[port_from].connect_port(space_to[port_to])
 
+        #generate connection event
+        if space_from == self._process_space_port_matrix:
+            self._drivers[space_from[port_from].get_linked_instance_name()].port_connected(port_from, port_to)
+        if space_to == self._process_space_port_matrix:
+            self._drivers[space_to[port_to].get_linked_instance_name()].port_connected(port_to, port_from)
+
         #make sure which is input and which is output
         input_port = None
         output_port = None
@@ -430,6 +446,13 @@ class GadgetVariableSpace(StoppableThread):
         else:
             raise ValueError('invalid instance: {}'.format(instance_name))
 
+    def is_port_connected(self, port_id):
+        if port_id in self._gadget_space_port_matrix:
+            return len(self._gadget_space_port_matrix[port_id].get_connected_to()) > 0
+        elif port_id in self._process_space_port_matrix[port_id]:
+            return len(self._process_space_port_matrix[port_id].get_connected_to()) > 0
+
+        raise KeyError('invalid port id: {}'.format(port_id))
 
     def get_available_var_by_type(self, var_type):
         pass
@@ -472,6 +495,17 @@ class GadgetVariableSpace(StoppableThread):
                 port_descriptor = self._gadget_space_port_matrix[connected_to]
                 self.__setattr__(port_descriptor.get_linked_port_name(), new_value)
 
+    def get_connection_matrix(self):
+        ret = {'gadget': {},
+               'process': {}}
+
+        for port_id, port_object in self._process_space_port_matrix.iteritems():
+            ret['process'][port_id] = port_object._connection_list
+        for port_id, port_object in self._gadget_space_port_matrix.iteritems():
+            ret['gadget'][port_id] = port_object._connection_list
+
+        return ret
+
     def _debug_dump_port_list(self):
         print 'Port list dump'
         print 'Process Space:'
@@ -497,6 +531,18 @@ class GadgetVariableSpace(StoppableThread):
 
         return instance_list
 
+    def get_port_info(self, port_id):
+        if port_id in self._gadget_space_port_matrix:
+            pspace = self._gadget_space_port_matrix
+        elif port_id in self._process_space_port_matrix:
+            pspace = self._process_space_port_matrix
+        else:
+            raise KeyError('invalid port id: {}'.format(port_id))
+
+        return {'direction' : pspace[port_id].get_direction(),
+                'instname': pspace[port_id].get_linked_instance_name(),
+                'portname': pspace[port_id].get_linked_port_name()}
+
     def call_driver_method(self, instance_name, method_name, **kwargs):
         if instance_name in self._drivers:
             method = self._drivers[instance_name].__getattr__(method_name)
@@ -511,6 +557,40 @@ class GadgetVariableSpace(StoppableThread):
             self.logger.warning('{}: {}'.format(instance_name, message))
         elif log_level == 'INFO':
             self.logger.info('{}: {}'.format(instance_name, message))
+
+    def rpc_request(self, request, **kwargs):
+        if request == 'portlist':
+            return {'gadget': self._gadget_space_port_matrix.keys(),
+                    'process': self._process_space_port_matrix.keys()}
+        if request == 'findport':
+            try:
+                return self.find_port_id(**kwargs)
+            except ValueError:
+                return None
+        if request == 'portinfo':
+            try:
+                return self.get_port_info(**kwargs)
+            except KeyError:
+                return None
+        if request == 'matrix':
+            return self.get_connection_matrix()
+        if request == 'getval':
+            return self.get_current_value(**kwargs)
+
+    def get_current_value(self, port_id):
+
+        if port_id in self._gadget_space_port_matrix:
+            var_name = self._gadget_space_port_matrix[port_id].get_linked_port_name()
+            return self._varspace[var_name].get_value()
+        elif port_id in self._process_space_port_matrix:
+            inst_name = self._process_space_port_matrix[port_id].get_linked_instance_name()
+            var_name = self._process_space_port_matrix[port_id].get_linked_port_name()
+
+            try:
+                return self._drivers[inst_name].get_variable_value(var_name)
+            except AttributeError:
+                self.logger.warning('get_current_value: no such port: {}.{}'.format(inst_name, var_name))
+                return None
 
     def run(self):
 
