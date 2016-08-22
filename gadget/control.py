@@ -1,6 +1,6 @@
 from gadget.hbusjson import HbusClient
 from util.thread import StoppableThread
-from vspace import VSpaceDriver, VSpaceInput, VSpaceOutput, VSpaceParameter
+from vspace import VSpaceDriver, VSpaceInput, VSpaceOutput, VSpaceParameter, CallNotAllowedError
 from gadget.vspacerpc import VSpaceRPCController
 import time
 from datetime import datetime, timedelta
@@ -544,9 +544,11 @@ class GadgetVariableSpace(StoppableThread):
                 'portname': pspace[port_id].get_linked_port_name()}
 
     def call_driver_method(self, instance_name, method_name, **kwargs):
+        return self._call_driver_method('local', instance_name, method_name, **kwargs)
+
+    def _call_driver_method(self, source, instance_name, method_name, **kwargs):
         if instance_name in self._drivers:
-            method = self._drivers[instance_name].__getattr__(method_name)
-            return method(**kwargs)
+            return self._drivers[instance_name].extern_method_call(source, method_name, **kwargs)
         else:
             raise KeyError('Invalid instance name: {}'.format(instance_name))
 
@@ -558,7 +560,7 @@ class GadgetVariableSpace(StoppableThread):
         elif log_level == 'INFO':
             self.logger.info('{}: {}'.format(instance_name, message))
 
-    def rpc_request(self, request, **kwargs):
+    def rpc_request(self, request, *args, **kwargs):
         if request == 'portlist':
             return {'gadget': self._gadget_space_port_matrix.keys(),
                     'process': self._process_space_port_matrix.keys()}
@@ -576,6 +578,8 @@ class GadgetVariableSpace(StoppableThread):
             return self.get_connection_matrix()
         if request == 'getval':
             return self.get_current_value(**kwargs)
+        if request == 'call':
+            return self._call_driver_method('rpc', *args, **kwargs)
 
     def get_current_value(self, port_id):
 

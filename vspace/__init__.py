@@ -14,6 +14,9 @@ IO_VARIABLE_TYPES = [
 class ParameterLockedError(Exception):
     pass
 
+class CallNotAllowedError(Exception):
+    pass
+
 def _check_variable_dtype(wanted_type, value):
     error = False
 
@@ -195,6 +198,18 @@ class VSpaceDriver(object):
     def get_variable_value(self, var_name):
         return self.__getattr__('__'+var_name)
 
+    def extern_method_call(self, call_src, method_name, **kwargs):
+        method = self.__getattr__(method_name)
+        if call_src == 'local':
+            return method(**kwargs)
+
+        try:
+           if call_src == 'rpc':
+                if method.rpc_call:
+                    return method(**kwargs)
+        except AttributeError:
+            raise CallNotAllowedError('method can not be called externally')
+
     def __getattr__(self, attr_name):
         #check if theres such an input
         try:
@@ -312,3 +327,11 @@ class VSpaceDriver(object):
     def log_info(self, msg):
         if self._gvarspace is not None:
             self._gvarspace.driver_log(self._instance_name, 'INFO', msg)
+
+
+#helpers
+def rpccallable(func):
+
+    func.rpc_call = True
+
+    return func
