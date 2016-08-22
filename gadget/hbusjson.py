@@ -6,6 +6,7 @@ import time
 import uuid
 from util.thread import StoppableThread
 import signal
+from urllib2 import URLError
 
 class HbusJsonServerError(Exception):
     pass
@@ -123,7 +124,11 @@ class HbusClient(object):
     def _put_req_and_wait(self, req):
 
         self._rdqueue.put(req)
-        resp = self._respqueue.get(timeout=1)
+        try:
+            resp = self._respqueue.get()
+        except QueueEmpty:
+            raise
+
         while resp.uuid != req.uuid:
             self._respqueue.put(resp)
             resp = self._respqueue.get()
@@ -242,6 +247,8 @@ class HbusClient(object):
                         HbusClient._check_slaves(client)
                     elif task_kind == 'stop':
                         return
+                except (JsonRpcError, URLError):
+                    wrqueue.put(wrtask)
                 except QueueEmpty:
                     #proceed to read tasks if empty
                     pass
@@ -269,7 +276,7 @@ class HbusClient(object):
                         rqueue.put(HbusClientResponse(HbusClient._get_slave_object_list(client, *task.get_params()), task_uuid, task._cb, task._ud))
                     elif task_kind == 'read':
                         rqueue.put(HbusClientResponse(HbusClient._read_slave_object(client, *task.get_params()), task_uuid, task._cb, task._ud))
-                except JsonRpcError:
+                except (JsonRpcError, URLError):
                     #try again later
                     rdqueue.put(task)
             except KeyboardInterrupt:

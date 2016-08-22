@@ -132,11 +132,19 @@ class GadgetVariableSpace(StoppableThread):
 
         self._hcli.start()
         #initial server scan
-        self._hcli.check_slaves()
-        time.sleep(2)
-        active_slaves = self._hcli.get_active_slave_list()
+        tries = 0
+        while (tries < 20):
+            self._hcli.check_slaves()
+            time.sleep(2)
+            active_slaves = self._hcli.get_active_slave_list()
 
-        if gadget_uid not in active_slaves:
+            if gadget_uid not in active_slaves:
+                tries += 1
+                continue
+
+            break
+
+        if tries == 20:
             raise GadgetNotPresentError('easybrewgadget is not available')
 
         #detect address
