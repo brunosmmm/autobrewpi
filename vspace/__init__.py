@@ -78,6 +78,7 @@ class VSpacePort(object):
         self._global_id = global_id
         self._parent = None
         self._tags = set(tags)
+        self._connected = False
 
     def set_parent(self, parent_object):
         self._parent = parent_object
@@ -96,6 +97,15 @@ class VSpacePort(object):
 
     def remove_tag(self, tag):
         self._tags.remove(tag)
+
+    def get_connected(self):
+        return self._connected
+
+    def set_connected(self):
+        self._connected = True
+
+    def set_disconected(self):
+        self._connected = False
 
 class VSpaceInput(VSpacePort):
     def __init__(self, dtype, initial_value = None):
@@ -182,6 +192,9 @@ class VSpaceDriver(object):
         #flags
         self._flags = set()
 
+    def get_variable_value(self, var_name):
+        return self.__getattr__('__'+var_name)
+
     def __getattr__(self, attr_name):
         #check if theres such an input
         try:
@@ -267,6 +280,26 @@ class VSpaceDriver(object):
 
     def cycle(self):
         pass
+
+    def port_connected(self, port_id, connected_to_id):
+        for port_name, port_obj in self._inputs.iteritems():
+            if port_obj.get_global_port_id() == port_id:
+                port_obj.set_connected()
+                return
+
+        for port_name, port_obj in self._outputs.iteritems():
+            if port_obj.get_global_port_id() == port_id:
+                port_obj.set_connected()
+
+    def port_disconnected(self, port_id):
+        for port_name, port_obj in self._inputs.iteritems():
+            if port_obj.get_global_port_id() == port_id:
+                port_obj.set_disconnected()
+                return
+
+        for port_name, port_obj in self._outputs.iteritems():
+            if port_obj.get_global_port_id() == port_id:
+                port_obj.set_disconnected()
 
     def log_warn(self, msg):
         if self._gvarspace is not None:
