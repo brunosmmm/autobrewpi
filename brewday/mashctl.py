@@ -1,4 +1,4 @@
-from vspace import VSpaceDriver, VSpaceOutput, VSpaceInput
+from vspace import VSpaceDriver, VSpaceOutput, VSpaceInput, rpccallable
 import json
 import re
 import logging
@@ -87,6 +87,7 @@ class MashController(VSpaceDriver):
         else:
             self.unpause_all()
 
+    @rpccallable
     def get_state(self):
         return self._state
 
@@ -96,9 +97,11 @@ class MashController(VSpaceDriver):
     def reset(self):
         self.enter_idle()
 
+    @rpccallable
     def get_hlt_temp(self):
         return self.__HLTTemp
 
+    @rpccallable
     def get_mlt_temp(self):
         return self.__MLTTemp
 

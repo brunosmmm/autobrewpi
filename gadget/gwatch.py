@@ -1,4 +1,4 @@
-from vspace import VSpaceDriver, VSpaceOutput, VSpaceInput
+from vspace import VSpaceDriver, VSpaceOutput, VSpaceInput, rpccallable
 
 class GadgetWatcher(VSpaceDriver):
 
@@ -26,6 +26,7 @@ class GadgetWatcher(VSpaceDriver):
 
         self._waiting_first_update = True
 
+    @rpccallable
     def is_panic(self):
         return self.__GadgetPanic
 
