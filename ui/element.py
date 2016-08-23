@@ -1,4 +1,21 @@
 from ui.instr import DrawInstructionGroup
+from collections import Mapping
+
+class Coordinate(Mapping):
+    def __init__(self, x, y):
+        super(Coordinate, self).__init__()
+        self.x = x
+        self.y = y
+
+    def __iter__(self):
+        yield 'x'
+        yield 'y'
+
+    def __len__(self):
+        return 2
+
+    def __getitem__(self, item):
+        return self.__getattribute__(item)
 
 class UIElement(object):
     def __init__(self, *args, **kwargs):
@@ -39,3 +56,35 @@ class UIElement(object):
 
     def event(self, event):
         pass
+
+    @property
+    def west(self):
+        return Coordinate(self.x, self.y + self.h/2)
+
+    @property
+    def east(self):
+        return Coordinate(self.x + self.w, self.y + self.h/2)
+
+    @property
+    def north(self):
+        return Coordinate(self.x + self.w/2, self.y)
+
+    @property
+    def south(self):
+        return Coordinate(self.x + self.w/2, self.y + self.h)
+
+    @property
+    def northwest(self):
+        return Coordinate(self.x, self.y)
+
+    @property
+    def northeast(self):
+        return Coordinate(self.x + self.w, self.y)
+
+    @property
+    def southeast(self):
+        return Coordinate(self.x + self.w, self.y + self.h)
+
+    @property
+    def southwest(self):
+        return Coordinate(self.x, self.y + self.h)
