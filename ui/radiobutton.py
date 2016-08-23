@@ -1,6 +1,7 @@
 from ui.checkbox import CheckBox
 from ui.instr import DrawInstruction, DrawInstructionGroup
 import uuid
+from collections import OrderedDict
 
 class GroupError(Exception):
     pass
@@ -8,7 +9,7 @@ class GroupError(Exception):
 class RadioGroup(object):
 
     def __init__(self):
-        self._registered_btns = {}
+        self._registered_btns = OrderedDict()
         self._selected_btn = None
 
     def register_btn(self, btn_uid, state_change_cb):
