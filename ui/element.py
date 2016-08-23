@@ -49,6 +49,10 @@ class UIElement(object):
             self.draw_prio = kwargs.pop('draw_prio')
         else:
             self.draw_prio = 0
+        if 'id' in kwargs:
+            self.uid = kwargs.pop('id')
+        else:
+            self.uid = None
         self.x = kwargs.pop('x')
         self.y = kwargs.pop('y')
 
