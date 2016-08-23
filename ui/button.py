@@ -43,7 +43,6 @@ class Button(Label, ButtonBehavior):
 
         return [dwg]
 
-    #regain control over width / height
     @property
     def w(self):
         return self._w
@@ -55,7 +54,6 @@ class Button(Label, ButtonBehavior):
     @property
     def h(self):
         return self._h
-
     @h.setter
     def h(self, value):
         self._h = value

@@ -4,6 +4,27 @@ import re
 
 _FONT_NAME_REGEX = re.compile(r'([0-9]+)x([0-9]+)')
 
+class DisableLabelSizeMixin(object):
+    def __init__(self, **kwargs):
+        super(DisableLabelSizeMixin, self).__init__(**kwargs)
+        self._w = None
+        self._h = None
+
+    @property
+    def w(self):
+        return self._w
+
+    @w.setter
+    def w(self, value):
+        self._w = value
+
+    @property
+    def h(self):
+        return self._h
+    @h.setter
+    def h(self, value):
+        self._h = value
+
 class Label(UIElement):
 
     _LABEL_H_JUSTIFICATION =('right', 'left', 'center')
