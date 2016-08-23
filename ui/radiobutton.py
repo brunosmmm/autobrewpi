@@ -20,12 +20,32 @@ class RadioGroup(object):
             raise GroupError('uid not registered in this group')
 
         self._selected_btn = btn_uid
-        for uid, cb in self._registered_btns:
+        for uid, cb in self._registered_btns.iteritems():
             if cb is not None:
                 if uid == self._selected_btn:
                     cb('pressed')
                 else:
                     cb('normal')
+
+    def _select_index(self, index):
+        self.select_btn(self._registered_btns.keys()[index])
+
+    def select_first(self):
+        self._select_index(0)
+
+    def select_next(self):
+        selected_index = self._registered_btns.keys().index(self._selected_btn)
+        if selected_index < len(self._registered_btns) - 1:
+            self.select_btn(self._registered_btns[selected_index + 1])
+        else:
+            self.select_first()
+
+    def select_prev(self):
+        selected_index = self._registered_btns.keys().index(self._selected_btn)
+        if selected_index > 0:
+            self.select_btn(self._registered_btns[selected_index - 1])
+        else:
+            self._select_index(-1)
 
 class RadioButton(CheckBox):
     def __init__(self, **kwargs):
