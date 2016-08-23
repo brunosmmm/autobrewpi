@@ -124,6 +124,30 @@ class MashController(VSpaceDriver):
     def get_mlt_temp(self):
         return self.__MLTTemp
 
+    @rpccallable
+    def get_mash_sp(self):
+        return self._mash_config['mash_states']['mash']['temp']
+
+    @rpccallable
+    def get_mashout_sp(self):
+        return self._mash_config['mash_states']['mashout']['temp']
+
+    @rpccallable
+    def get_hyst_level(self):
+        return self._mash_config['hystctl']['level']
+
+    @rpccallable
+    def get_mash_duration(self):
+        return self._mash_config['mash_states']['mash']['duration']
+
+    @rpccallable
+    def get_mashout_duration(self):
+        return self._mash_config['mash_states']['mashout']['duration']
+
+    @rpccallable
+    def get_sparge_duration(self):
+        return self._mash_config['mash_states']['sparge']['duration']
+
     def default_configuration(self):
         self.set_output_value('HLTCtlSetPoint', 0)
         self.set_output_value('HLTCtlHystLevel', float(self._mash_config['hystctl']['level']))

@@ -1,6 +1,6 @@
 from ui.screen import Screen
 from ui.button import Button
-from ui.label import Label
+from ui.label import Label, ValueCaption
 from ui.box import Box
 from ui.modal import Modal
 from ui.frame import Frame
@@ -118,23 +118,64 @@ class ABMashScreen(Screen):
                                        y=2,
                                        r=5,
                                        group=self._cfg_items)
-        self._cfg_item_2 = RadioButton(x=2,
-                                       y=14,
-                                       r=5,
+        self._cfg_item_2 = RadioButton(r=5,
+                                       group=self._cfg_items,
+                                       **self._cfg_item_1.southwest+(0, 2))
+        self._cfg_item_3 = RadioButton(r=5,
+                                       group=self._cfg_items,
+                                       **self._cfg_item_2.southwest+(0, 2))
+        self._cfg_item_4 = RadioButton(r=5,
+                                       x=self.w/2+2,
+                                       y=2,
                                        group=self._cfg_items)
+        self._cfg_item_5 = RadioButton(r=5,
+                                       group=self._cfg_items,
+                                       **self._cfg_item_4.southwest+(0, 2))
+        self._cfg_item_6 = RadioButton(r=5,
+                                       group=self._cfg_items,
+                                       **self._cfg_item_5.southwest+(0, 2))
 
-        self._mash_setpoint = Label(font='5x12',
-                                    text='Mash Setpoint',
-                                    **self._cfg_item_1.northeast+(5,0))
-        self._mashout_setpoint = Label(font='5x12',
-                                       text='Mashout Setpoint',
-                                       **self._cfg_item_2.northeast+(5,0))
+        self._mash_setpoint = ValueCaption(font='5x12',
+                                           caption='Temp Mash',
+                                           maximum_length=20,
+                                           **self._cfg_item_1.northeast+(5, 0))
+        self._mashout_setpoint = ValueCaption(font='5x12',
+                                              caption='Temp Mashout',
+                                              maximum_length=20,
+                                              **self._cfg_item_2.northeast+(5, 0))
+        self._hyst_level = ValueCaption(font='5x12',
+                                        caption='Niv Histerese',
+                                        maximum_length=20,
+                                        **self._cfg_item_3.northeast+(5, 0))
+
+        self._mash_dur = ValueCaption(font='5x12',
+                                      caption='Dur Mash',
+                                      maximum_length=20,
+                                      **self._cfg_item_4.northeast+(5, 0))
+
+        self._mashout_dur = ValueCaption(font='5x12',
+                                         caption='Dur Mashout',
+                                         maximum_length=20,
+                                         **self._cfg_item_5.northeast+(5, 0))
+
+        self._sparge_dur = ValueCaption(font='5x12',
+                                        caption='Dur Sparge',
+                                        maximum_length=20,
+                                        **self._cfg_item_6.northeast+(5, 0))
 
         self._cfg_items.select_first()
         self._configframe.add_element(self._cfg_item_1)
         self._configframe.add_element(self._cfg_item_2)
+        self._configframe.add_element(self._cfg_item_3)
+        self._configframe.add_element(self._cfg_item_4)
+        self._configframe.add_element(self._cfg_item_5)
+        self._configframe.add_element(self._cfg_item_6)
         self._configframe.add_element(self._mash_setpoint)
         self._configframe.add_element(self._mashout_setpoint)
+        self._configframe.add_element(self._hyst_level)
+        self._configframe.add_element(self._mash_dur)
+        self._configframe.add_element(self._sparge_dur)
+        self._configframe.add_element(self._mashout_dur)
 
 
         #track manual mode
@@ -159,14 +200,25 @@ class ABMashScreen(Screen):
     def _show_stats(self):
         self._statframe.show()
         self._configframe.hide()
+        self._footb_ml.set_text('Inicia')
         self._footb_mr.set_text('Config')
         self._current_frame = 'stat'
 
     def _show_config(self):
+        self._update_config()
         self._configframe.show()
         self._statframe.hide()
+        self._footb_ml.set_text('Edita')
         self._footb_mr.set_text('Status')
         self._current_frame = 'config'
+
+    def _update_config(self):
+        self._mash_setpoint.set_value('({})'.format(self._varspace.call_driver_method(self.ctl_inst, 'get_mash_sp')))
+        self._mashout_setpoint.set_value('({})'.format(self._varspace.call_driver_method(self.ctl_inst, 'get_mashout_sp')))
+        self._hyst_level.set_value('({})'.format(self._varspace.call_driver_method(self.ctl_inst, 'get_hyst_level')))
+        self._mash_dur.set_value('({})'.format(self._varspace.call_driver_method(self.ctl_inst, 'get_mash_duration')))
+        self._mashout_dur.set_value('({})'.format(self._varspace.call_driver_method(self.ctl_inst, 'get_mashout_duration')))
+        self._sparge_dur.set_value('({})'.format(self._varspace.call_driver_method(self.ctl_inst, 'get_sparge_duration')))
 
     @staticmethod
     def _composite_label_text(label, value, max_len):
@@ -386,14 +438,17 @@ class ABMashScreen(Screen):
 
     def update_screen(self):
         #update to current values
+        main_title = 'Mash Ctl'
+        if self._current_frame == 'config':
+            main_title += ' - CONFIG'
         if self._manual:
-            self._mashctltitle.set_text(self._composite_label_text('Mash Ctl', 'MANUAL', 29))
+            self._mashctltitle.set_text(self._composite_label_text(main_title, 'MANUAL', 29))
             if self._varspace.call_driver_method('PumpSwitch', 'get_value'):
                 self._varspace.call_driver_method('ManualPumpCtl', 'set_value', value=True)
             else:
                 self._varspace.call_driver_method('ManualPumpCtl', 'set_value', value=False)
         else:
-            self._mashctltitle.set_text(self._composite_label_text('Mash Ctl', ' ', 29))
+            self._mashctltitle.set_text(self._composite_label_text(main_title, ' ', 29))
             self._varspace.call_driver_method('ManualPumpCtl', 'set_value', value=False)
         #self._manual_changed = False
 
