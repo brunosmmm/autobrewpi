@@ -4,6 +4,7 @@ from ui.label import Label
 from ui.box import Box
 from ui.modal import Modal
 from ui.frame import Frame
+from ui.radiobutton import RadioGroup, RadioButton
 from datetime import datetime
 
 class ABMashScreen(Screen):
@@ -111,6 +112,31 @@ class ABMashScreen(Screen):
 
         self.add_element(self._msg_modal)
 
+        #configuration stuff
+        self._cfg_items = RadioGroup()
+        self._cfg_item_1 = RadioButton(x=2,
+                                       y=2,
+                                       r=5,
+                                       group=self._cfg_items)
+        self._cfg_item_2 = RadioButton(x=2,
+                                       y=14,
+                                       r=5,
+                                       group=self._cfg_items)
+
+        self._mash_setpoint = Label(font='5x12',
+                                    text='Mash Setpoint',
+                                    **self._cfg_item_1.northeast+(5,0))
+        self._mashout_setpoint = Label(font='5x12',
+                                       text='Mashout Setpoint',
+                                       **self._cfg_item_2.northeast+(5,0))
+
+        self._cfg_items.select_first()
+        self._configframe.add_element(self._cfg_item_1)
+        self._configframe.add_element(self._cfg_item_2)
+        self._configframe.add_element(self._mash_setpoint)
+        self._configframe.add_element(self._mashout_setpoint)
+
+
         #track manual mode
         self._manual = False
         self._manual_changed = True
@@ -126,6 +152,21 @@ class ABMashScreen(Screen):
 
         #recurrent call
         self._upd_call_id = None
+
+        #configuration / stat
+        self._current_frame = 'stat'
+
+    def _show_stats(self):
+        self._statframe.show()
+        self._configframe.hide()
+        self._footb_mr.set_text('Config')
+        self._current_frame = 'stat'
+
+    def _show_config(self):
+        self._configframe.show()
+        self._statframe.hide()
+        self._footb_mr.set_text('Status')
+        self._current_frame = 'config'
 
     @staticmethod
     def _composite_label_text(label, value, max_len):
@@ -293,6 +334,12 @@ class ABMashScreen(Screen):
                 if self._state == 'idle':
                     self._parent.activate_screen('main')
 
+            if evt['data'] == '2':
+                if self._current_frame == 'stat':
+                    self._show_config()
+                else:
+                    self._show_stats()
+
             if evt['data'] == '1':
                 if self._state == 'idle':
                     self._mash_start()
@@ -313,6 +360,13 @@ class ABMashScreen(Screen):
             elif evt['data'] == 'normal':
                 self._manual = False
 
+        elif evt['event'] == 'encoder.cw':
+            if self._current_frame == 'config':
+                self._cfg_items.select_next()
+        elif evt['event'] == 'encoder.ccw':
+            if self._current_frame == 'config':
+                self._cfg_items.select_prev()
+
     def _screen_activated(self, **kwargs):
         super(ABMashScreen, self)._screen_activated(**kwargs)
 
@@ -320,7 +374,7 @@ class ABMashScreen(Screen):
         self._upd_call_id = self._parent.add_recurrent_call(self.update_screen, 1)
 
         #show default view
-        self._statframe.show()
+        self._show_stats()
 
     def _screen_deactivated(self, **kwargs):
         super(ABMashScreen, self)._screen_deactivated(**kwargs)
