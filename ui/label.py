@@ -4,6 +4,15 @@ import re
 
 _FONT_NAME_REGEX = re.compile(r'([0-9]+)x([0-9]+)')
 
+def _composite_label_text(label, value, max_len):
+    label_fill = max_len - len(value)
+
+    if label_fill - len(label) < 0:
+        raise IOError('text is too long')
+
+    ret = '{label: <{fill_len}}'.format(label=label, fill_len=label_fill)+value
+    return ret
+
 class DisableLabelSizeMixin(object):
     def __init__(self, **kwargs):
         super(DisableLabelSizeMixin, self).__init__(**kwargs)
@@ -103,3 +112,29 @@ class Label(UIElement):
     @h.setter
     def h(self, value):
         pass
+
+class ValueCaption(Label):
+    def __init__(self, **kwargs):
+        self._max_len = kwargs.pop('maximum_length')
+        if 'value' in kwargs:
+            self._value = kwargs.pop('value')
+        else:
+            self._value = ''
+        if 'caption' in kwargs:
+            self._caption = kwargs.pop('caption')
+        else:
+            self._caption = ''
+        kwargs['text'] = ''
+        super(ValueCaption, self).__init__(**kwargs)
+        self._update_text()
+
+    def _update_text(self):
+        self.set_text(_composite_label_text(self._caption, self._value, self._max_len))
+
+    def set_value(self, value):
+        self._value = str(value)
+        self._update_text()
+
+    def set_caption(self, caption):
+        self._caption = str(caption)
+        self._update_text
