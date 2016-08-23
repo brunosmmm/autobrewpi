@@ -17,6 +17,17 @@ class Coordinate(Mapping):
     def __getitem__(self, item):
         return self.__getattribute__(item)
 
+    def __add__(self, other):
+        if isinstance(other, Coordinate):
+            return Coordinate(self.x + other.x, self.y + other.y)
+        elif isinstance(other, tuple) or isinstance(other, list):
+            return Coordinate(self.x + other[0], self.y + other[1])
+        elif isinstance(other, dict):
+            return Coordinate(self.x + other['x'], self.y + other['y'])
+
+    def __radd__(self, other):
+        return self + other
+
 class UIElement(object):
     def __init__(self, *args, **kwargs):
         if 'w' in kwargs:
