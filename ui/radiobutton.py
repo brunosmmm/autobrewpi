@@ -36,14 +36,14 @@ class RadioGroup(object):
     def select_next(self):
         selected_index = self._registered_btns.keys().index(self._selected_btn)
         if selected_index < len(self._registered_btns) - 1:
-            self.select_btn(self._registered_btns[selected_index + 1])
+            self.select_btn(self._registered_btns.keys()[selected_index + 1])
         else:
             self.select_first()
 
     def select_prev(self):
         selected_index = self._registered_btns.keys().index(self._selected_btn)
         if selected_index > 0:
-            self.select_btn(self._registered_btns[selected_index - 1])
+            self.select_btn(self._registered_btns.keys()[selected_index - 1])
         else:
             self._select_index(-1)
 
