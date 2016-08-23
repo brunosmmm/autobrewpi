@@ -55,9 +55,9 @@ class RadioButton(CheckBox):
             self.group = None
 
         #use radius, not w/h
-        r = kwargs.pop('r')
-        kwargs['w'] = 2*r
-        kwargs['h'] = 2*r
+        self.r = kwargs.pop('r')
+        kwargs['w'] = 2*self.r
+        kwargs['h'] = 2*self.r
 
         #generate an unique id
         self._uid = uuid.uuid1()
