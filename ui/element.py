@@ -1,6 +1,9 @@
 from ui.instr import DrawInstructionGroup
 from collections import Mapping
 
+class ElementArgumentError(Exception):
+    pass
+
 class Coordinate(Mapping):
     def __init__(self, x, y):
         super(Coordinate, self).__init__()
@@ -48,6 +51,10 @@ class UIElement(object):
             self.draw_prio = 0
         self.x = kwargs.pop('x')
         self.y = kwargs.pop('y')
+
+        #super is object, so check for stray kwargs
+        if len(kwargs) > 0:
+            raise ElementArgumentError('unknown arguments: {}'.format(','.join(kwargs.keys())))
         super(UIElement, self).__init__(*args, **kwargs)
 
         self._parent = None
