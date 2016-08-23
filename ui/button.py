@@ -5,6 +5,8 @@ from ui.instr import DrawInstruction, DrawInstructionGroup
 
 class Button(Label, ButtonBehavior):
     def __init__(self, **kwargs):
+        self._w = None
+        self._h = None
         super(Button, self).__init__(**kwargs)
 
     def set_state(self, state):
@@ -40,3 +42,20 @@ class Button(Label, ButtonBehavior):
         )
 
         return [dwg]
+
+    #regain control over width / height
+    @property
+    def w(self):
+        return self._w
+
+    @w.setter
+    def w(self, value):
+        self._w = value
+
+    @property
+    def h(self):
+        return self._h
+
+    @h.setter
+    def h(self, value):
+        self._h = value
