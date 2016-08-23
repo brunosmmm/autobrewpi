@@ -3,6 +3,7 @@ from ui.button import Button
 from ui.label import Label
 from ui.box import Box
 from ui.modal import Modal
+from ui.frame import Frame
 from datetime import datetime
 
 class ABMashScreen(Screen):
@@ -30,31 +31,41 @@ class ABMashScreen(Screen):
         self._footb_mr = Button(text='Config', font='8x8', x=self.w/2, y=self.h-self._foot_btn_height-1, w=self.w/4-1, h=self._foot_btn_height)
         self._footb_r = Button(text='Sair', font='8x8', x=3*self.w/4, y=self.h-self._foot_btn_height-1, w=self.w/4-1, h=self._foot_btn_height)
 
-        self._state_label = Label(text='STATE', font='5x12',
-                                  y=self._mashctltitle.y+self._mashctltitle.h+3,
-                                  x=2)
-        self._phase_label = Label(text='PHASE', font='5x12',
-                                  y=self._mashctltitle.y+self._mashctltitle.h+17,
-                                  x=2)
-        self._timer_label = Label(text='TIMER', font='5x12',
-                                  y=self._mashctltitle.y+self._mashctltitle.h+31,
-                                  x=2)
+        self._statframe = Frame(x=0,
+                                y=self._mashctltitle.y+self._mashctltitle.h+1,
+                                w=self.w-1,
+                                h=self.h - self._foot_btn_height - self._mashctltitle.h - 3)
+
+        self._configframe = Frame(x=0,
+                                  y=self._mashctltitle.y+self._mashctltitle.h+1,
+                                  w=self.w-1,
+                                  h=self.h - self._foot_btn_height - self._mashctltitle.h - 3)
 
         self._box_l = Box(x=0,
-                          y=self._mashctltitle.y+self._mashctltitle.h+1,
+                          y=0,
                           w=self.w/2 - 1,
                           h=self.h - self._foot_btn_height - self._mashctltitle.h - 3)
         self._box_r = Box(x=self.w/2,
-                          y=self._mashctltitle.y+self._mashctltitle.h+1,
+                          y=0,
                           w=self.w/2 - 1,
                           h=self.h - self._foot_btn_height - self._mashctltitle.h - 3)
 
+        self._state_label = Label(text='STATE', font='5x12',
+                                  y=2,
+                                  x=2)
+        self._phase_label = Label(text='PHASE', font='5x12',
+                                  y=14,
+                                  x=2)
+        self._timer_label = Label(text='TIMER', font='5x12',
+                                  y=26,
+                                  x=2)
+
         #in box R, show current values
         self._hlt_temp_label = Label(text='HLT_TEMP', font='5x12',
-                                     y=self._mashctltitle.y+self._mashctltitle.h+3,
+                                     y=2,
                                      x=self.w/2 + 2)
         self._mlt_temp_label = Label(text='MLT_TEMP', font='5x12',
-                                     y=self._mashctltitle.y+self._mashctltitle.h+17,
+                                     y=14,
                                      x=self.w/2 + 2)
 
         #message modal
@@ -80,19 +91,24 @@ class ABMashScreen(Screen):
         self._msg_modal.add_element(self._modal_label_3)
 
         #add stuff
+        self.add_element(self._statframe)
+        self.add_element(self._configframe)
+
         self.add_element(self._mashctltitle)
         self.add_element(self._footb_l)
         self.add_element(self._footb_ml)
         self.add_element(self._footb_mr)
         self.add_element(self._footb_r)
-        self.add_element(self._state_label)
-        self.add_element(self._phase_label)
-        self.add_element(self._timer_label)
-        self.add_element(self._box_l)
-        self.add_element(self._box_r)
 
-        self.add_element(self._hlt_temp_label)
-        self.add_element(self._mlt_temp_label)
+
+        self._statframe.add_element(self._box_l)
+        self._statframe.add_element(self._box_r)
+        self._statframe.add_element(self._state_label)
+        self._statframe.add_element(self._phase_label)
+        self._statframe.add_element(self._timer_label)
+        self._statframe.add_element(self._hlt_temp_label)
+        self._statframe.add_element(self._mlt_temp_label)
+
         self.add_element(self._msg_modal)
 
         #track manual mode
@@ -302,6 +318,9 @@ class ABMashScreen(Screen):
 
         #install recurrent call
         self._upd_call_id = self._parent.add_recurrent_call(self.update_screen, 1)
+
+        #show default view
+        self._statframe.show()
 
     def _screen_deactivated(self, **kwargs):
         super(ABMashScreen, self)._screen_deactivated(**kwargs)
