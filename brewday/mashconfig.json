@@ -1,11 +1,11 @@
 {
     "mash_states": {
         "mash": {
-            "temp": 66,
+            "temp": 66.0,
             "duration": 60
         },
         "mashout": {
-            "temp": 75,
+            "temp": 75.0,
             "duration": 10
         },
         "sparge": {
