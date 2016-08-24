@@ -164,6 +164,12 @@ class Menu(Frame):
             self.uids[self._items[selected].get_item_id()+'_label'].set_normal()
         self._editing = False
 
+    def cancel_edit(self):
+        selected = self._group.get_selected_index()
+        if selected is not None:
+            self.uids[self._items[selected].get_item_id()+'_label'].set_normal()
+        self._editing = False
+
     def update_values(self):
         for item in self._items:
             if item.getter is not None:
