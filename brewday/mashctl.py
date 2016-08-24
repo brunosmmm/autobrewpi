@@ -148,6 +148,30 @@ class MashController(VSpaceDriver):
     def get_sparge_duration(self):
         return self._mash_config['mash_states']['sparge']['duration']
 
+    @rpccallable
+    def set_mash_sp(self, value):
+        pass
+
+    @rpccallable
+    def set_mashout_sp(self, value):
+        pass
+
+    @rpccallable
+    def set_hyst_level(self, value):
+        pass
+
+    @rpccallable
+    def set_mash_duration(self, value):
+        pass
+
+    @rpccallable
+    def set_mashout_duration(self, value):
+        pass
+
+    @rpccallable
+    def set_sparge_duration(self, value):
+        pass
+
     def default_configuration(self):
         self.set_output_value('HLTCtlSetPoint', 0)
         self.set_output_value('HLTCtlHystLevel', float(self._mash_config['hystctl']['level']))
