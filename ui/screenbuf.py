@@ -77,7 +77,7 @@ class ScreenBuffer(StoppableThread):
         #recurrent call manager
         self.recurrent_calls = {}
 
-    def _switch_press(self, data):
+    def _switch_press(self, data, uuid):
         if self.active_screen is not None:
 
             #filter manual switch out
@@ -90,7 +90,7 @@ class ScreenBuffer(StoppableThread):
 
             self._screens[self.active_screen]._input_event(event)
 
-    def _switch_release(self, data):
+    def _switch_release(self, data, uuid):
         if self.active_screen is not None:
 
             if data == '4':
@@ -101,32 +101,32 @@ class ScreenBuffer(StoppableThread):
                          'data': data}
             self._screens[self.active_screen]._input_event(event)
 
-    def _keypad_keypress(self, data):
+    def _keypad_keypress(self, data, uuid):
         if self.active_screen is not None:
             self._screens[self.active_screen]._input_event({'event': 'keypad.press',
                                                             'data': data})
 
-    def _keypad_keyrelease(self, data):
+    def _keypad_keyrelease(self, data, uuid):
         if self.active_screen is not None:
             self._screens[self.active_screen]._input_event({'event': 'keypad.release',
                                                             'data': data})
 
-    def _encoder_rotate_cw(self, data):
+    def _encoder_rotate_cw(self, data, uuid):
         if self.active_screen is not None:
             self._screens[self.active_screen]._input_event({'event': 'encoder.cw',
                                                             'data': None})
 
-    def _encoder_rotate_ccw(self, data):
+    def _encoder_rotate_ccw(self, data, uuid):
         if self.active_screen is not None:
             self._screens[self.active_screen]._input_event({'event': 'encoder.ccw',
                                                             'data': None})
 
-    def _encoder_press(self, data):
+    def _encoder_press(self, data, uuid):
         if self.active_screen is not None:
             self._screens[self.active_screen]._input_event({'event': 'encoder.press',
                                                             'data': None})
 
-    def _encoder_release(self, data):
+    def _encoder_release(self, data, uuid):
         if self.active_screen is not None:
             self._screens[self.active_screen]._input_event({'event': 'encoder.release',
                                                             'data': None})

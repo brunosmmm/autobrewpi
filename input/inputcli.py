@@ -2,6 +2,7 @@ from util.thread import StoppableThread
 import struct
 import time
 import zmq
+import uuid
 
 _INPUT_EVENTS = {
     'encoder.cw' : ('ENCODER', 0x01),
@@ -58,7 +59,7 @@ class ABInputClient(StoppableThread):
                         try:
                             for callback in self.attached_callbacks[event_type]:
                                 if callback is not None:
-                                    callback(data)
+                                    callback(data, uuid.uuid1())
                         except KeyError:
                             pass
 
