@@ -11,22 +11,43 @@ class MenuError(Exception):
     pass
 
 class MenuItem(object):
-    def __init__(self, item_id, item_caption, item_action=None, value_getter=None, value_setter=None):
+    def __init__(self, item_id, item_caption, item_action=None, value_getter=None, value_setter=None, value_type=None, **kwargs):
         self._id = item_id
         self._caption = item_caption
-        self._action_cb = item_action
+        self._action = item_action
         self.getter = value_getter
         self.setter = value_setter
+        self.value_type = value_type
+        self._kwargs = kwargs
+        self._parent = None
 
     def do_action(self):
-        if self._action_cb is not None:
-            self._action_cb()
+        if self._action == 'call':
+            if 'callback' in self._kwargs:
+                if self._kwargs['callback'] is not None:
+                    self._kwargs['callback']()
+        elif self._action == 'edit':
+            if self._parent is not None:
+                self._parent.edit_value()
+        #if self._action_cb is not None:
+        #    self._action_cb()
 
     def get_item_id(self):
         return self._id
 
     def get_caption(self):
         return self._caption
+
+    def check_validity(self, value):
+        if self.value_type == int:
+            if 'max_val' in self._kwargs:
+                if value > max_val:
+                    return False
+            if 'min_val' in self._kwargs:
+                if value < 'min_val':
+                    return False
+
+        return True
 
 
 class Menu(Frame):
@@ -67,6 +88,9 @@ class Menu(Frame):
         self._col_max_len = (col_w - 2*self._sel_radius - self._sel_spacing)/self._font_w
         self._max_item_count = self._colnum*(self.h/(2*self._sel_radius + self._sel_spacing))
 
+        self._item_value = None
+        self._editing = False
+
     def add_item(self, item):
         if not isinstance(item, MenuItem):
             raise TypeError('not a MenuItem instance')
@@ -74,6 +98,7 @@ class Menu(Frame):
         if len(self._items) == self._max_item_count:
             raise MenuError('cannot add any more items')
 
+        item._parent = self
         self._items.append(item)
         #create widgets
         selector = RadioButton(r=self._sel_radius,
@@ -101,18 +126,43 @@ class Menu(Frame):
             self.add_item(item)
 
     def select_first(self):
+        if self._editing:
+            return
         self._group.select_first()
 
     def select_next(self):
+        if self._editing:
+            return
         self._group.select_next()
 
     def select_prev(self):
+        if self._editing:
+            return
         self._group.select_prev()
 
     def item_click(self):
+        if self._editing:
+            self.finish_edit()
+            return
         selected = self._group.get_selected_index()
         if selected is not None:
             self._items[selected].do_action()
+
+    def edit_value(self):
+        selected = self._group.get_selected_index()
+        if selected is not None:
+            if self._items[selected].getter is not None\
+               and self._items[selected].setter is not None:
+                self._editing = True
+                self.uids[self._items[selected].get_item_id()+'_label'].set_inverted()
+
+    def finish_edit(self):
+        selected = self._group.get_selected_index()
+        if selected is not None:
+            if self._items[selected].setter is not None:
+                self._items[selected].setter(self._item_value)
+            self.uids[self._items[selected].get_item_id()+'_label'].set_normal()
+        self._editing = False
 
     def update_values(self):
         for item in self._items:
