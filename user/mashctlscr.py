@@ -128,7 +128,9 @@ class ABMashScreen(Screen):
             yield MenuItem('mashtemp',
                            'Temp Mash',
                            value_getter=get_fn('MashCtl', 'get_mash_sp'),
-                           value_setter=get_fn('MashCtl', 'set_mash_sp'))
+                           value_setter=get_fn('MashCtl', 'set_mash_sp'),
+                           value_type=int,
+                           item_action='edit')
             yield MenuItem('mashouttemp',
                            'Temp Mashout',
                            value_getter=get_fn('MashCtl', 'get_mashout_sp'),
@@ -172,19 +174,21 @@ class ABMashScreen(Screen):
         self._current_frame = 'stat'
 
     def _show_stats(self):
-        self._statframe.show()
         self._cfgmenu.hide()
+        self._statframe.show()
         self._footb_ml.set_text('Inicia')
         self._footb_mr.set_text('Config')
         self._current_frame = 'stat'
+        self.log_info('showing status')
 
     def _show_config(self):
-        self._update_config()
-        self._cfgmenu.show()
         self._statframe.hide()
+        self._cfgmenu.show()
+        self._update_config()
         self._footb_ml.set_text('Edita')
         self._footb_mr.set_text('Status')
         self._current_frame = 'config'
+        self.log_info('showing config')
 
     def _update_config(self):
         self._cfgmenu.update_values()
@@ -342,7 +346,7 @@ class ABMashScreen(Screen):
                                                               23))
 
     def _input_event(self, evt):
-        if evt['event'] == 'switches.release':
+        if evt['event'] == 'switches.press':
 
             if self._modal_showing:
                 if evt['data'] == '5':
