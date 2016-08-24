@@ -79,6 +79,18 @@ class UIElement(object):
     def event(self, event):
         pass
 
+    def log_info(self, msg):
+        if self._parent is not None:
+            self._parent.log_info(msg)
+
+    def log_warn(self, msg):
+        if self._parent is not None:
+            self._parent.log_warn(msg)
+
+    def log_err(self, msg):
+        if self._parent is not None:
+            self._parent.log_err(msg)
+
     @property
     def west(self):
         return Coordinate(self.x, self.y + self.h/2)

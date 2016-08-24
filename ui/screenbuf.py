@@ -274,6 +274,15 @@ class ScreenBuffer(StoppableThread):
 
         self._pause_calls = False
 
+    def log_err(self, msg):
+        self.logger.error(msg)
+
+    def log_warn(self, msg):
+        self.logger.warning(msg)
+
+    def log_info(self, msg):
+        self.logger.info(msg)
+
     def _activate_screen(self, screen_id, erase=True, blank=False):
 
         #wait
