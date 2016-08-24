@@ -66,6 +66,15 @@ class Label(UIElement):
 
         super(Label, self).__init__(*args, **kwargs)
 
+    @staticmethod
+    def guess_font_size(font_name):
+        m = re.match(_FONT_NAME_REGEX, font_name)
+        if m != None:
+            return {'w': int(m.group(1)),
+                    'h': int(m.group(2))}
+
+        return None
+
     def get_text(self):
         return self.text
 
