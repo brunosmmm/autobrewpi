@@ -1,7 +1,13 @@
 from ui.element import UIElement
 
+class ScreenError(Exception):
+    pass
+
 class Screen(UIElement):
     def __init__(self, **kwargs):
+        if 'w' not in kwargs or 'h' not in kwargs:
+            raise ScreenError('width and/or height not specified!')
+
         super(Screen, self).__init__(**kwargs)
         self._children = []
         self.uids = {}
