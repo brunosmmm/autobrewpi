@@ -114,68 +114,78 @@ class ABMashScreen(Screen):
 
         #configuration stuff
         self._cfg_items = RadioGroup()
-        self._cfg_item_1 = RadioButton(x=2,
-                                       y=2,
-                                       r=5,
-                                       group=self._cfg_items)
-        self._cfg_item_2 = RadioButton(r=5,
-                                       group=self._cfg_items,
-                                       **self._cfg_item_1.southwest+(0, 2))
-        self._cfg_item_3 = RadioButton(r=5,
-                                       group=self._cfg_items,
-                                       **self._cfg_item_2.southwest+(0, 2))
-        self._cfg_item_4 = RadioButton(r=5,
-                                       x=self.w/2+2,
-                                       y=2,
-                                       group=self._cfg_items)
-        self._cfg_item_5 = RadioButton(r=5,
-                                       group=self._cfg_items,
-                                       **self._cfg_item_4.southwest+(0, 2))
-        self._cfg_item_6 = RadioButton(r=5,
-                                       group=self._cfg_items,
-                                       **self._cfg_item_5.southwest+(0, 2))
+        def _configframe_elements(_configframe):
+            yield RadioButton(x=2,
+                              y=2,
+                              r=5,
+                              group=self._cfg_items,
+                              id='_cfg_item_1')
+            yield RadioButton(r=5,
+                              group=self._cfg_items,
+                              id='_cfg_item_2',
+                              **_configframe._cfg_item_1.southwest+(0, 2))
+            yield RadioButton(r=5,
+                              group=self._cfg_items,
+                              id='_cfg_item_3',
+                              **_configframe._cfg_item_2.southwest+(0, 2))
+            yield RadioButton(r=5,
+                              x=self.w/2+2,
+                              y=2,
+                              group=self._cfg_items,
+                              id='_cfg_item_4')
+            yield RadioButton(r=5,
+                              group=self._cfg_items,
+                              id='_cfg_item_5',
+                              **_configframe._cfg_item_4.southwest+(0, 2))
+            yield RadioButton(r=5,
+                              group=self._cfg_items,
+                              id='_cfg_item_6',
+                              **_configframe._cfg_item_5.southwest+(0, 2))
+            yield ValueCaption(font='5x12',
+                               caption='Temp Mash',
+                               maximum_length=20,
+                               id='_mash_setpoint',
+                               **_configframe._cfg_item_1.northeast+(5, 0))
+            yield ValueCaption(font='5x12',
+                               caption='Temp Mashout',
+                               maximum_length=20,
+                               id='_mashout_setpoint',
+                               **_configframe._cfg_item_2.northeast+(5, 0))
+            yield ValueCaption(font='5x12',
+                               caption='Niv Histerese',
+                               maximum_length=20,
+                               id='_hyst_level',
+                               **_configframe._cfg_item_3.northeast+(5, 0))
+            yield ValueCaption(font='5x12',
+                               caption='Dur Mash',
+                               maximum_length=20,
+                               id='_mash_dur',
+                               **_configframe._cfg_item_4.northeast+(5, 0))
+            yield ValueCaption(font='5x12',
+                               caption='Dur Mashout',
+                               maximum_length=20,
+                               id='_mashout_dur',
+                               **_configframe._cfg_item_5.northeast+(5, 0))
+            yield ValueCaption(font='5x12',
+                               caption='Dur Sparge',
+                               maximum_length=20,
+                               id='_sparge_dur',
+                               **_configframe._cfg_item_6.northeast+(5, 0))
 
-        self._mash_setpoint = ValueCaption(font='5x12',
-                                           caption='Temp Mash',
-                                           maximum_length=20,
-                                           **self._cfg_item_1.northeast+(5, 0))
-        self._mashout_setpoint = ValueCaption(font='5x12',
-                                              caption='Temp Mashout',
-                                              maximum_length=20,
-                                              **self._cfg_item_2.northeast+(5, 0))
-        self._hyst_level = ValueCaption(font='5x12',
-                                        caption='Niv Histerese',
-                                        maximum_length=20,
-                                        **self._cfg_item_3.northeast+(5, 0))
+        self._configframe.add_elements(_configframe_elements)
 
-        self._mash_dur = ValueCaption(font='5x12',
-                                      caption='Dur Mash',
-                                      maximum_length=20,
-                                      **self._cfg_item_4.northeast+(5, 0))
-
-        self._mashout_dur = ValueCaption(font='5x12',
-                                         caption='Dur Mashout',
-                                         maximum_length=20,
-                                         **self._cfg_item_5.northeast+(5, 0))
-
-        self._sparge_dur = ValueCaption(font='5x12',
-                                        caption='Dur Sparge',
-                                        maximum_length=20,
-                                        **self._cfg_item_6.northeast+(5, 0))
-
-        self._cfg_items.select_first()
-        self._configframe.add_element(self._cfg_item_1)
-        self._configframe.add_element(self._cfg_item_2)
-        self._configframe.add_element(self._cfg_item_3)
-        self._configframe.add_element(self._cfg_item_4)
-        self._configframe.add_element(self._cfg_item_5)
-        self._configframe.add_element(self._cfg_item_6)
-        self._configframe.add_element(self._mash_setpoint)
-        self._configframe.add_element(self._mashout_setpoint)
-        self._configframe.add_element(self._hyst_level)
-        self._configframe.add_element(self._mash_dur)
-        self._configframe.add_element(self._sparge_dur)
-        self._configframe.add_element(self._mashout_dur)
+        #self._configframe.add_element(self._cfg_item_1)
+        #self._configframe.add_element(self._cfg_item_2)
+        #self._configframe.add_element(self._cfg_item_3)
+        #self._configframe.add_element(self._cfg_item_4)
+        #self._configframe.add_element(self._cfg_item_5)
+        #self._configframe.add_element(self._cfg_item_6)
+        #self._configframe.add_element(self._mash_setpoint)
+        #self._configframe.add_element(self._mashout_setpoint)
+        #self._configframe.add_element(self._hyst_level)
+        #self._configframe.add_element(self._mash_dur)
+        #self._configframe.add_element(self._sparge_dur)
+        #self._configframe.add_element(self._mashout_dur)
 
 
         #track manual mode
@@ -213,12 +223,12 @@ class ABMashScreen(Screen):
         self._current_frame = 'config'
 
     def _update_config(self):
-        self._mash_setpoint.set_value('({})'.format(self._varspace.call_driver_method(self.ctl_inst, 'get_mash_sp')))
-        self._mashout_setpoint.set_value('({})'.format(self._varspace.call_driver_method(self.ctl_inst, 'get_mashout_sp')))
-        self._hyst_level.set_value('({})'.format(self._varspace.call_driver_method(self.ctl_inst, 'get_hyst_level')))
-        self._mash_dur.set_value('({})'.format(self._varspace.call_driver_method(self.ctl_inst, 'get_mash_duration')))
-        self._mashout_dur.set_value('({})'.format(self._varspace.call_driver_method(self.ctl_inst, 'get_mashout_duration')))
-        self._sparge_dur.set_value('({})'.format(self._varspace.call_driver_method(self.ctl_inst, 'get_sparge_duration')))
+        self._configframe._mash_setpoint.set_value('({})'.format(self._varspace.call_driver_method(self.ctl_inst, 'get_mash_sp')))
+        self._configframe._mashout_setpoint.set_value('({})'.format(self._varspace.call_driver_method(self.ctl_inst, 'get_mashout_sp')))
+        self._configframe._hyst_level.set_value('({})'.format(self._varspace.call_driver_method(self.ctl_inst, 'get_hyst_level')))
+        self._configframe._mash_dur.set_value('({})'.format(self._varspace.call_driver_method(self.ctl_inst, 'get_mash_duration')))
+        self._configframe._mashout_dur.set_value('({})'.format(self._varspace.call_driver_method(self.ctl_inst, 'get_mashout_duration')))
+        self._configframe._sparge_dur.set_value('({})'.format(self._varspace.call_driver_method(self.ctl_inst, 'get_sparge_duration')))
 
     @staticmethod
     def _composite_label_text(label, value, max_len):
@@ -235,6 +245,7 @@ class ABMashScreen(Screen):
         #enter idle
         self._enter_idle()
         #update NOW
+        self._cfg_items.select_first()
         self.update_screen()
 
     def _enter_active(self):
