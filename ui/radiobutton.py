@@ -54,6 +54,12 @@ class RadioGroup(object):
         else:
             self.select_index(-1)
 
+    def get_selected_index(self):
+        if self._selected_btn is None:
+            return None
+
+        return self._registered_btns.keys().index(self._selected_btn)
+
 class RadioButton(CheckBox):
     def __init__(self, **kwargs):
         if 'group' in kwargs:
