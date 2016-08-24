@@ -21,8 +21,6 @@ class Frame(Screen):
         dwg = DrawInstructionGroup(self.draw_prio)
 
         #note: use relative positioning
-
-
         child_instr = super(Frame, self)._get_drawing_instructions()
         for child in child_instr:
             child.translate(self.x,
