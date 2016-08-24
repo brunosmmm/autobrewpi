@@ -179,7 +179,6 @@ class ABMashScreen(Screen):
         self._footb_ml.set_text('Inicia')
         self._footb_mr.set_text('Config')
         self._current_frame = 'stat'
-        self.log_info('showing status')
 
     def _show_config(self):
         self._statframe.hide()
@@ -188,7 +187,6 @@ class ABMashScreen(Screen):
         self._footb_ml.set_text('Edita')
         self._footb_mr.set_text('Status')
         self._current_frame = 'config'
-        self.log_info('showing config')
 
     def _update_config(self):
         self._cfgmenu.update_values()
@@ -358,12 +356,14 @@ class ABMashScreen(Screen):
 
             if evt['data'] == '3':
                 if self._state == 'idle':
+                    self._cfgmenu.cancel_edit()
                     self._parent.activate_screen('main')
 
             if evt['data'] == '2':
                 if self._current_frame == 'stat':
                     self._show_config()
                 else:
+                    self._cfgmenu.cancel_edit()
                     self._show_stats()
 
             if evt['data'] == '1':
