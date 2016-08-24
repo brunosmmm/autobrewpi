@@ -49,6 +49,10 @@ class Label(UIElement):
             self.vjust = kwargs.pop('vjust')
         else:
             self.vjust = 'top'
+        if 'invert' in kwargs:
+            self._invert = kwargs.pop('invert')
+        else:
+            self._invert = False
 
         #try to guess font size
         m = re.match(_FONT_NAME_REGEX, self.font)
@@ -82,8 +86,26 @@ class Label(UIElement):
         self.text = text
         self._needs_redrawing()
 
+    def set_inverted(self):
+        self._invert = True
+        self._needs_redrawing()
+
+    def set_normal(self):
+        self._invert = False
+        self._needs_redrawing()
+
     def _get_drawing_instructions(self):
         dwg = DrawInstructionGroup(self.draw_prio)
+        if self._invert:
+            dwg.add_instructions(
+                DrawInstruction('rect',
+                                x1=self.x,
+                                x2=self.x+self.w,
+                                y1=self.y,
+                                y2=self.y+self.h,
+                                color=True,
+                                fill=True)
+            )
         dwg.add_instructions(
             DrawInstruction('text',
                             x=self.x,
@@ -92,7 +114,7 @@ class Label(UIElement):
                             msg=self.text,
                             hjust=self.hjust,
                             vjust=self.vjust,
-                            color=True)
+                            color=(not self._invert))
             )
 
         return [dwg]
