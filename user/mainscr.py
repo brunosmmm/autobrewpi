@@ -28,6 +28,6 @@ class ABMainScreen(Screen):
         self.add_element(self._footb_r)
 
     def _input_event(self, evt):
-        if evt['event'] == 'switches.release':
+        if evt['event'] == 'switches.press':
             if evt['data'] == '3':
                 self._parent.activate_screen('mash')
