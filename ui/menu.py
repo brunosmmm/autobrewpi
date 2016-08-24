@@ -38,8 +38,25 @@ class MenuItem(object):
     def get_caption(self):
         return self._caption
 
-    def check_validity(self, value):
+    def calculate_value(self, value):
         if self.value_type == int:
+            total_value = 0
+            for i in range(0, len(value)):
+                total_value += (10**i)*value[i]
+
+            return total_value
+        elif self.value_type == float:
+            total_value = 0.0
+            for i in range(0, len(value)):
+                if i < self._kwargs['fixp_size']:
+                    total_value += (1.0/(10**(self._kwargs['fixp_size'] - i)))*value[i]
+                else:
+                    total_value += (10**(i-self._kwargs['fixp_size']))*value[i]
+
+            return total_value
+
+    def check_validity(self, value):
+        if self.value_type in (int, float):
             if 'max_val' in self._kwargs:
                 if value > max_val:
                     return False
@@ -148,11 +165,31 @@ class Menu(Frame):
         if selected is not None:
             self._items[selected].do_action()
 
+    def insert_value(self, value):
+        if self._editing is False:
+            return
+
+        self._item_value.append(value)
+        #provide visual feedback here
+        selected = self._group.get_selected_index()
+        current_formatted_value = self._value_format.format(self._items[selected].calculate_value(self._item_value))
+        self.uids[self._items[selected].get_item_id()+'_label'].set_value(current_formatted_value)
+
+    def delete_value(self):
+        if self._editing is False:
+            return
+
+        self._item_value.pop()
+        selected = self._group.get_selected_index()
+        current_formatted_value = self._value_format.format(self._items[selected].calculate_value(self._item_value))
+        self.uids[self._items[selected].get_item_id()+'_label'].set_value(current_formatted_value)
+
     def edit_value(self):
         selected = self._group.get_selected_index()
         if selected is not None:
             if self._items[selected].getter is not None\
                and self._items[selected].setter is not None:
+                self._item_value = []
                 self._editing = True
                 self.uids[self._items[selected].get_item_id()+'_label'].set_inverted()
 
@@ -160,7 +197,7 @@ class Menu(Frame):
         selected = self._group.get_selected_index()
         if selected is not None:
             if self._items[selected].setter is not None:
-                self._items[selected].setter(self._item_value)
+                self._items[selected].setter(self._items[selected].calculate_value(self._item_value))
             self.uids[self._items[selected].get_item_id()+'_label'].set_normal()
         self._editing = False
 
@@ -169,6 +206,12 @@ class Menu(Frame):
         if selected is not None:
             self.uids[self._items[selected].get_item_id()+'_label'].set_normal()
         self._editing = False
+
+        #update values
+        self.update_values()
+
+    def is_editing(self):
+        return self._editing
 
     def update_values(self):
         for item in self._items:
