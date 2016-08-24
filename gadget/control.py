@@ -556,6 +556,11 @@ class GadgetVariableSpace(StoppableThread):
                 'instname': pspace[port_id].get_linked_instance_name(),
                 'portname': pspace[port_id].get_linked_port_name()}
 
+    def get_driver_method(self, instance_name, method_name):
+        if instance_name in self._drivers:
+            return self._drivers[instance_name].__getattr__(method_name)
+        raise KeyError('Invalid instance name: {}'.format(instance_name))
+
     def call_driver_method(self, instance_name, method_name, **kwargs):
         return self._call_driver_method('local', instance_name, method_name, **kwargs)
 
