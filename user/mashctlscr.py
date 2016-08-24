@@ -129,7 +129,8 @@ class ABMashScreen(Screen):
                            'Temp Mash',
                            value_getter=get_fn('MashCtl', 'get_mash_sp'),
                            value_setter=get_fn('MashCtl', 'set_mash_sp'),
-                           value_type=int,
+                           value_type=float,
+                           fixp_size=1,
                            item_action='edit')
             yield MenuItem('mashouttemp',
                            'Temp Mashout',
@@ -356,8 +357,10 @@ class ABMashScreen(Screen):
 
             if evt['data'] == '3':
                 if self._state == 'idle':
-                    self._cfgmenu.cancel_edit()
-                    self._parent.activate_screen('main')
+                    if self._current_frame == 'config' and self._cfgmenu.is_editing():
+                        self._cfgmenu.cancel_edit()
+                    else:
+                        self._parent.activate_screen('main')
 
             if evt['data'] == '2':
                 if self._current_frame == 'stat':
@@ -390,6 +393,18 @@ class ABMashScreen(Screen):
         elif evt['event'] == 'encoder.ccw':
             if self._current_frame == 'config':
                 self._cfgmenu.select_prev()
+
+        elif evt['event'] == 'keypad.press':
+            if self._current_frame == 'config':
+                if evt['data'] == '*':
+                    self._cfgmenu.delete_value()
+                    return
+
+                try:
+                    numeric_value = int(evt['data'])
+                except TypeError:
+                    return
+                self._cfgmenu.insert_value(numeric_value)
 
     def _screen_activated(self, **kwargs):
         super(ABMashScreen, self)._screen_activated(**kwargs)
