@@ -206,7 +206,7 @@ class MashController(VSpaceDriver):
 
     def enter_idle(self):
         self.logger.debug('entering idle state')
-        self.set_output_value('PumpCtl', False)
+        self._pump_on = False
         self.set_output_value('HLTCtlEnable', False)
         self._state = 'idle'
 
@@ -219,7 +219,7 @@ class MashController(VSpaceDriver):
     def enter_transfer(self):
         self.logger.debug('entering transfer state')
         if self._mash_config['misc']['transfer_use_pump']:
-            self.set_output_value('PumpCtl', True)
+            self._pump_on = True
         self._state = 'transfer_hlt_mlt'
 
     def pause_transfer(self):
@@ -250,7 +250,7 @@ class MashController(VSpaceDriver):
 
     def enter_addgrains(self):
         self.logger.debug('entering add_grains state')
-        self.set_output_value('PumpCtl', False)
+        self._pump_on = False
         self._state = 'add_grains'
 
     def enter_mash(self):
