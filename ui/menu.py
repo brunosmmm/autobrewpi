@@ -179,7 +179,8 @@ class Menu(Frame):
         if self._editing is False:
             return
 
-        self._item_value.pop()
+        if len(self._item_value) > 0:
+            self._item_value.pop()
         selected = self._group.get_selected_index()
         current_formatted_value = self._value_format.format(self._items[selected].calculate_value(self._item_value))
         self.uids[self._items[selected].get_item_id()+'_label'].set_value(current_formatted_value)
