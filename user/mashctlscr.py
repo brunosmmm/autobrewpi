@@ -135,23 +135,35 @@ class ABMashScreen(Screen):
             yield MenuItem('mashouttemp',
                            'Temp Mashout',
                            value_getter=get_fn('MashCtl', 'get_mashout_sp'),
-                           value_setter=get_fn('MashCtl', 'set_mashout_sp'))
+                           value_setter=get_fn('MashCtl', 'set_mashout_sp'),
+                           value_type=float,
+                           fixp_size=1,
+                           item_action='edit')
             yield MenuItem('hystlevel',
                            'Niv Histerese',
                            value_getter=get_fn('MashCtl', 'get_hyst_level'),
-                           value_setter=get_fn('MashCtl', 'set_hyst_level'))
+                           value_setter=get_fn('MashCtl', 'set_hyst_level'),
+                           value_type=float,
+                           fixp_size=1,
+                           item_action='edit')
             yield MenuItem('mashdur',
                            'Dur Mash',
                            value_getter=get_fn('MashCtl', 'get_mash_duration'),
-                           value_setter=get_fn('MashCtl', 'set_mash_duration'))
+                           value_setter=get_fn('MashCtl', 'set_mash_duration'),
+                           value_type=int,
+                           item_action='edit')
             yield MenuItem('mashoutdur',
                            'Dur Mashout',
                            value_getter=get_fn('MashCtl', 'get_mashout_duration'),
-                           value_setter=get_fn('MashCtl', 'set_mashout_duration'))
+                           value_setter=get_fn('MashCtl', 'set_mashout_duration'),
+                           value_type=int,
+                           item_action='edit')
             yield MenuItem('spargedur',
                            'Dur Sparge',
                            value_getter=get_fn('MashCtl', 'get_sparge_duration'),
-                           value_setter=get_fn('MashCtl', 'set_sparge_duration'))
+                           value_setter=get_fn('MashCtl', 'set_sparge_duration'),
+                           value_type=int,
+                           item_action='edit')
         self._cfgmenu.add_items(_cfgitems())
         self.add_element(self._cfgmenu)
 
