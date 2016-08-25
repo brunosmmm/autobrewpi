@@ -6,6 +6,10 @@ from datetime import datetime, timedelta
 
 _PORT_REGEX = re.compile(r'([a-zA-Z0-9_]+)\.([a-zA-Z0-9_]+)')
 
+def _test_type(type, value):
+    if not isinstance(value, type):
+        raise TypeError('type {} required'.format(type))
+
 class MashController(VSpaceDriver):
 
     _inputs = {
@@ -150,27 +154,50 @@ class MashController(VSpaceDriver):
 
     @rpccallable
     def set_mash_sp(self, value):
-        pass
+        _test_type(float, value)
+        self._mash_config['mash_states']['mash']['temp'] = value
+
+        if self._state in ('mash', 'preheat'):
+            self.__HLTCtlEnable = False
+            self.__HLTCtlSetPoint = value
+            self.__HLTCtlEnable = True
 
     @rpccallable
     def set_mashout_sp(self, value):
-        pass
+        _test_type(float, value)
+        self._mash_config['mash_states']['mashout']['temp'] = value
+
+        if self._state == 'mashout':
+            self.__HLTCtlEnable = False
+            self.__HLTCtlSetPoint = value
+            self.__HLTCtlEnable = True
 
     @rpccallable
     def set_hyst_level(self, value):
-        pass
+        _test_type(float, value)
+        self._mash_config['hystctl']['level'] = value
+
+        if self.__HLTCtlEnable:
+            self.__HLTCtlEnable = False
+            self.__HLTCtlHystLevel = value
+            self.__HLTCtlEnable = True
+        else:
+            self.__HLTCtlHystLevel = value
 
     @rpccallable
     def set_mash_duration(self, value):
-        pass
+        _test_type(int, value)
+        self._mash_config['mash_states']['mash']['duration'] = value
 
     @rpccallable
     def set_mashout_duration(self, value):
-        pass
+        _test_type(int, value)
+        self._mash_config['mash_states']['mashout']['duration'] = value
 
     @rpccallable
     def set_sparge_duration(self, value):
-        pass
+        _test_type(int, value)
+        self._mash_config['mash_states']['sparge']['duration'] = value
 
     def default_configuration(self):
         self.set_output_value('HLTCtlSetPoint', 0)
