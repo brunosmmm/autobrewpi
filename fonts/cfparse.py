@@ -2,6 +2,7 @@ import re
 from array import array
 from fontarr import FontArray
 
+
 class CFontParser(object):
 
     def __init__(self, lines, data_size=8):
