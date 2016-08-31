@@ -5,7 +5,7 @@ import logging
 
 class FontManager(object):
 
-    def __init__(self, config_file='fonts/fontcfg.json'):
+    def __init__(self, config_file='config/fonts/fontcfg.json'):
 
         self.logger = logging.getLogger('AutoBrew.FontManager')
 
