@@ -18,7 +18,7 @@ class Pt100Table(VSpaceDriver):
         super(Pt100Table, self).__init__(**kwargs)
 
         try:
-            with open('vspace/pt100.json', 'r') as f:
+            with open('config/drivers/pt100.json', 'r') as f:
                 config = json.load(f)
 
             self._table = numpy.unique(numpy.loadtxt(os.path.join(os.getcwd(), 'data', config['value_file']), delimiter=',').flatten())
