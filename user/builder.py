@@ -2,10 +2,10 @@ import importlib
 import json
 from collections import OrderedDict
 
+
 class SystemBuilder(object):
     def __init__(self, config_file, gadget_vspace):
 
-        system_objects = {}
         self._gvspace = gadget_vspace
 
         try:
@@ -14,24 +14,26 @@ class SystemBuilder(object):
         except IOError:
             raise IOError('could not open configuration file')
 
-        #parse configuration
+        # parse configuration
 
-        #load drivers
-        for instance_name, driver_type in config_contents['driver_instances'].iteritems():
+        # load drivers
+        for (instance_name,
+             driver_type) in config_contents['driver_instances'].iteritems():
             try:
-                #try to load class
-                m = importlib.import_module(config_contents['driver_classes'][driver_type])
+                # try to load class
+                driver_type = config_contents['driver_classes'][driver_type]
+                m = importlib.import_module(driver_type)
                 c = getattr(m, driver_type)
                 self._gvspace.register_driver(c, instance_name)
             except Exception:
                 raise
 
-        #make hardwired connections
+        # make hardwired connections
         for connection in config_contents['required_connections']:
             port_from = self._gvspace.find_port_id(connection['port_from']['instance_name'],
-                                                                          connection['port_from']['port_name'],
-                                                                          connection['port_from']['port_direction'])
+                                                   connection['port_from']['port_name'],
+                                                   connection['port_from']['port_direction'])
             port_to = self._gvspace.find_port_id(connection['port_to']['instance_name'],
-                                                                          connection['port_to']['port_name'],
-                                                                          connection['port_to']['port_direction'])
+                                                 connection['port_to']['port_name'],
+                                                 connection['port_to']['port_direction'])
             self._gvspace.connect_pspace_ports(port_from, port_to)

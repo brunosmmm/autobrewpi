@@ -1,6 +1,7 @@
 import pyjsonrpc
 from util.thread import StoppableThread
 
+
 def make_json_server(rpc_request_fn):
 
     class VSpaceRPCServer(pyjsonrpc.HttpRequestHandler):
@@ -21,7 +22,7 @@ def make_json_server(rpc_request_fn):
         @pyjsonrpc.rpcmethod
         def get_port_info(self, port_id):
             val = self._rpc_req('portinfo',
-                                 port_id=port_id)
+                                port_id=port_id)
 
             if val is None:
                 return {'status': 'error'}
@@ -66,6 +67,7 @@ def make_json_server(rpc_request_fn):
                     'data': val}
 
     return VSpaceRPCServer
+
 
 class VSpaceRPCController(StoppableThread):
 

@@ -2,6 +2,7 @@ from ui.element import UIElement
 from ui.instr import DrawInstruction, DrawInstructionGroup
 from PIL import Image as PImage
 
+
 class Image(UIElement):
     def __init__(self, *args, **kwargs):
         if 'path' in kwargs:

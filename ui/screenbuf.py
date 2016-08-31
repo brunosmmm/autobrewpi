@@ -1,7 +1,6 @@
-from ctypes import CDLL, c_ubyte, c_uint
+from ctypes import CDLL, c_uint
 from fonts.fontmgr import FontManager
 from ui.element import UIElement
-from ui.screen import Screen
 from util.thread import StoppableThread
 from array import array
 from datetime import datetime
@@ -11,6 +10,7 @@ import uuid
 
 SCREENBUF_SO_PATH = './lcd/screen.so'
 
+
 class RecurrentCall(object):
     def __init__(self, callback, interval):
         self.cb = callback
@@ -18,19 +18,21 @@ class RecurrentCall(object):
 
         self._last_called = datetime.now()
 
+
 class ScreenBuffer(StoppableThread):
 
-    def __init__(self, width, height, input_client, refresh_interval=0.05, screen_on_hook=None):
+    def __init__(self, width, height, input_client,
+                 refresh_interval=0.05, screen_on_hook=None):
         super(ScreenBuffer, self).__init__()
 
-        #logging
+        # logging
         self.logger = logging.getLogger('AutoBrew.ScreenBuffer')
 
         # properties
         self._width = width
         self._height = height
 
-        #input client
+        # input client
         self._icli = input_client
 
         # display controller
@@ -40,31 +42,31 @@ class ScreenBuffer(StoppableThread):
         if screen_on_hook is not None:
             screen_on_hook()
 
-        #font manager
+        # font manager
         self._fmgr = FontManager()
 
-        #screen manager
+        # screen manager
         self._screens = {}
         self.active_screen = None
 
-        #auto refresh
+        # auto refresh
         self.refresh_interval = refresh_interval
 
-        #control flow
+        # control flow
         self._drawing = False
         self._old = False
 
-        #local buffer
+        # local buffer
         self._screenbuf = array('B', [])
         for i in range(0, height):
             for j in range(0, width/6):
                 self._screenbuf.append(0x00)
 
-        #flags
+        # flags
         self._needs_redrawing = None
         self._pause_calls = False
 
-        #attach input client callbacks
+        # attach input client callbacks
         self._icli.attach_callback('keypad.press', self._keypad_keypress)
         self._icli.attach_callback('keypad.release', self._keypad_keyrelease)
         self._icli.attach_callback('encoder.cw', self._encoder_rotate_cw)
@@ -74,13 +76,13 @@ class ScreenBuffer(StoppableThread):
         self._icli.attach_callback('switches.press', self._switch_press)
         self._icli.attach_callback('switches.release', self._switch_release)
 
-        #recurrent call manager
+        # recurrent call manager
         self.recurrent_calls = {}
 
     def _switch_press(self, data, uuid):
         if self.active_screen is not None:
 
-            #filter manual switch out
+            # filter manual switch out
             if data == '4':
                 event = {'event': 'mode.change',
                          'data': 'manual'}
@@ -103,33 +105,39 @@ class ScreenBuffer(StoppableThread):
 
     def _keypad_keypress(self, data, uuid):
         if self.active_screen is not None:
-            self._screens[self.active_screen]._input_event({'event': 'keypad.press',
-                                                            'data': data})
+            active_screen = self._screens[self.active_screen]
+            active_screen._input_event({'event': 'keypad.press',
+                                        'data': data})
 
     def _keypad_keyrelease(self, data, uuid):
         if self.active_screen is not None:
-            self._screens[self.active_screen]._input_event({'event': 'keypad.release',
-                                                            'data': data})
+            active_screen = self._screens[self.active_screen]
+            active_screen._input_event({'event': 'keypad.release',
+                                        'data': data})
 
     def _encoder_rotate_cw(self, data, uuid):
         if self.active_screen is not None:
-            self._screens[self.active_screen]._input_event({'event': 'encoder.cw',
-                                                            'data': None})
+            active_screen = self._screens[self.active_screen]
+            active_screen._input_event({'event': 'encoder.cw',
+                                        'data': None})
 
     def _encoder_rotate_ccw(self, data, uuid):
         if self.active_screen is not None:
-            self._screens[self.active_screen]._input_event({'event': 'encoder.ccw',
-                                                            'data': None})
+            active_screen = self._screens[self.active_screen]
+            active_screen._input_event({'event': 'encoder.ccw',
+                                        'data': None})
 
     def _encoder_press(self, data, uuid):
         if self.active_screen is not None:
-            self._screens[self.active_screen]._input_event({'event': 'encoder.press',
-                                                            'data': None})
+            active_screen = self._screens[self.active_screen]
+            active_screen._input_event({'event': 'encoder.press',
+                                        'data': None})
 
     def _encoder_release(self, data, uuid):
         if self.active_screen is not None:
-            self._screens[self.active_screen]._input_event({'event': 'encoder.release',
-                                                            'data': None})
+            active_screen = self._screens[self.active_screen]
+            active_screen._input_event({'event': 'encoder.release',
+                                        'data': None})
 
     def add_screen(self, screen_id, screen_obj):
         screen_obj._parent = self
@@ -168,11 +176,10 @@ class ScreenBuffer(StoppableThread):
         row_data_array = (c_uint*len(row_data))(*row_data)
         self._lcd.SCREEN_Char(x, y, row_data_array, font_w, font_h, color)
 
-
     def draw_bitmap(self, x, y, data):
         for ix in range(0, data.width):
             for iy in range(0, data.height):
-                if data.getpixel((ix,iy)) < 255:
+                if data.getpixel((ix, iy)) < 255:
                     self.set_pixel_value(x+ix, y+iy, True)
                 else:
                     self.set_pixel_value(x+ix, y+iy, False)
@@ -202,7 +209,11 @@ class ScreenBuffer(StoppableThread):
             offset_v = -font_h
 
         for i in range(0, len(msg)):
-            self.draw_font_char(offset_h+x+i*font_w, offset_v+y, font_name, msg[i], color)
+            self.draw_font_char(offset_h+x+i*font_w,
+                                offset_v+y,
+                                font_name,
+                                msg[i],
+                                color)
 
     def draw_circle(self, x, y, radius, fill, color):
         self._lcd.SCREEN_Circle(x, y, radius, fill, color)
@@ -228,7 +239,7 @@ class ScreenBuffer(StoppableThread):
         if not isinstance(drawing_groups, list):
             drawing_groups = [drawing_groups]
 
-        #organize drawing list by priority
+        # organize drawing list by priority
         drawing_groups = sorted(drawing_groups, key=lambda group: group._prio)
 
         for group in drawing_groups:
@@ -258,7 +269,7 @@ class ScreenBuffer(StoppableThread):
 
     def activate_screen(self, screen_id, erase=True):
         self._pause_calls = True
-        #wait till drawing stops
+        # wait till drawing stops
         while self._drawing:
             time.sleep(0.01)
 
@@ -285,7 +296,7 @@ class ScreenBuffer(StoppableThread):
 
     def _activate_screen(self, screen_id, erase=True, blank=False):
 
-        #wait
+        # wait
         while self._drawing:
             time.sleep(0.01)
 
@@ -333,7 +344,7 @@ class ScreenBuffer(StoppableThread):
                 self.put_buffer()
                 self._old = False
 
-            #process recurrent calls
+            # process recurrent calls
             if self._pause_calls is False:
                 for rc in self.recurrent_calls.values():
                     td = datetime.now() - rc._last_called

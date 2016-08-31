@@ -3,8 +3,10 @@ from ui.instr import DrawInstruction, DrawInstructionGroup
 import uuid
 from collections import OrderedDict
 
+
 class GroupError(Exception):
     pass
+
 
 class RadioGroup(object):
 
@@ -60,6 +62,7 @@ class RadioGroup(object):
 
         return self._registered_btns.keys().index(self._selected_btn)
 
+
 class RadioButton(CheckBox):
     def __init__(self, **kwargs):
         if 'group' in kwargs:
@@ -67,21 +70,21 @@ class RadioButton(CheckBox):
         else:
             self.group = None
 
-        #use radius, not w/h
+        # use radius, not w/h
         self.r = kwargs.pop('r')
         kwargs['w'] = 2*self.r
         kwargs['h'] = 2*self.r
 
-        #generate an unique id
+        # generate an unique id
         self._uid = uuid.uuid1()
 
-        #register in group
+        # register in group
         if self.group is not None:
             self.group.register_btn(self._uid, self.set_state)
 
         super(RadioButton, self).__init__(**kwargs)
 
-    #override set_state
+    # override set_state
     def set_state(self, state):
         if self.state != state:
             super(RadioButton, self).set_state(state)
@@ -97,9 +100,7 @@ class RadioButton(CheckBox):
                             y=self.y+self.h/2,
                             radius=self.w/2,
                             fill=False,
-                            color=True
-            )
-        )
+                            color=True))
 
         if self.state == 'pressed':
             dwg.add_instructions(
@@ -108,6 +109,5 @@ class RadioButton(CheckBox):
                                 y=self.y+self.h/2,
                                 radius=self.w/2-3,
                                 fill=True,
-                                color=True)
-                )
+                                color=True))
         return [dwg]

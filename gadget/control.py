@@ -1,26 +1,28 @@
 from gadget.hbusjson import HbusClient
 from util.thread import StoppableThread
-from vspace import VSpaceDriver, VSpaceInput, VSpaceOutput, VSpaceParameter, CallNotAllowedError
 from gadget.vspacerpc import VSpaceRPCController
 import time
 from datetime import datetime, timedelta
 from collections import deque
 import re
 import logging
-import os
 
 _GADGET_DRIVER_REGEX = re.compile(r'([a-zA-Z]+)([0-9]+)_([a-zA-Z0-9]+)')
+
 
 class GadgetNotPresentError(Exception):
     pass
 
+
 class GadgetVariableError(Exception):
     pass
+
 
 class GadgetVariableRequest(object):
     def __init__(self, var_name, value):
         self._var = var_name
         self._value = value
+
 
 class GadgetVariableProxy(object):
     def __init__(self, object_idx, can_read=False, can_write=False):
@@ -65,7 +67,8 @@ class GadgetVariableProxy(object):
 
 
 class VSpacePortDescriptor(object):
-    def __init__(self, direction, port_id, linked_instance, instance_port_name):
+    def __init__(self, direction, port_id, linked_instance,
+                 instance_port_name):
         self._dir = direction
         self._pid = port_id
         self._inst = linked_instance
@@ -89,10 +92,10 @@ class VSpacePortDescriptor(object):
         else:
             raise IOError('unknown error!')
 
-        #add to list
+        # add to list
         self._connection_list.add(connect_to._pid)
 
-        #connect other to this (only do it once!!)
+        # connect other to this (only do it once!!)
         if dont_recurse is False:
             connect_to.connect_port(self, dont_recurse=True)
 
@@ -115,6 +118,7 @@ class VSpacePortDescriptor(object):
     def get_direction(self):
         return self._dir
 
+
 class GadgetVariableSpace(StoppableThread):
 
     _initialized = False
@@ -131,7 +135,7 @@ class GadgetVariableSpace(StoppableThread):
         self._write_queue = deque()
 
         self._hcli.start()
-        #initial server scan, wait for master to be available
+        # initial server scan, wait for master to be available
         master_state = self._hcli.get_master_state()
         while master_state != 5:
             time.sleep(5)
@@ -152,29 +156,29 @@ class GadgetVariableSpace(StoppableThread):
         if tries == 20:
             raise GadgetNotPresentError('easybrewgadget is not available')
 
-        #detect address
+        # detect address
         gadget_info = self._hcli.get_slave_info(self._guid)
         self._gaddr = gadget_info['currentaddress']
 
-        #connection matrix
+        # connection matrix
         self._gadget_space_port_matrix = {}
         self._process_space_port_matrix = {}
         self._global_port_counter = 0
 
-        #variable space
+        # variable space
         self._varspace = {}
 
-        #parse
+        # parse
         self._parse_objects()
         self._scan_values()
 
-        #drivers
+        # drivers
         self._drivers = {}
 
-        #timers
+        # timers
         self._last_scan = datetime.now()
 
-        #RPC server
+        # RPC server
         self._rpcsrv = VSpaceRPCController(self.rpc_request)
         self._rpcsrv.start()
 
@@ -195,8 +199,10 @@ class GadgetVariableSpace(StoppableThread):
             can_read = True if permissions & 0x01 else False
             can_write = True if permissions & 0x02 else False
 
-            self._varspace[obj_name] = GadgetVariableProxy(obj_idx, can_read, can_write)
-            #create port aliases
+            self._varspace[obj_name] = GadgetVariableProxy(obj_idx,
+                                                           can_read,
+                                                           can_write)
+            # create port aliases
             if (can_write):
                 port_id = self._new_port_added()
                 port = VSpacePortDescriptor('input',
@@ -223,15 +229,16 @@ class GadgetVariableSpace(StoppableThread):
         return self._varspace.keys()
 
     def _hbus_read_cb(self, data, user_data):
-        #got data!
+        # got data!
         var = self._varspace[user_data]
         if var._value != data:
-            #trigger systemwide changes
+            # trigger systemwide changes
             self.logger.debug('detected a change of value in '
-                              'gadget variable "{}", propagating...'.format(user_data))
+                              'gadget variable "{}"'
+                              ', propagating...'.format(user_data))
             self.logger.debug('was: {}, is: {}'.format(var._value, data))
             if var.get_output_port_id() is not None:
-                #propagate
+                # propagate
                 self._propagate_value(var.get_output_port_id(), data)
         var._value = data
         if var._old:
@@ -242,11 +249,11 @@ class GadgetVariableSpace(StoppableThread):
     def _gadget_state_read_cb(self, data, user_data):
         self._hbus_read_cb(data, user_data)
         if int(data) & 0x08:
-            #tracked value change detected, read new values
+            # tracked value change detected, read new values
             change_flags = int(data) >> 8
             read_list = []
             for i in range(0, 16):
-                if change_flags & (1<<i):
+                if change_flags & (1 << i):
                     read_list.append(i+1)
             self._scan_values(read_list)
 
@@ -256,10 +263,15 @@ class GadgetVariableSpace(StoppableThread):
             try:
                 if var._read_pending:
                     return
-                self._hcli.read_slave_object(self._gaddr, var._idx, False, rd_callback, var_name)
+                self._hcli.read_slave_object(self._gaddr,
+                                             var._idx,
+                                             False,
+                                             rd_callback,
+                                             var_name)
                 var._read_pending = True
             except Exception as e:
-                self.logger.debug('failed to read variable "{}": {}'.format(var_name, e.message))
+                self.logger.debug('failed to read variable'
+                                  ' "{}": {}'.format(var_name, e.message))
                 var._old = True
 
     def _scan_values(self, obj_idx_list=None):
@@ -270,7 +282,8 @@ class GadgetVariableSpace(StoppableThread):
     def __setattr__(self, name, value):
         if self._initialized:
             if name in self._varspace.keys():
-                self._write_queue.appendleft(GadgetVariableRequest(name, value))
+                self._write_queue.appendleft(GadgetVariableRequest(name,
+                                                                   value))
                 return
         super(GadgetVariableSpace, self).__setattr__(name, value)
 

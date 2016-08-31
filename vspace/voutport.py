@@ -1,5 +1,6 @@
 from vspace import VSpaceDriver, VSpaceOutput, rpccallable
 
+
 class VirtualOutput(VSpaceDriver):
 
     _outputs = {'Output': VSpaceOutput('GENERIC')}

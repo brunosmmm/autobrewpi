@@ -1,5 +1,6 @@
 from vspace import VSpaceDriver, VSpaceInput, rpccallable
 
+
 class VirtualInput(VSpaceDriver):
 
     _inputs = {'Input': VSpaceInput('GENERIC')}

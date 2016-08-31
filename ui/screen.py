@@ -1,7 +1,9 @@
 from ui.element import UIElement
 
+
 class ScreenError(Exception):
     pass
+
 
 class Screen(UIElement):
     def __init__(self, **kwargs):
@@ -12,14 +14,14 @@ class Screen(UIElement):
         self._children = []
         self.uids = {}
 
-        #property set by ScreenBuffer
+        # property set by ScreenBuffer
         self._screen_id = None
 
     def add_element(self, element):
         element._parent = self
         self._children.append(element)
 
-        #this will cost some more references, but do it for now
+        # this will cost some more references, but do it for now
         if element.uid is not None:
             self.uids[element.uid] = element
 
@@ -27,11 +29,11 @@ class Screen(UIElement):
         for element in args(self):
             self.add_element(element)
 
-        #for element in self._children:
+        # for element in self._children:
         #    print element._parent
 
     def find_child(self, child_uid):
-        if child_id is None:
+        if child_uid is None:
             return None
 
         for child in self._children:

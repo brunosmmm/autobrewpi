@@ -1,4 +1,5 @@
-from vspace import VSpaceDriver, VSpaceInput, VSpaceOutput, VSpaceParameter
+from vspace import VSpaceDriver, VSpaceInput, VSpaceOutput
+
 
 class ByteComp(VSpaceDriver):
 
@@ -30,5 +31,5 @@ class ByteComp(VSpaceDriver):
 
         self.set_output_value('ByteOut', output_value)
 
-        #clear flags
+        # clear flags
         self.get_flags()

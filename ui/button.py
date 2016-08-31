@@ -1,7 +1,7 @@
-from ui.element import UIElement
 from ui.behaviors import ButtonBehavior
 from ui.label import Label
 from ui.instr import DrawInstruction, DrawInstructionGroup
+
 
 class Button(Label, ButtonBehavior):
     def __init__(self, **kwargs):
@@ -54,6 +54,7 @@ class Button(Label, ButtonBehavior):
     @property
     def h(self):
         return self._h
+
     @h.setter
     def h(self, value):
         self._h = value

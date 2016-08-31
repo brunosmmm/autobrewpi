@@ -1,4 +1,5 @@
-from vspace import VSpaceDriver, VSpaceInput, VSpaceOutput, VSpaceParameter
+from vspace import VSpaceDriver, VSpaceOutput
+
 
 class ConstantValue(VSpaceDriver):
 
@@ -13,7 +14,7 @@ class ConstantValue(VSpaceDriver):
         self._output_set = False
 
     def cycle(self):
-        #cycle only really runs once
+        # cycle only really runs once
         if self._output_set is False:
             self.set_output_value('ConstOut', self._const_val)
             self._output_set = True

@@ -30,7 +30,8 @@ class Pt100Table(VSpaceDriver):
             self._start_temp = float(config['begins_at'])
         except IOError as e:
             raise
-            self.log_err('could not load configuration or data file: {}'.format(e.message))
+            self.log_err('could not load '
+                         'configuration or data file: {}'.format(e.message))
             self._table = None
             self._start_temp = None
 
@@ -41,11 +42,12 @@ class Pt100Table(VSpaceDriver):
             return
 
         try:
-            original_xs = numpy.arange(self._start_temp, self._start_temp+len(self._table))
+            original_xs = numpy.arange(self._start_temp,
+                                       self._start_temp+len(self._table))
             interp_data = interpolate.interp1d(self._table, original_xs)
-            #new_xs = numpy.arange(self._start_temp, self._start_temp+len(self._table), 0.01)
             curr_res = self.__Resistance
 
             self.__Temperature = numpy.around(interp_data(curr_res), 2)
         except Exception as e:
-            self.log_err('could not calculate temperature: {}'.format(e.message))
+            self.log_err('could not calculate'
+                         ' temperature: {}'.format(e.message))

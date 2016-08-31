@@ -2,6 +2,7 @@ from ui.behaviors import ButtonBehavior
 from ui.instr import DrawInstruction, DrawInstructionGroup
 from ui.element import UIElement
 
+
 class CheckBox(UIElement, ButtonBehavior):
     def __init__(self, **kwargs):
         super(CheckBox, self).__init__(**kwargs)
@@ -13,7 +14,7 @@ class CheckBox(UIElement, ButtonBehavior):
 
     def _get_drawing_instructions(self):
 
-        #build drawing instructions
+        # build drawing instructions
         dwg = DrawInstructionGroup(self.draw_prio)
         dwg.add_instructions(
             DrawInstruction('rect',

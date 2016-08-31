@@ -18,7 +18,7 @@ class CFontParser(object):
 
         msb = 0
         for i in range(0, data_size):
-            if value & (1<<i):
+            if value & (1 << i):
                 msb = i
 
         return msb
@@ -46,13 +46,13 @@ class CFontParser(object):
 
             bytelist = m.group(1).split(',')
 
-            #combine bytes to create true representation
+            # combine bytes to create true representation
             valuelist = []
             for chunk in self._list_chunks(bytelist, self.data_size/8):
                 val = 0
                 for i in range(0, len(chunk)):
-                    #endianness??
-                    val += int(chunk[i].strip(), 16)<< i*8
+                    # endianness??
+                    val += int(chunk[i].strip(), 16) << i*8
 
                 valuelist.append(val)
 
@@ -61,16 +61,18 @@ class CFontParser(object):
                 self.font_h = len(bytelist) / (self.data_size/8)
             else:
                 if len(bytelist) / (self.data_size/8) != self.font_h:
-                    raise IOError('invalid line length: {};'
-                                  ' detected length is {}'.format(len(bytelist),
-                                                                  self.font_h))
+                    raise IOError('invalid line length: {}; '
+                                  'detected length is {}'.format(len(bytelist),
+                                                                 self.font_h))
 
-            #check font height
+            # check font height
             for value in valuelist:
                 if self.font_w is None:
                     self.font_w = self._find_MSB(value, self.data_size) + 1
                 else:
-                    self.font_w = max(self.font_w, self._find_MSB(value, self.data_size) + 1)
+                    self.font_w = max(self.font_w,
+                                      self._find_MSB(value,
+                                                     self.data_size) + 1)
 
             self.font_map[c_counter] = valuelist
 

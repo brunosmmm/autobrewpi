@@ -1,8 +1,9 @@
-from ui.element import UIElement, Coordinate
+from ui.element import UIElement
 from ui.instr import DrawInstruction, DrawInstructionGroup
 import re
 
 _FONT_NAME_REGEX = re.compile(r'([0-9]+)x([0-9]+)')
+
 
 def _composite_label_text(label, value, max_len):
     label_fill = max_len - len(value)
@@ -12,6 +13,7 @@ def _composite_label_text(label, value, max_len):
 
     ret = '{label: <{fill_len}}'.format(label=label, fill_len=label_fill)+value
     return ret
+
 
 class DisableLabelSizeMixin(object):
     def __init__(self, **kwargs):
@@ -30,13 +32,15 @@ class DisableLabelSizeMixin(object):
     @property
     def h(self):
         return self._h
+
     @h.setter
     def h(self, value):
         self._h = value
 
+
 class Label(UIElement):
 
-    _LABEL_H_JUSTIFICATION =('right', 'left', 'center')
+    _LABEL_H_JUSTIFICATION = ('right', 'left', 'center')
 
     def __init__(self, *args, **kwargs):
         self.text = kwargs.pop('text')
@@ -54,9 +58,9 @@ class Label(UIElement):
         else:
             self._invert = False
 
-        #try to guess font size
+        # try to guess font size
         m = re.match(_FONT_NAME_REGEX, self.font)
-        if m != None:
+        if m is not None:
             self._font_w = int(m.group(1))
             self._font_h = int(m.group(2))
         else:
@@ -73,7 +77,7 @@ class Label(UIElement):
     @staticmethod
     def guess_font_size(font_name):
         m = re.match(_FONT_NAME_REGEX, font_name)
-        if m != None:
+        if m is not None:
             return {'w': int(m.group(1)),
                     'h': int(m.group(2))}
 
@@ -119,8 +123,9 @@ class Label(UIElement):
 
         return [dwg]
 
-    #label anchors are calculated differently because the width/height are dynamic
-    #depending on the size of the text
+    # label anchors are calculated differently
+    # because the width/height are dynamic
+    # depending on the size of the text
 
     @property
     def w(self):
@@ -144,6 +149,7 @@ class Label(UIElement):
     def h(self, value):
         pass
 
+
 class ValueCaption(Label):
     def __init__(self, **kwargs):
         self._max_len = kwargs.pop('maximum_length')
@@ -160,7 +166,9 @@ class ValueCaption(Label):
         self._update_text()
 
     def _update_text(self):
-        self.set_text(_composite_label_text(self._caption, self._value, self._max_len))
+        self.set_text(_composite_label_text(self._caption,
+                                            self._value,
+                                            self._max_len))
 
     def set_value(self, value):
         self._value = str(value)

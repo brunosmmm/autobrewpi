@@ -11,11 +11,14 @@ IO_VARIABLE_TYPES = [
     'FLOAT'
 ]
 
+
 class ParameterLockedError(Exception):
     pass
 
+
 class CallNotAllowedError(Exception):
     pass
+
 
 def _check_variable_dtype(wanted_type, value):
     error = False
@@ -25,28 +28,30 @@ def _check_variable_dtype(wanted_type, value):
             error = True
     elif wanted_type == 'BYTE':
         if not isinstance(value, int):
-            #try to convert
+            # try to convert
             try:
-                val = int(value, 2)
+                int(value, 2)
                 return
             except:
                 error = True
 
             try:
-                val = int(value, 16)
+                int(value, 16)
                 return
             except:
                 error = True
 
             try:
-                val = int(value)
+                int(value)
                 return
             except:
                 error = True
     # todo: check others
 
     if error:
-        raise TypeError('invalid python type for variable type {}'.format(wanted_type))
+        raise TypeError('invalid python type'
+                        ' for variable type {}'.format(wanted_type))
+
 
 def _autoconvert_variable_value(wanted_type, value):
     val = value
@@ -74,6 +79,7 @@ def _autoconvert_variable_value(wanted_type, value):
             pass
 
     return val
+
 
 class VSpacePort(object):
     def __init__(self, dtype, tags=[], global_id=None):
@@ -110,8 +116,9 @@ class VSpacePort(object):
     def set_disconected(self):
         self._connected = False
 
+
 class VSpaceInput(VSpacePort):
-    def __init__(self, dtype, initial_value = None):
+    def __init__(self, dtype, initial_value=None):
         super(VSpaceInput, self).__init__(dtype)
         self._value = initial_value
         self._value_changed = False
@@ -126,17 +133,18 @@ class VSpaceInput(VSpacePort):
         self._value = val
 
     def get_value(self):
-        #clear flags
+        # clear flags
         self._value_changed = False
         return self._value
 
     def value_changed(self):
-        #also clear flags
+        # also clear flags
         self._value_changed = False
         return self._value_changed
 
+
 class VSpaceParameter(VSpaceInput):
-    def __init__(self, var_type, initial_value = None):
+    def __init__(self, var_type, initial_value=None):
         super(VSpaceParameter, self).__init__(var_type, initial_value)
 
     def set_value(self, value):
@@ -145,15 +153,17 @@ class VSpaceParameter(VSpaceInput):
             if self._parent.parameters_locked():
                 raise ParameterLockedError('parameter is locked by driver')
         else:
-            raise ParameterLockedError('cannot determine parameter lock state!')
+            raise ParameterLockedError('cannot determine'
+                                       ' parameter lock state!')
 
         super(VSpaceParameter, self).set_value(value)
 
+
 class VSpaceOutput(VSpacePort):
-    def __init__(self, dtype, initial_value = None):
+    def __init__(self, dtype, initial_value=None):
         super(VSpaceOutput, self).__init__(dtype)
-        #ideally this differs from an input in the way
-        #the values are updated and propagated
+        # ideally this differs from an input in the way
+        # the values are updated and propagated
         self._stored_value = initial_value
 
     def set_value(self, value):
@@ -164,6 +174,7 @@ class VSpaceOutput(VSpacePort):
 
     def get_stored_value(self):
         return self._stored_value
+
 
 class VSpaceDriver(object):
 
@@ -179,20 +190,21 @@ class VSpaceDriver(object):
             self._gvarspace = None
         self._instance_name = None
 
-        #make a copy of the input/output declaration to isolate different instances
+        # make a copy of the input/output declaration
+        # to isolate different instances
         input_copy = copy.deepcopy(self._inputs)
         output_copy = copy.deepcopy(self._outputs)
 
         self._inputs = input_copy
         self._outputs = output_copy
 
-        #link ports to driver
+        # link ports to driver
         for port_name, port_object in self._inputs.iteritems():
             port_object.set_parent(self)
         for port_name, port_object in self._outputs.iteritems():
             port_object.set_parent(self)
 
-        #flags
+        # flags
         self._flags = set()
 
     def get_variable_value(self, var_name):
@@ -204,20 +216,20 @@ class VSpaceDriver(object):
             return method(**kwargs)
 
         try:
-           if call_src == 'rpc':
+            if call_src == 'rpc':
                 if method.rpc_call:
                     return method(**kwargs)
         except AttributeError:
             raise CallNotAllowedError('method can not be called externally')
 
     def __getattr__(self, attr_name):
-        #check if theres such an input
+        # check if theres such an input
         try:
             var_name = attr_name.split('__')[1]
             if var_name in self._inputs:
                 return self.get_input_value(var_name)
 
-            #check for outputs
+            # check for outputs
             if var_name in self._outputs:
                 return self.get_output_stored_value(var_name)
         except IndexError:
@@ -236,7 +248,6 @@ class VSpaceDriver(object):
 
         super(VSpaceDriver, self).__setattr__(attr_name, value)
 
-
     def _set_flag(self, flag):
         if flag in self._AVAILABLE_FLAGS:
             self._flags.add(flag)
@@ -248,20 +259,22 @@ class VSpaceDriver(object):
     def get_available_var_by_type(self):
         pass
 
-    #todo rename this, maybe _input_value_change
+    # todo rename this, maybe _input_value_change
     def update_local_variable(self, variable_name, new_value):
         """Update an input. This is called by the gadget variable space manager
         """
         self._inputs[variable_name].set_value(new_value)
-        #mark changes
+        # mark changes
         self._set_flag('inputs_changed')
 
     def _output_value_change(self, variable_name, new_value):
         """Update an output. This is called by the driver code to signal an update
         """
         self._outputs[variable_name].set_value(new_value)
-        #trigger change
-        self._gvarspace.trigger_output_change(self._instance_name, variable_name, new_value)
+        # trigger change
+        self._gvarspace.trigger_output_change(self._instance_name,
+                                              variable_name,
+                                              new_value)
 
     def get_input_value(self, variable_name):
         return self._inputs[variable_name].get_value()
@@ -329,7 +342,7 @@ class VSpaceDriver(object):
             self._gvarspace.driver_log(self._instance_name, 'INFO', msg)
 
 
-#helpers
+# helpers
 def rpccallable(func):
 
     func.rpc_call = True

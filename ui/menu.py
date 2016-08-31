@@ -2,16 +2,20 @@ from ui.frame import Frame
 from ui.radiobutton import RadioButton, RadioGroup
 from ui.label import Label, ValueCaption
 from ui.element import Coordinate
-from collections import OrderedDict
+
 
 class MenuItemError(Exception):
     pass
 
+
 class MenuError(Exception):
     pass
 
+
 class MenuItem(object):
-    def __init__(self, item_id, item_caption, item_action=None, value_getter=None, value_setter=None, value_type=None, **kwargs):
+    def __init__(self, item_id, item_caption, item_action=None,
+                 value_getter=None, value_setter=None,
+                 value_type=None, **kwargs):
         self._id = item_id
         self._caption = item_caption
         self._action = item_action
@@ -29,8 +33,6 @@ class MenuItem(object):
         elif self._action == 'edit':
             if self._parent is not None:
                 self._parent.edit_value()
-        #if self._action_cb is not None:
-        #    self._action_cb()
 
     def get_item_id(self):
         return self._id
@@ -48,20 +50,22 @@ class MenuItem(object):
         elif self.value_type == float:
             total_value = 0.0
             for i in range(0, len(value)):
-                if i < self._kwargs['fixp_size']:
-                    total_value += (1.0/(10**(self._kwargs['fixp_size'] - i)))*value[i]
+                fp_size = self._kwargs['fixp_size']
+                if i < fp_size:
+
+                    total_value += (1.0/(10**(fp_size - i)))*value[i]
                 else:
-                    total_value += (10**(i-self._kwargs['fixp_size']))*value[i]
+                    total_value += (10**(i - fp_size))*value[i]
 
             return total_value
 
     def check_validity(self, value):
         if self.value_type in (int, float):
             if 'max_val' in self._kwargs:
-                if value > max_val:
+                if value > self._kwargs['max_val']:
                     return False
             if 'min_val' in self._kwargs:
-                if value < 'min_val':
+                if value < self._kwargs['min_val']:
                     return False
 
         return True
@@ -87,7 +91,9 @@ class Menu(Frame):
                 self._font_w = kwargs.pop('font_w')
                 self._font_h = kwargs.pop('font_h')
             except KeyError:
-                raise MenuError('could not guess font size and missing arguments "font_w" and/or "font_h"')
+                raise MenuError('could not guess font size '
+                                'and missing arguments "font_w" '
+                                'and/or "font_h"')
         else:
             self._font_w = font_size['w']
             self._font_h = font_size['h']
@@ -97,13 +103,16 @@ class Menu(Frame):
         self._items = []
         self._group = RadioGroup()
 
-        #item placement position
+        # item placement position
         self._current_position = Coordinate(0, 0)
 
-        #calculate maximum length, etc
+        # calculate maximum length, etc
         col_w = self.w/self._colnum
-        self._col_max_len = (col_w - 2*self._sel_radius - self._sel_spacing)/self._font_w
-        self._max_item_count = self._colnum*(self.h/(2*self._sel_radius + self._sel_spacing))
+        self._col_max_len = (col_w -
+                             2*self._sel_radius -
+                             self._sel_spacing)/self._font_w
+        self._max_item_count = self._colnum*(self.h/(2*self._sel_radius +
+                                                     self._sel_spacing))
 
         self._item_value = None
         self._editing = False
@@ -117,7 +126,7 @@ class Menu(Frame):
 
         item._parent = self
         self._items.append(item)
-        #create widgets
+        # create widgets
         selector = RadioButton(r=self._sel_radius,
                                id=item.get_item_id(),
                                group=self._group,
@@ -131,8 +140,9 @@ class Menu(Frame):
         self.add_element(selector)
         self.add_element(label)
 
-        #calculate next position
-        if selector.southwest.y + 2*self._sel_radius + self._sel_spacing > self.h - 1:
+        # calculate next position
+        if selector.southwest.y + 2*self._sel_radius + self._sel_spacing >\
+           self.h - 1:
             self._current_position.y = 0
             self._current_position.x += self.w/self._colnum
         else:
@@ -170,10 +180,12 @@ class Menu(Frame):
             return
 
         self._item_value.append(value)
-        #provide visual feedback here
+        # provide visual feedback here
         selected = self._group.get_selected_index()
-        current_formatted_value = self._value_format.format(self._items[selected].calculate_value(self._item_value))
-        self.uids[self._items[selected].get_item_id()+'_label'].set_value(current_formatted_value)
+        item_value = self._items[selected].calculate_value(self._item_value)
+        current_formatted_value = self._value_format.format(item_value)
+        menu_item = self.uids[self._items[selected].get_item_id()+'_label']
+        menu_item.set_value(current_formatted_value)
 
     def delete_value(self):
         if self._editing is False:
@@ -182,8 +194,10 @@ class Menu(Frame):
         if len(self._item_value) > 0:
             self._item_value.pop()
         selected = self._group.get_selected_index()
-        current_formatted_value = self._value_format.format(self._items[selected].calculate_value(self._item_value))
-        self.uids[self._items[selected].get_item_id()+'_label'].set_value(current_formatted_value)
+        item_value = self._items[selected].calculate_value(self._item_value)
+        current_formatted_value = self._value_format.format(item_value)
+        menu_item = self.uids[self._items[selected].get_item_id()+'_label']
+        menu_item.set_value(current_formatted_value)
 
     def edit_value(self):
         selected = self._group.get_selected_index()
@@ -192,23 +206,27 @@ class Menu(Frame):
                and self._items[selected].setter is not None:
                 self._item_value = []
                 self._editing = True
-                self.uids[self._items[selected].get_item_id()+'_label'].set_inverted()
+                label = self.uids[self._items[selected].get_item_id()+'_label']
+                label.set_inverted()
 
     def finish_edit(self):
         selected = self._group.get_selected_index()
         if selected is not None:
             if self._items[selected].setter is not None:
-                self._items[selected].setter(self._items[selected].calculate_value(self._item_value))
-            self.uids[self._items[selected].get_item_id()+'_label'].set_normal()
+                value = self._items[selected].calculate_value(self._item_value)
+                self._items[selected].setter(value)
+            label = self.uids[self._items[selected].get_item_id()+'_label']
+            label.set_normal()
         self._editing = False
 
     def cancel_edit(self):
         selected = self._group.get_selected_index()
         if selected is not None:
-            self.uids[self._items[selected].get_item_id()+'_label'].set_normal()
+            label = self.uids[self._items[selected].get_item_id()+'_label']
+            label.set_normal()
         self._editing = False
 
-        #update values
+        # update values
         self.update_values()
 
     def is_editing(self):
@@ -218,4 +236,5 @@ class Menu(Frame):
         for item in self._items:
             if item.getter is not None:
                 new_value = item.getter()
-                self.uids[item.get_item_id()+'_label'].set_value(self._value_format.format(new_value))
+                label = self.uids[item.get_item_id()+'_label']
+                label.set_value(self._value_format.format(new_value))

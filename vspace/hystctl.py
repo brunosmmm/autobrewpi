@@ -1,9 +1,10 @@
 from vspace import VSpaceDriver, VSpaceInput, VSpaceOutput, VSpaceParameter
 
+
 class HystController(VSpaceDriver):
 
     _inputs = {
-        'SetPoint' : VSpaceParameter('TEMPERATURE'),
+        'SetPoint': VSpaceParameter('TEMPERATURE'),
         'HystLevel': VSpaceParameter('TEMPERATURE'),
         'HystType': VSpaceParameter('GENERIC'),
         'CurrTemp': VSpaceInput('TEMPERATURE'),
@@ -21,7 +22,6 @@ class HystController(VSpaceDriver):
         self._deadzone = False
 
     def _element_on(self):
-        #self.log_info('turning element on, current state is {}'.format(self.__CtlOut))
         if self.__CtlOut is False:
             self.__CtlOut = True
 
@@ -32,11 +32,13 @@ class HystController(VSpaceDriver):
     def update_local_variable(self, variable_name, new_value):
         """Asynchronously control state
         """
-        super(HystController, self).update_local_variable(variable_name, new_value)
+        super(HystController, self).update_local_variable(variable_name,
+                                                          new_value)
 
         if variable_name == 'Enabled':
             if new_value:
-                self.log_info('enabling control, setpoint = {}'.format(self.__SetPoint))
+                self.log_info('enabling control,'
+                              ' setpoint = {}'.format(self.__SetPoint))
                 if self._current_state == 'idle':
                     self._current_state = 'control'
             else:
@@ -52,7 +54,6 @@ class HystController(VSpaceDriver):
             return True
 
         return False
-
 
     def cycle(self):
 
@@ -74,7 +75,6 @@ class HystController(VSpaceDriver):
 
         if self._current_state == 'control':
             if output_enable_condition:
-                #self.log_info('output enable condition is true')
                 if self._deadzone is False:
                     self._element_on()
                 else:
@@ -91,5 +91,4 @@ class HystController(VSpaceDriver):
                     self._deadzone = True
 
         else:
-            #unknown ??
             self._current_state = 'idle'

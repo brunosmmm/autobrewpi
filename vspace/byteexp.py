@@ -1,9 +1,10 @@
-from vspace import VSpaceDriver, VSpaceInput, VSpaceOutput, VSpaceParameter, rpccallable
+from vspace import VSpaceDriver, VSpaceInput, VSpaceOutput, rpccallable
+
 
 class ByteExp(VSpaceDriver):
 
     _inputs = {
-        'ByteIn' : VSpaceInput('BYTE')
+        'ByteIn': VSpaceInput('BYTE')
     }
 
     _outputs = {
@@ -27,12 +28,12 @@ class ByteExp(VSpaceDriver):
     def update_local_variable(self, *args, **kwargs):
         super(ByteExp, self).update_local_variable(*args, **kwargs)
 
-        #update outputs immediately
+        # update outputs immediately
         for i in range(0, 8):
-            if self.get_input_value('ByteIn') & (1<<i):
+            if self.get_input_value('ByteIn') & (1 << i):
                 self.set_output_value('Bit{}'.format(i), True)
             else:
                 self.set_output_value('Bit{}'.format(i), False)
 
-        #clear flags
+        # clear flags
         self.get_flags()

@@ -1,4 +1,5 @@
-from vspace import VSpaceDriver, VSpaceInput, VSpaceOutput, rpccallable
+from vspace import VSpaceDriver, VSpaceInput, VSpaceOutput
+
 
 class LogicBlock(VSpaceDriver):
 

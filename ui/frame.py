@@ -1,5 +1,6 @@
 from ui.screen import Screen
-from ui.instr import DrawInstruction, DrawInstructionGroup
+from ui.instr import DrawInstructionGroup
+
 
 class Frame(Screen):
     def __init__(self, **kwargs):
@@ -17,10 +18,8 @@ class Frame(Screen):
 
     def _get_drawing_instructions(self):
 
-        #draw children!
-        dwg = DrawInstructionGroup(self.draw_prio)
-
-        #note: use relative positioning
+        # draw children!
+        # note: use relative positioning
         child_instr = super(Frame, self)._get_drawing_instructions()
         for child in child_instr:
             child.translate(self.x,
