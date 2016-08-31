@@ -60,7 +60,7 @@ if __name__ == "__main__":
     buf = ScreenBuffer(240, 64, icli, screen_on_hook=_turn_lcd_on)
 
     #build system
-    sys = SystemBuilder(config_file='user/absystem.json', gadget_vspace=gvspace)
+    sys = SystemBuilder(config_file='config/user/absystem.json', gadget_vspace=gvspace)
     #get information
     gvspace._debug_dump_port_list()
 
