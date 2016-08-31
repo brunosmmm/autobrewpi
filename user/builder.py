@@ -21,8 +21,8 @@ class SystemBuilder(object):
              driver_type) in config_contents['driver_instances'].iteritems():
             try:
                 # try to load class
-                driver_type = config_contents['driver_classes'][driver_type]
-                m = importlib.import_module(driver_type)
+                driver_class = config_contents['driver_classes'][driver_type]
+                m = importlib.import_module(driver_class)
                 c = getattr(m, driver_type)
                 self._gvspace.register_driver(c, instance_name)
             except Exception:
