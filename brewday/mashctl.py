@@ -42,7 +42,7 @@ class MashController(VSpaceDriver):
 
         #load persistent data
         try:
-            with open('brewday/mashconfig.json', 'r') as f:
+            with open('config/brewday/mashconfig.json', 'r') as f:
                 self._mash_config = json.load(f)
         except IOError:
             raise
