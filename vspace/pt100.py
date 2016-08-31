@@ -4,6 +4,7 @@ from scipy import interpolate
 import json
 import os
 
+
 class Pt100Table(VSpaceDriver):
 
     _inputs = {
@@ -21,7 +22,11 @@ class Pt100Table(VSpaceDriver):
             with open('config/drivers/pt100.json', 'r') as f:
                 config = json.load(f)
 
-            self._table = numpy.unique(numpy.loadtxt(os.path.join(os.getcwd(), 'data', config['value_file']), delimiter=',').flatten())
+            self._table = numpy.unique(numpy.loadtxt(os.path.join(os.getcwd(),
+                                                                  'data',
+                                                                  'drivers',
+                                                                  config['value_file']),
+                                                     delimiter=',').flatten())
             self._start_temp = float(config['begins_at'])
         except IOError as e:
             raise
