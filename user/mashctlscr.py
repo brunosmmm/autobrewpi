@@ -155,7 +155,7 @@ class ABMashScreen(Screen):
                              value_format='[{}]')
 
         def get_fn(inst, method):
-            self._varspace.get_driver_method(inst, method)
+            return self._varspace.get_driver_method(inst, method)
 
         def _cfgitems():
             yield MenuItem('mashtemp',
@@ -318,7 +318,7 @@ class ABMashScreen(Screen):
             self._hide_msg_modal()
 
             if self._mash_phase == 'check_water':
-                #next
+                # next
                 self._enter_active()
                 self._varspace.call_driver_method(self.ctl_inst, 'start_mash')
                 self._mash_phase = 'preheat'
@@ -328,7 +328,6 @@ class ABMashScreen(Screen):
                 self._main_mash()
             elif self._mash_phase == 'presparge':
                 self._sparge()
-
 
     def _cancel_press(self):
         if self._modal_showing:
