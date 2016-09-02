@@ -1,13 +1,7 @@
 from vspace import VSpaceOutput, VSpaceInput, rpccallable
-from brewday.controller import BrewdayController
-import json
+from brewday.controller import BrewdayController, _test_type
 import logging
 from datetime import datetime, timedelta
-
-
-def _test_type(type, value):
-    if not isinstance(value, type):
-        raise TypeError('type {} required'.format(type))
 
 
 class MashController(BrewdayController):

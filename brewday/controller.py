@@ -5,6 +5,11 @@ import json
 _PORT_REGEX = re.compile(r'([a-zA-Z0-9_]+)\.([a-zA-Z0-9_]+)')
 
 
+def _test_type(type, value):
+    if not isinstance(value, type):
+        raise TypeError('type {} required'.format(type))
+
+
 class BrewdayController(VSpaceDriver):
 
     _inputs = {}
