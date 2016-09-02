@@ -1,16 +1,6 @@
 from ui.screenbuf import ScreenBuffer
-from ui.checkbox import CheckBox
-from ui.label import Label
-from ui.button import Button
-from ui.radiobutton import RadioButton
-from ui.screen import Screen
-from ui.modal import Modal
 from gadget.control import GadgetVariableSpace
 from input.inputcli import ABInputClient
-from vspace.hystctl import HystController
-from vspace.constant import ConstantValue
-from vspace.byteexp import ByteExp
-from vspace.bytecomp import ByteComp
 from user.mainscr import ABMainScreen
 from user.mashctlscr import ABMashScreen
 from user.builder import SystemBuilder
@@ -46,7 +36,7 @@ if __name__ == "__main__":
     console = logging.StreamHandler()
     console.setLevel(logging.INFO)
     logging.getLogger('').addHandler(console)
-    #logging
+    # logging
     logger = logging.getLogger('AutoBrew')
 
     logger.info('AutoBrew loading...')
@@ -59,9 +49,9 @@ if __name__ == "__main__":
 
     buf = ScreenBuffer(240, 64, icli, screen_on_hook=_turn_lcd_on)
 
-    #build system
+    # build system
     sys = SystemBuilder(config_file='config/user/absystem.json', gadget_vspace=gvspace)
-    #get information
+    # get information
     gvspace._debug_dump_port_list()
 
     main_screen = ABMainScreen()
