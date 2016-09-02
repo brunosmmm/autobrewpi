@@ -259,8 +259,6 @@ class HbusClient(object):
             # check for outstanding requests
             try:
 
-                if stop_flag.is_set():
-                    return
                 # write separately for more responsiveness
                 try:
                     wrtask = wrqueue.get(False)
@@ -276,7 +274,8 @@ class HbusClient(object):
                     wrqueue.put(wrtask)
                 except QueueEmpty:
                     # proceed to read tasks if empty
-                    pass
+                    if stop_flag.is_set():
+                        return
 
                 try:
                     task = rdqueue.get(False)
