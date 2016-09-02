@@ -29,6 +29,9 @@ class BoilController(BrewdayController):
     def start_boil(self):
         self.enter_preheat()
 
+    def stop_boil(self):
+        self.enter_idle()
+
     def reset(self):
         self.enter_idle()
 
@@ -56,6 +59,7 @@ class BoilController(BrewdayController):
 
     def enter_idle(self):
         self.log_info('entering idle state')
+        self._state = 'idle'
         self.__BKCtlEnable = False
 
     def enter_preheat(self):
