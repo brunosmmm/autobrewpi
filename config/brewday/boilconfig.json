@@ -15,7 +15,7 @@
     ],
     "connections": {
         "BKCtlEnable": "HystCtl1.Enabled",
-        "BKCtlSetpoint": "HystCtl1.SetPoint",
+        "BKCtlSetPoint": "HystCtl1.SetPoint",
         "BKTemp": "HLTSens.Temperature",
         "GPanic": "GWatch.GadgetPanic"
     }
