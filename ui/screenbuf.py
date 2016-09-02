@@ -331,6 +331,8 @@ class ScreenBuffer(StoppableThread):
         while True:
 
             if self.is_stopped():
+                # clear screen!
+                self._lcd.SCREEN_Blank()
                 exit(0)
 
             if self._needs_redrawing is not None:
