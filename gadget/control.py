@@ -567,7 +567,8 @@ class GadgetVariableSpace(StoppableThread):
 
         return {'direction' : pspace[port_id].get_direction(),
                 'instname': pspace[port_id].get_linked_instance_name(),
-                'portname': pspace[port_id].get_linked_port_name()}
+                'portname': pspace[port_id].get_linked_port_name(),
+                'connected_to': pspace[port_id].get_connected_to()}
 
     def get_driver_method(self, instance_name, method_name):
         if instance_name in self._drivers:
