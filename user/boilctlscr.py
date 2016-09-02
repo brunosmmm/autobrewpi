@@ -1,4 +1,4 @@
-from ui.label import Label, _composite_label_text
+from ui.label import Label, _composite_label_text, ValueCaption
 from ui.menu import MenuItem
 from ui.box import Box
 from datetime import datetime
@@ -42,7 +42,41 @@ class ABBoilScreen(ABCtlScreen):
                                                               'Nenhum',
                                                               23),
                                    font='5x12',
-                                   **self._box_r.northwest+(2, 2))
+                                   **self._timer_label.southwest)
+
+        # hops list
+        self._hop1 = ValueCaption(caption='1',
+                                  maximum_length=11,
+                                  font='5x8',
+                                  **self._box_r.northwest+(2, 2))
+        self._hop2 = ValueCaption(caption='2',
+                                  maximum_length=11,
+                                  font='5x8',
+                                  **self._hop1.southwest)
+        self._hop3 = ValueCaption(caption='3',
+                                  maximum_length=11,
+                                  font='5x8',
+                                  **self._hop2.southwest)
+        self._hop4 = ValueCaption(caption='4',
+                                  maximum_length=11,
+                                  font='5x8',
+                                  **self._hop3.southwest)
+        self._hop5 = ValueCaption(caption='5',
+                                  maximum_length=11,
+                                  font='5x8',
+                                  **self._hop1.northeast)
+        self._hop6 = ValueCaption(caption='6',
+                                  maximum_length=11,
+                                  font='5x8',
+                                  **self._hop5.southwest)
+        self._hop7 = ValueCaption(caption='7',
+                                  maximum_length=11,
+                                  font='5x8',
+                                  **self._hop6.southwest)
+        self._hop8 = ValueCaption(caption='8',
+                                  maximum_length=11,
+                                  font='5x8',
+                                  **self._hop7.southwest)
 
         # configure menu
         def get_fn(inst, method):
@@ -65,6 +99,14 @@ class ABBoilScreen(ABCtlScreen):
         self._statframe.add_element(self._recipe_label)
         self._statframe.add_element(self._box_l)
         self._statframe.add_element(self._box_r)
+        self._statframe.add_element(self._hop1)
+        self._statframe.add_element(self._hop2)
+        self._statframe.add_element(self._hop3)
+        self._statframe.add_element(self._hop4)
+        self._statframe.add_element(self._hop5)
+        self._statframe.add_element(self._hop6)
+        self._statframe.add_element(self._hop7)
+        self._statframe.add_element(self._hop8)
 
         self._screen_state = 'idle'
         self._waiting_stop = False
@@ -102,12 +144,39 @@ class ABBoilScreen(ABCtlScreen):
         super(ABBoilScreen, self)._screen_deactivated(**kwargs)
         self._varspace.call_driver_method(self.ctl_inst, 'deactivate')
 
+    def _hide_hops(self):
+        self._hop1.set_caption('')
+        self._hop1.set_value('')
+        self._hop2.set_caption('')
+        self._hop2.set_value('')
+        self._hop3.set_caption('')
+        self._hop3.set_value('')
+        self._hop4.set_caption('')
+        self._hop4.set_value('')
+        self._hop5.set_caption('')
+        self._hop5.set_value('')
+        self._hop6.set_caption('')
+        self._hop6.set_value('')
+        self._hop7.set_caption('')
+        self._hop7.set_value('')
+        self._hop8.set_caption('')
+        self._hop8.set_value('')
+
+    def _hop_label(self, index):
+        return self.__getattribute__('_hop{}'.format(index+1))
+
     def load_recipe(self):
         active_recipe = self._recipemgr.get_loaded_recipe()
 
         if active_recipe is not None:
             recipe = self._recipemgr.get_recipe(active_recipe)
             self._loaded_recipe = recipe['abbrev']
+
+            hops = recipe['boil']['hops']
+            self._hide_hops()
+            for i in range(0, len(hops)):
+                self._hop_label(i).set_caption(hops[i]['name'])
+                self._hop_label(i).set_value(hops[i]['time'])
 
     def update_screen(self):
         super(ABBoilScreen, self).update_screen()
