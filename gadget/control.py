@@ -187,6 +187,9 @@ class GadgetVariableSpace(StoppableThread):
     def stop(self):
         self._rpcsrv.stop()
         self._rpcsrv.join()
+        # send shutdown events to all drivers
+        for driver in self._drivers.values():
+            driver.shutdown()
         super(GadgetVariableSpace, self).stop()
 
     def _parse_objects(self):

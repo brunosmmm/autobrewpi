@@ -341,6 +341,9 @@ class VSpaceDriver(object):
         if self._gvarspace is not None:
             self._gvarspace.driver_log(self._instance_name, 'INFO', msg)
 
+    def shutdown(self):
+        pass
+
 
 # helpers
 def rpccallable(func):
