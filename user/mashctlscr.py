@@ -499,6 +499,8 @@ class ABMashScreen(Screen):
     def _screen_activated(self, **kwargs):
         super(ABMashScreen, self)._screen_activated(**kwargs)
 
+        # activate mash controller
+        self._varspace.call_driver_method('MashCtl', 'activate')
         # install recurrent call
         self._upd_call_id = self._parent.add_recurrent_call(self.update_screen, 1)
 
@@ -508,6 +510,8 @@ class ABMashScreen(Screen):
     def _screen_deactivated(self, **kwargs):
         super(ABMashScreen, self)._screen_deactivated(**kwargs)
 
+        # deactivate mash controller
+        self._varspace.call_driver_method('MashCtl', 'deactivate')
         # remove recurrent call
         if self._upd_call_id is not None:
             self._parent.remove_recurrent_call(self._upd_call_id)

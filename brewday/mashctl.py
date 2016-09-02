@@ -50,6 +50,39 @@ class MashController(VSpaceDriver):
             raise
 
     def post_init(self):
+        # self.connect_ports()
+        pass
+
+    def activate(self):
+        self.connect_ports()
+        self.default_configuration()
+        self.enter_idle()
+
+    def deactivate(self):
+        self.disconnect_ports()
+        self._state = 'inactive'
+
+    def disconnect_ports(self):
+        for port_name, port_object in self._inputs.iteritems():
+            if port_object.get_connected():
+                port_id = port_object.get_global_port_id()
+
+                # discover what is connected to this port
+                connects_to = self._gvarspace.get_port_info(port_id)['connected_to']
+                for connected_port in connects_to:
+                    self._gvarspace.disconnect_pspace_ports(port_id,
+                                                            connected_port)
+        for port_name, port_object in self._outputs.iteritems():
+            if port_object.get_connected():
+                port_id = port_object.get_global_port_id()
+
+                # discover what is connected to this port
+                connects_to = self._gvarspace.get_port_info(port_id)['connected_to']
+                for connected_port in connects_to:
+                    self._gvarspace.disconnect_pspace_ports(port_id,
+                                                            connected_port)
+
+    def connect_ports(self):
         # make connections if configuration present
         for (port_name,
              connect_to) in self._mash_config['connections'].iteritems():
@@ -96,9 +129,6 @@ class MashController(VSpaceDriver):
             else:
                 self.log_warn('unknown mashctl port: {}'.format(port_name))
                 continue
-
-        self.default_configuration()
-        self.enter_idle()
 
     @property
     def _pump_on(self):
@@ -328,7 +358,7 @@ class MashController(VSpaceDriver):
 
     def cycle(self):
 
-        if self._state == 'idle':
+        if self._state in ('idle', 'inactive'):
             pass
         elif self._state == 'preheat':
             mash_target = self._mash_config['mash_states']['mash']['temp']
