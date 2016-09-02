@@ -40,6 +40,12 @@ class BoilController(BrewdayController):
     def get_boil_duration(self):
         return self._config['boil_duration']
 
+    def get_timer_end(self):
+        if self._state == 'boil':
+            return self._boil_start_timer + self._boil_timer_duration
+        else:
+            return None
+
     @rpccallable
     def set_boil_duration(self, value):
         _test_type(int, value)
