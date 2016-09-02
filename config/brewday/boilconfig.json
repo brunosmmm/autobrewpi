@@ -1,0 +1,22 @@
+{
+    "boil_thresh": 95.0,
+    "boil_duration": 60,
+    "hops": [
+        {
+            "time": 0,
+            "type": null,
+            "amount": null
+        },
+        {
+            "time": 30,
+            "type": null,
+            "amount": null
+        }
+    ],
+    "connections": {
+        "BKCtlEnable": "HystCtl1.Enabled",
+        "BKCtlSetpoint": "HystCtl1.SetPoint",
+        "BKTemp": "HLTSens.Temperature",
+        "GPanic": "GWatch.GadgetPanic"
+    }
+}

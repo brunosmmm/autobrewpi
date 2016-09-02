@@ -4,6 +4,7 @@
         "ByteComp": "vspace.bytecomp",
         "ByteExp": "vspace.byteexp",
         "MashController": "brewday.mashctl",
+        "BoilController": "brewday.boilctl",
         "GadgetWatcher": "gadget.gwatch",
         "Pt100Table": "vspace.pt100",
         "DataLogger": "gadget.datalog",
@@ -21,6 +22,7 @@
         "PumpSwitch": "VirtualInput",
         "ManualPumpCtl": "VirtualOutput",
         "MashCtl": "MashController",
+        "BoilCtl": "BoilController",
         "DataLog": "DataLogger"
     },
 
