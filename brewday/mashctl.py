@@ -307,11 +307,3 @@ class MashController(BrewdayController):
                 pass
         else:
             self._state = 'idle'
-
-    def save_configuration(self):
-
-        try:
-            with open('config/brewday/mashconfig.json', 'w') as f:
-                json.dump(self._config, f)
-        except IOError:
-            raise

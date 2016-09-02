@@ -12,14 +12,14 @@ class BrewdayController(VSpaceDriver):
 
     def __init__(self, **kwargs):
         if 'config_file' in kwargs:
-            config_file = kwargs.pop('config_file')
+            self.config_file = kwargs.pop('config_file')
         else:
-            config_file = None
+            self.config_file = None
         super(BrewdayController, self).__init__(**kwargs)
 
-        if config_file is not None:
+        if self.config_file is not None:
             try:
-                with open(config_file, 'r') as f:
+                with open(self.config_file, 'r') as f:
                     self._config = json.load(f)
             except IOError:
                 raise
@@ -116,3 +116,12 @@ class BrewdayController(VSpaceDriver):
 
     def default_configuration(self):
         pass
+
+    def save_configuration(self):
+        if self.config_file is None:
+            return
+        try:
+            with open(self.config_file, 'w') as f:
+                json.dump(self._config, f)
+        except IOError:
+            raise
