@@ -3,6 +3,7 @@ from gadget.control import GadgetVariableSpace
 from input.inputcli import ABInputClient
 from user.mainscr import ABMainScreen
 from user.mashctlscr import ABMashScreen
+from user.boilctlscr import ABBoilScreen
 from user.builder import SystemBuilder
 from time import sleep
 from datetime import datetime
@@ -56,8 +57,10 @@ if __name__ == "__main__":
 
     main_screen = ABMainScreen()
     mash_screen = ABMashScreen(varspace=gvspace)
+    boil_screen = ABBoilScreen(varspace=gvspace)
     buf.add_screen('main', main_screen)
     buf.add_screen('mash', mash_screen)
+    buf.add_screen('boil', boil_screen)
 
     #start threads
     buf.start()

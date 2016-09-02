@@ -27,7 +27,7 @@ class ABMainScreen(Screen):
                                 y=self.h-self._foot_btn_height-1,
                                 w=self.w/4-1,
                                 h=self._foot_btn_height)
-        self._footb_mr = Button(text='',
+        self._footb_mr = Button(text='BoilCtl',
                                 font='8x8',
                                 x=self.w/2,
                                 y=self.h-self._foot_btn_height-1,
@@ -51,3 +51,5 @@ class ABMainScreen(Screen):
         if evt['event'] == 'switches.press':
             if evt['data'] == '3':
                 self._parent.activate_screen('mash')
+            if evt['data'] == '2':
+                self._parent.activate_screen('boil')
