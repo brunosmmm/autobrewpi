@@ -230,6 +230,7 @@ class ABMashScreen(Screen):
 
         # configuration / stat
         self._current_frame = 'stat'
+        self._waiting_stop = False
 
     def _show_stats(self):
         self._cfgmenu.hide()
@@ -312,10 +313,19 @@ class ABMashScreen(Screen):
         self._panic_saved_state = self._state
         self._state = 'panic'
 
+    def _confirm_stop(self):
+        self._waiting_stop = True
+        self._show_msg_modal('Realmente parar?\nPressione CONFIRMA')
+
     def _confirm_press(self):
         if self._modal_showing:
 
             self._hide_msg_modal()
+
+            if self._waiting_stop:
+                self._mash_stop()
+                self._waiting_stop = False
+                return
 
             if self._mash_phase == 'check_water':
                 # next
@@ -331,6 +341,8 @@ class ABMashScreen(Screen):
 
     def _cancel_press(self):
         if self._modal_showing:
+            if self._waiting_stop:
+                self._waiting_stop = False
             if self._mash_phase == 'check_water':
                 pass
             self._hide_msg_modal()
@@ -361,6 +373,11 @@ class ABMashScreen(Screen):
         self._mash_phase = 'check_water'
         self._show_msg_modal('Encha o HLT com agua agora\n'
                              'Pressione CONFIRMA para continuar')
+
+    def _mash_stop(self):
+        self._varspace.call_driver_method(self.ctl_inst,
+                                          'stop_mash')
+        self._enter_idle()
 
     def _mash_done(self):
         self._mash_phase = 'mashout'
@@ -450,6 +467,8 @@ class ABMashScreen(Screen):
                         self._cfgmenu.cancel_edit()
                     else:
                         self._parent.activate_screen('main')
+                else:
+                    self._confirm_stop()
 
             if evt['data'] == '2':
                 if self._current_frame == 'stat':
