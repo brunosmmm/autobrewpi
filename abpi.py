@@ -47,6 +47,9 @@ if __name__ == "__main__":
     icli = ABInputClient()
     gvspace = GadgetVariableSpace(0xff000001)
 
+    # recipe manager
+    recipemgr = RecipeManager('config/recipes/')
+
     def _turn_lcd_on():
         gvspace.send_gadget_command(0x05)
 
