@@ -5,8 +5,8 @@ class HystController(VSpaceDriver):
 
     _inputs = {
         'SetPoint': VSpaceParameter('TEMPERATURE'),
-        'HystLevel': VSpaceParameter('TEMPERATURE'),
-        'HystType': VSpaceParameter('GENERIC'),
+        'HystLevel': VSpaceParameter('TEMPERATURE', 1.0),
+        'HystType': VSpaceParameter('GENERIC', 'updown'),
         'CurrTemp': VSpaceInput('TEMPERATURE'),
         'Enabled': VSpaceInput('BOOLEAN')
     }
