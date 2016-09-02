@@ -42,6 +42,8 @@ class ScreenBuffer(StoppableThread):
         if splash is not None:
             self._splash_screen(splash)
 
+        self._splash = splash
+
         if screen_on_hook is not None:
             screen_on_hook()
 
@@ -340,7 +342,10 @@ class ScreenBuffer(StoppableThread):
 
             if self.is_stopped():
                 # clear screen!
-                self._lcd.SCREEN_Blank()
+                if self._splash is not None:
+                    self._splash_screen(self._splash)
+                else:
+                    self._lcd.SCREEN_Blank()
                 exit(0)
 
             if self._needs_redrawing is not None:
