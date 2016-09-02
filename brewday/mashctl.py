@@ -255,12 +255,6 @@ class MashController(BrewdayController):
         self._state_timer_duration = timedelta(minutes=int(sparge_dur))
         self._state = 'sparge'
 
-    def _target_reached(self, target_temp, current_temp):
-        if abs(target_temp - current_temp) <=\
-           float(self._config['misc']['temp_error']):
-            return True
-        return False
-
     @staticmethod
     def _to_seconds(minutes, seconds):
         return minutes*60 + seconds
@@ -278,7 +272,8 @@ class MashController(BrewdayController):
         elif self._state == 'preheat':
             mash_target = self._config['mash_states']['mash']['temp']
             if self._target_reached(float(mash_target),
-                                    self.__HLTTemp):
+                                    self.__HLTTemp,
+                                    self._config['misc']['temp_error']):
                 self.log_info('Preheat done')
                 self._state = 'preheat_done'
         elif self._state == 'preheat_done':

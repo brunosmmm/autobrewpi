@@ -108,5 +108,11 @@ class BrewdayController(VSpaceDriver):
     def enter_idle(self):
         self._state = 'idle'
 
+    def _target_reached(self, target_temp, current_temp, temp_error):
+        if abs(target_temp - current_temp) <=\
+           float(temp_error):
+            return True
+        return False
+
     def default_configuration(self):
         pass
