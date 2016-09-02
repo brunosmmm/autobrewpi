@@ -73,6 +73,9 @@ class MashController(BrewdayController):
     def start_mash(self):
         self.enter_preheat()
 
+    def stop_mash(self):
+        self.enter_idle()
+
     def reset(self):
         self.enter_idle()
 
