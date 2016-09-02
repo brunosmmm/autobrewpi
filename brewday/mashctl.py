@@ -262,6 +262,9 @@ class MashController(BrewdayController):
 
         return None
 
+    def shutdown(self):
+        self.enter_idle()
+
     def cycle(self):
 
         if self._state in ('idle', 'inactive'):

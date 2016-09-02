@@ -75,6 +75,9 @@ class BoilController(BrewdayController):
         self._boil_timer_duration = timedelta(minutes=int(boil_duration))
         self._state = 'boil'
 
+    def shutdown(self):
+        self.enter_idle()
+
     def cycle(self):
 
         if self._state in ('idle', 'inactive'):
