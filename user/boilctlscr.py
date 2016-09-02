@@ -39,6 +39,7 @@ class ABBoilScreen(ABCtlScreen):
                            item_action='edit')
 
         # add elements
+        self._cfgmenu.add_items(_cfgitems())
         self._statframe.add_element(self._state_label)
         self._statframe.add_element(self._timer_label)
 
