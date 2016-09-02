@@ -10,7 +10,15 @@ class RecipeManager(object):
         self.logger = logging.getLogger('AutoBrew.RecipeMgr')
 
         self.recipes = {}
+        self.recipe_path = recipe_path
         # find recipe files
+        self.find_recipes(self.recipe_path)
+
+        self.logger.info('loaded {} recipes'.format(len(self.recipes)))
+
+        self._active_recipe = None
+
+    def find_recipes(self, recipe_path):
         file_list = []
         for f in os.listdir(recipe_path):
             if f.endswith('.json') and\
@@ -29,11 +37,6 @@ class RecipeManager(object):
 
             recipe_id = f.split('.')[0]
             self.recipes[recipe_id] = recipe
-            self.logger.debug('loaded recipe "{}"'.format(recipe['title']))
-
-        self.logger.info('loaded {} recipes'.format(len(self.recipes)))
-
-        self._active_recipe = None
 
     def load_recipe(self, recipe_id):
         if recipe_id not in self.recipes:
