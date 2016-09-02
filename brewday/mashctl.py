@@ -18,7 +18,8 @@ class MashController(BrewdayController):
         'HLTCtlSetPoint': VSpaceOutput('TEMPERATURE'),
         'HLTCtlHystLevel': VSpaceOutput('TEMPERATURE'),
         'HLTCtlHystType': VSpaceOutput('GENERIC'),
-        'PumpCtl': VSpaceOutput('BOOLEAN')
+        'PumpCtl': VSpaceOutput('BOOLEAN'),
+        'MashLock': VSpaceOutput('BOOLEAN')
     }
 
     def __init__(self, **kwargs):

@@ -17,6 +17,7 @@
         "BKCtlEnable": "HystCtl1.Enabled",
         "BKCtlSetPoint": "HystCtl1.SetPoint",
         "BKTemp": "HLTSens.Temperature",
-        "GPanic": "GWatch.GadgetPanic"
+        "GPanic": "GWatch.GadgetPanic",
+        "BoilLock": "RecipeLock.Input"
     }
 }

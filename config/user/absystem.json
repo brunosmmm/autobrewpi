@@ -23,7 +23,8 @@
         "ManualPumpCtl": "VirtualOutput",
         "MashCtl": "MashController",
         "BoilCtl": "BoilController",
-        "DataLog": "DataLogger"
+        "DataLog": "DataLogger",
+        "RecipeLock": "VirtualInput"
     },
 
     "required_connections": [

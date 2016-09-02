@@ -1,5 +1,9 @@
 {
     "mash_states": {
+        "strike": {
+            "temp": 72.0,
+            "duration": null
+        },
         "mash": {
             "temp": 66.0,
             "duration": 60
@@ -22,7 +26,8 @@
         "MLTTemp": "gadget.TmpSens2_TMP",
         "PumpCtl": "GOutBits.Bit1",
         "GPanic": "GWatch.GadgetPanic",
-        "ManualPump": "ManualPumpCtl.Output"
+        "ManualPump": "ManualPumpCtl.Output",
+        "MashLock": "RecipeLock.Input"
     },
     "hystctl": {
         "type": "updown",
@@ -32,5 +37,10 @@
     {
         "temp_error": 0.5,
         "transfer_use_pump": false
+    },
+    "recipe":
+    {
+        "mash_water_amount": null,
+        "sparge_water_amount": null
     }
 }

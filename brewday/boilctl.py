@@ -12,7 +12,8 @@ class BoilController(BrewdayController):
 
     _outputs = {
         'BKCtlEnable': VSpaceOutput('BOOLEAN'),
-        'BKCtlSetPoint': VSpaceOutput('TEMPERATURE')
+        'BKCtlSetPoint': VSpaceOutput('TEMPERATURE'),
+        'BoilLock': VSpaceOutput('BOOLEAN')
     }
 
     def __init__(self, **kwargs):
