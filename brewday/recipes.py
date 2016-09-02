@@ -32,3 +32,19 @@ class RecipeManager(object):
             self.logger.debug('loaded recipe "{}"'.format(recipe['title']))
 
         self.logger.info('loaded {} recipes'.format(len(self.recipes)))
+
+        self._active_recipe = None
+
+    def load_recipe(self, recipe_id):
+        if recipe_id not in self.recipes:
+            raise KeyError('invalid recipe id: {}'.format(recipe_id))
+        self._active_recipe = recipe_id
+
+    def get_loaded_recipe(self):
+        return self._active_recipe
+
+    def get_recipe_list(self):
+        return self.recipes.keys()
+
+    def get_recipe(self, recipe_id):
+        return self.recipes[recipe_id]
