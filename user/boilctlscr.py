@@ -1,15 +1,15 @@
 from ui.label import Label, _composite_label_text
 from ui.menu import MenuItem
+from ui.box import Box
 from datetime import datetime
 from user.controllerscr import ABCtlScreen
 
 
 class ABBoilScreen(ABCtlScreen):
 
-    _foot_btn_height = 10
-
     def __init__(self, **kwargs):
         kwargs['title'] = 'Boil Ctl'
+        self._recipemgr = kwargs.pop('recipemgr')
         super(ABBoilScreen, self).__init__(**kwargs)
 
         # labels
@@ -23,6 +23,26 @@ class ABBoilScreen(ABCtlScreen):
                                   **self._state_label.southwest)
 
         self.ctl_inst = self._varspace.find_driver_by_classname('BoilController')[0]
+
+        # boxes
+        self._box_l = Box(x=0,
+                          y=0,
+                          w=self.w/2 - 1,
+                          h=(self.h -
+                             self._foot_btn_height -
+                             self._title.h - 3))
+        self._box_r = Box(x=self.w/2,
+                          y=0,
+                          w=self.w/2 - 1,
+                          h=(self.h -
+                             self._foot_btn_height -
+                             self._title.h - 3))
+
+        self._recipe_label = Label(text=_composite_label_text('Receita',
+                                                              'Nenhum',
+                                                              23),
+                                   font='5x12',
+                                   **self._box_r.northwest+(2, 2))
 
         # configure menu
         def get_fn(inst, method):
@@ -42,9 +62,13 @@ class ABBoilScreen(ABCtlScreen):
         self._cfgmenu.add_items(_cfgitems())
         self._statframe.add_element(self._state_label)
         self._statframe.add_element(self._timer_label)
+        self._statframe.add_element(self._recipe_label)
+        self._statframe.add_element(self._box_l)
+        self._statframe.add_element(self._box_r)
 
         self._screen_state = 'idle'
         self._waiting_stop = False
+        self._loaded_recipe = None
 
     def _start_boil(self):
         self._footb_ml.set_text('Pausa')
@@ -71,11 +95,19 @@ class ABBoilScreen(ABCtlScreen):
         super(ABBoilScreen, self)._screen_activated(**kwargs)
 
         self._idle()
+        self.load_recipe()
         self._varspace.call_driver_method(self.ctl_inst, 'activate')
 
     def _screen_deactivated(self, **kwargs):
         super(ABBoilScreen, self)._screen_deactivated(**kwargs)
         self._varspace.call_driver_method(self.ctl_inst, 'deactivate')
+
+    def load_recipe(self):
+        active_recipe = self._recipemgr.get_loaded_recipe()
+
+        if active_recipe is not None:
+            recipe = self._recipemgr.get_recipe(active_recipe)
+            self._loaded_recipe = recipe['abbrev']
 
     def update_screen(self):
         super(ABBoilScreen, self).update_screen()
@@ -85,6 +117,11 @@ class ABBoilScreen(ABCtlScreen):
 
         state = self._varspace.call_driver_method(self.ctl_inst,
                                                   'get_state')
+
+        if self._loaded_recipe is not None:
+            self._recipe_label.set_text(_composite_label_text('Receita',
+                                                              self._loaded_recipe,
+                                                              23))
 
         if state == 'boil':
 
