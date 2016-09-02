@@ -22,7 +22,8 @@ class RecurrentCall(object):
 class ScreenBuffer(StoppableThread):
 
     def __init__(self, width, height, input_client,
-                 refresh_interval=0.05, screen_on_hook=None):
+                 refresh_interval=0.05, screen_on_hook=None,
+                 splash=None):
         super(ScreenBuffer, self).__init__()
 
         # logging
@@ -38,6 +39,8 @@ class ScreenBuffer(StoppableThread):
         # display controller
         self._lcd = CDLL(SCREENBUF_SO_PATH)
         self._lcd.SCREEN_Init()
+        if splash is not None:
+            self._splash_screen(splash)
 
         if screen_on_hook is not None:
             screen_on_hook()
@@ -306,6 +309,11 @@ class ScreenBuffer(StoppableThread):
         self.draw_ui_element(self._screens[screen_id])
         self.active_screen = screen_id
         self._old = True
+
+    def _splash_screen(self, screen):
+        self.erase_screen(True)
+        self.draw_ui_element(screen)
+        self.put_buffer()
 
     def screen_needs_redrawing(self, screen_id):
 

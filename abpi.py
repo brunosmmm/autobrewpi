@@ -4,11 +4,13 @@ from input.inputcli import ABInputClient
 from user.mainscr import ABMainScreen
 from user.mashctlscr import ABMashScreen
 from user.boilctlscr import ABBoilScreen
+from user.splashscr import ABSplashScreen
 from user.builder import SystemBuilder
 from time import sleep
 from datetime import datetime
 import signal
 import logging
+from brewday.recipes import RecipeManager
 
 usleep = lambda x: sleep(x/1000000.0)
 
@@ -48,7 +50,12 @@ if __name__ == "__main__":
     def _turn_lcd_on():
         gvspace.send_gadget_command(0x05)
 
-    buf = ScreenBuffer(240, 64, icli, screen_on_hook=_turn_lcd_on)
+    splash_screen = ABSplashScreen()
+    buf = ScreenBuffer(240,
+                       64,
+                       icli,
+                       screen_on_hook=_turn_lcd_on,
+                       splash=splash_screen)
 
     # build system
     sys = SystemBuilder(config_file='config/user/absystem.json', gadget_vspace=gvspace)
