@@ -178,6 +178,11 @@ class ABBoilScreen(ABCtlScreen):
                 self._hop_label(i).set_caption(hops[i]['name'])
                 self._hop_label(i).set_value(hops[i]['time'])
 
+            boil_duration = recipe['boil']['duration']
+            self._varspace.call_driver_method(self.ctl_inst,
+                                              'set_boil_duration',
+                                              value=boil_duration)
+
     def update_screen(self):
         super(ABBoilScreen, self).update_screen()
 
