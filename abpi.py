@@ -17,13 +17,14 @@ usleep = lambda x: sleep(x/1000000.0)
 if __name__ == "__main__":
 
     def _handle_signal(*args):
-        print "Exiting..."
+        print "Shutting down..."
         buf.stop()
         buf.join()
         gvspace.stop()
         gvspace.join()
         icli.stop()
         icli.join()
+        print "Done"
         exit(0)
 
     def shutdown():
@@ -49,6 +50,7 @@ if __name__ == "__main__":
 
     # recipe manager
     recipemgr = RecipeManager('config/recipes/')
+    recipemgr.load_recipe('snclone')
 
     def _turn_lcd_on():
         gvspace.send_gadget_command(0x05)
@@ -66,8 +68,10 @@ if __name__ == "__main__":
     gvspace._debug_dump_port_list()
 
     main_screen = ABMainScreen()
-    mash_screen = ABMashScreen(varspace=gvspace)
-    boil_screen = ABBoilScreen(varspace=gvspace)
+    mash_screen = ABMashScreen(varspace=gvspace,
+                               recipemgr=recipemgr)
+    boil_screen = ABBoilScreen(varspace=gvspace,
+                               recipemgr=recipemgr)
     buf.add_screen('main', main_screen)
     buf.add_screen('mash', mash_screen)
     buf.add_screen('boil', boil_screen)
