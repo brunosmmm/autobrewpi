@@ -286,7 +286,7 @@ class MashController(BrewdayController):
         self._state = 'mashout'
 
     def enter_sparge_wait(self):
-        self.logger.debug('entering sparge_wait state')
+        self.log_info('Entering sparge wait state')
         # disable heating element
         self.__HLTCtlEnable = False
         self._pump_on = False
@@ -294,8 +294,13 @@ class MashController(BrewdayController):
 
     def enter_sparge(self):
         sparge_dur = self._config['mash_stages'][self._mash_stage]['time']
+        target_temp = self._config['mash_stages'][self._mash_stage]['target_temp']
         self.log_info('Starting sparge phase')
-        self._pump_on = True
+        if self._config['mash_stages'][self._mash_stage]['use_pump']:
+            self._pump_on = True
+        self.__HLTCtlEnable = False
+        self.__HLTCtlSetPoint = float(target_temp)
+        self.__HLTCtlEnable = True
         self._state_start_timer = datetime.now()
         self._state_timer_duration = timedelta(minutes=int(sparge_dur))
         self._state = 'sparge'
@@ -336,6 +341,7 @@ class MashController(BrewdayController):
                datetime.now():
                 # timer reached
                 self.log_info('Mash stage finished')
+                self._pump_on = False
                 self.next_stage()
         elif self._state == 'mashout':
             if self._state_start_timer + self._state_timer_duration <\
