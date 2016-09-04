@@ -29,6 +29,7 @@ class MashController(BrewdayController):
         self.logger = logging.getLogger('AutoBrew.mashctl')
 
         self._state = 'idle'
+        self._mash_stage = -1
         self._pause_transfer = False
         self._state_start_timer = None
         self._state_timer_duration = None
@@ -71,13 +72,14 @@ class MashController(BrewdayController):
     def get_state(self):
         return self._state
 
-    def start_mash(self):
-        self.enter_preheat()
+    #def start_mash(self):
+    #    self.enter_preheat()
 
     def stop_mash(self):
         self.enter_idle()
 
     def reset(self):
+        self._mash_stage = -1
         self.enter_idle()
 
     @rpccallable
@@ -167,22 +169,64 @@ class MashController(BrewdayController):
                               self._config['hystctl']['type'])
 
     def enter_idle(self):
-        self.logger.debug('entering idle state')
+        self.log_info('entering idle state')
         self._pump_on = False
         self.set_output_value('HLTCtlEnable', False)
         self._state = 'idle'
 
     def enter_preheat(self):
-        target_temp = float(self._config['mash_states']['mash']['temp'])
-        self.logger.debug('entering preheat state')
-        self.set_output_value('HLTCtlSetPoint',
-                              target_temp)
-        self.set_output_value('HLTCtlEnable', True)
+        target_temp = float(self._config['mash_stages'][self._mash_stage]['target_temp'])
+        self.log_info('entering preheat state')
+        self.__HLTCtlEnable = False
+        self.__HLTCtlSetPoint = target_temp
+        self.__HLTCtlEnable = True
         self._state = 'preheat'
+
+    def next_stage(self):
+        if self._mash_stage < len(self._config['mash_stages']) - 1:
+            self._mash_stage += 1
+            stage_type = self._config['mash_stages'][self._mash_stage]['type']
+
+            if stage_type == 'water_in':
+                self.enter_idle()
+            elif stage_type == 'preheat':
+                self.enter_preheat()
+            elif stage_type == 'conversion':
+                self.enter_mash()
+            elif stage_type == 'mashout':
+                self.enter_mashout()
+            elif stage_type in ('fly_sparge', 'batch_sparge', 'sparge'):
+                self.enter_sparge_wait()
+            elif stage_type == 'water_transfer':
+                self.enter_transfer()
+            elif stage_type == 'add_items':
+                self._state = 'add_items'
+            else:
+                self.log_err('illegal mash step: "{}"'
+                             ', aborting'.format(stage_type))
+                self.reset()
+        else:
+            # finished
+            self.reset()
+
+    def get_next_stage_data(self):
+        if self._mash_stage < len(self._config['mash_stages']) - 1:
+            return self._config['mash_stages'][self._mash_stage + 1]
+        else:
+            return None
+
+    def get_current_stage_data(self):
+        if self._mash_stage > -1:
+            return self._config['mash_stages'][self._mash_stage]
+        else:
+            return None
+
+    def set_mash_stages(self, stage_data):
+        self._config['mash_stages'] = stage_data
 
     def enter_transfer(self):
         self.logger.debug('entering transfer state')
-        if self._config['misc']['transfer_use_pump']:
+        if self._config['mash_stages'][self._mash_stage]['use_pump']:
             self._pump_on = True
         self._state = 'transfer_hlt_mlt'
 
@@ -192,7 +236,8 @@ class MashController(BrewdayController):
 
     def unpause_transfer(self):
         self._pause_transfer = False
-        self._pump_on = True
+        if self._config['mash_stages'][self._mash_stage]['use_pump']:
+            self._pump_on = True
 
     def pause_all(self):
         self._saved_state = {'pump': self.__PumpCtl,
@@ -212,22 +257,23 @@ class MashController(BrewdayController):
         self._saved_state = None
         self._pause_all = False
 
-    def enter_addgrains(self):
-        self.logger.debug('entering add_grains state')
-        self._pump_on = False
-        self._state = 'add_grains'
-
     def enter_mash(self):
-        mash_duration = self._config['mash_states']['mash']['duration']
+        mash_target = self._config['mash_stages'][self._mash_stage]['target_temp']
+        mash_duration = self._config['mash_stages'][self._mash_stage]['time']
         self.log_info('Starting recirculating mash')
         self._state_start_timer = datetime.now()
         self._state_timer_duration = timedelta(minutes=int(mash_duration))
-        self._pump_on = True
+        # update setpoint
+        self.__HLTCtlEnable = False
+        self.__HLTCtlSetPoint = float(mash_target)
+        self.__HLTCtlEnable = True
+        if self._config['mash_stages'][self._mash_stage]['use_pump']:
+            self._pump_on = True
         self._state = 'mash'
 
     def enter_mashout(self):
-        mashout_dur = self._config['mash_states']['mashout']['duration']
-        mashout_target = self._config['mash_states']['mashout']['temp']
+        mashout_dur = self._config['mash_stages'][self._mash_stage]['time']
+        mashout_target = self._config['mash_stages'][self._mash_stage]['target_temp']
         self.log_info('Starting mashout now')
         self._state_start_timer = datetime.now()
         self._state_timer_duration = timedelta(minutes=int(mashout_dur))
@@ -235,20 +281,26 @@ class MashController(BrewdayController):
         self.__HLTCtlEnable = False
         self.__HLTCtlSetPoint = float(mashout_target)
         self.__HLTCtlEnable = True
-        self._pump_on = True
+        if self._config['mash_stages'][self._mash_stage]['use_pump']:
+            self._pump_on = True
         self._state = 'mashout'
 
     def enter_sparge_wait(self):
-        self.logger.debug('entering sparge_wait state')
+        self.log_info('Entering sparge wait state')
         # disable heating element
         self.__HLTCtlEnable = False
         self._pump_on = False
         self._state = 'sparge_wait'
 
     def enter_sparge(self):
-        sparge_dur = self._config['mash_states']['sparge']['duration']
+        sparge_dur = self._config['mash_stages'][self._mash_stage]['time']
+        target_temp = self._config['mash_stages'][self._mash_stage]['target_temp']
         self.log_info('Starting sparge phase')
-        self._pump_on = True
+        if self._config['mash_stages'][self._mash_stage]['use_pump']:
+            self._pump_on = True
+        self.__HLTCtlEnable = False
+        self.__HLTCtlSetPoint = float(target_temp)
+        self.__HLTCtlEnable = True
         self._state_start_timer = datetime.now()
         self._state_timer_duration = timedelta(minutes=int(sparge_dur))
         self._state = 'sparge'
@@ -271,7 +323,7 @@ class MashController(BrewdayController):
         if self._state in ('idle', 'inactive'):
             pass
         elif self._state == 'preheat':
-            mash_target = self._config['mash_states']['mash']['temp']
+            mash_target = self._config['mash_stages'][self._mash_stage]['target_temp']
             if self._target_reached(float(mash_target),
                                     self.__HLTTemp,
                                     self._config['misc']['temp_error']):
@@ -282,27 +334,27 @@ class MashController(BrewdayController):
             pass
         elif self._state == 'transfer_hlt_mlt':
             pass
-        elif self._state == 'add_grains':
-            # wait
+        elif self._state == 'add_items':
             pass
         elif self._state == 'mash':
             if self._state_start_timer + self._state_timer_duration <\
                datetime.now():
                 # timer reached
-                self.log_info('Mash finished')
-                self.enter_mashout()
+                self.log_info('Mash stage finished')
+                self._pump_on = False
+                self.next_stage()
         elif self._state == 'mashout':
             if self._state_start_timer + self._state_timer_duration <\
                datetime.now():
                 self.log_info('Mashout finished')
-                self.enter_sparge_wait()
+                self.next_stage()
         elif self._state == 'sparge_wait':
                 pass
         elif self._state == 'sparge':
             if self._state_start_timer + self._state_timer_duration <\
                datetime.now():
-                self.log_info('Mash completed')
-                self.enter_idle()
+                self.log_info('Sparge finished')
+                self.next_stage()
         elif self._state == 'paused':
             if self._state_start_timer is not None:
                 pass
