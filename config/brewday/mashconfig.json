@@ -1,22 +1,29 @@
 {
-    "mash_states": {
-        "strike": {
+    "mash_stages": [
+        {
+            "type": "preheat",
             "temp": 72.0,
             "duration": null
         },
-        "mash": {
+        {
+            "type": "conversion",
             "temp": 66.0,
-            "duration": 60
-        },
-        "mashout": {
-            "temp": 75.0,
-            "duration": 10
-        },
-        "sparge": {
             "duration": 60,
-            "temp": null
+            "use_pump": true
+        },
+        {
+            "type": "mashout",
+            "temp": 75.0,
+            "duration": 10,
+            "use_pump": true
+        },
+        {
+            "type": "flysparge",
+            "duration": 60,
+            "temp": null,
+            "use_pump": false
         }
-    },
+    ],
     "connections": {
         "HLTCtlEnable": "HystCtl1.Enabled",
         "HLTCtlSetPoint": "HystCtl1.SetPoint",
