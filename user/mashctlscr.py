@@ -362,6 +362,7 @@ class ABMashScreen(ABCtlScreen):
 
     def update_screen(self):
         # update to current values
+        super(ABMashScreen, self).update_screen()
         if self._manual:
             if self._varspace.call_driver_method('PumpSwitch', 'get_value'):
                 self._varspace.call_driver_method('ManualPumpCtl',
