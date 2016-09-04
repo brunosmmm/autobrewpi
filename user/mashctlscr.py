@@ -64,24 +64,6 @@ class ABMashScreen(ABCtlScreen):
             return self._varspace.get_driver_method(inst, method)
 
         def _cfgitems():
-            #yield MenuItem('mashtemp',
-            #               'Temp Mash',
-            #               value_getter=get_fn('MashCtl',
-            #                                   'get_mash_sp'),
-            #               value_setter=get_fn('MashCtl',
-            #                                   'set_mash_sp'),
-            #               value_type=float,
-            #               fixp_size=1,
-            #               item_action='edit')
-            #yield MenuItem('mashouttemp',
-            #               'Temp Mashout',
-            #               value_getter=get_fn('MashCtl',
-            #                                   'get_mashout_sp'),
-            #               value_setter=get_fn('MashCtl',
-            #                                   'set_mashout_sp'),
-            #               value_type=float,
-            #               fixp_size=1,
-            #               item_action='edit')
             yield MenuItem('hystlevel',
                            'Niv Histerese',
                            value_getter=get_fn('MashCtl',
@@ -91,30 +73,7 @@ class ABMashScreen(ABCtlScreen):
                            value_type=float,
                            fixp_size=1,
                            item_action='edit')
-            #yield MenuItem('mashdur',
-            #               'Dur Mash',
-            #               value_getter=get_fn('MashCtl',
-            #                                   'get_mash_duration'),
-            #               value_setter=get_fn('MashCtl',
-            #                                   'set_mash_duration'),
-            #               value_type=int,
-            #               item_action='edit')
-            #yield MenuItem('mashoutdur',
-            #               'Dur Mashout',
-            #               value_getter=get_fn('MashCtl',
-            #                                   'get_mashout_duration'),
-            #               value_setter=get_fn('MashCtl',
-            #                                   'set_mashout_duration'),
-            #               value_type=int,
-            #               item_action='edit')
-            #yield MenuItem('spargedur',
-            #               'Dur Sparge',
-            #               value_getter=get_fn('MashCtl',
-            #                                   'get_sparge_duration'),
-            #               value_setter=get_fn('MashCtl',
-            #                                   'set_sparge_duration'),
-            #               value_type=int,
-            #               item_action='edit')
+
         self._cfgmenu.add_items(_cfgitems())
 
         # local state tracking
@@ -160,10 +119,6 @@ class ABMashScreen(ABCtlScreen):
         self._state_label.set_text(_composite_label_text('Estado',
                                                          'ativo',
                                                          23))
-        #if self._state == 'idle':
-        #    self._phase_label.set_text(_composite_label_text('Fase Mash',
-        #                                                     'preaquecendo',
-        #                                                     23))
         self._state = 'active'
 
     def _enter_idle(self):
@@ -172,9 +127,6 @@ class ABMashScreen(ABCtlScreen):
         self._state_label.set_text(_composite_label_text('Estado',
                                                          'ocioso',
                                                          23))
-        #self._phase_label.set_text(_composite_label_text('Fase Mash',
-        #                                                 'parado',
-        #                                                 23))
         self._timer_label.set_text(_composite_label_text('Timer',
                                                          'Nenhum',
                                                          23))
@@ -218,9 +170,7 @@ class ABMashScreen(ABCtlScreen):
 
             next_stage = self._varspace.call_driver_method(self.ctl_inst,
                                                            'get_next_stage_data')
-            #print 'confirm pressed'
-            #print current_stage
-            #print next_stage
+
             if current_stage['type'] == 'water_in':
                 # next
                 self._enter_active()
@@ -279,16 +229,9 @@ class ABMashScreen(ABCtlScreen):
 
     def _mash_done(self):
         pass
-        # self._mash_phase = 'mashout'
-        # self._phase_label.set_text(_composite_label_text('Fase Mash',
-        #                                                 'mashout',
-        #                                                 23))
 
     def _sparge_wait(self):
         self._mash_phase = 'presparge'
-        #self._phase_label.set_text(_composite_label_text('Fase Mash',
-        #                                                 'pre-sparge',
-        #                                                 23))
         self._timer_label.set_text(_composite_label_text('Timer',
                                                          'Nenhum',
                                                          23))
@@ -299,16 +242,10 @@ class ABMashScreen(ABCtlScreen):
 
     def _sparge(self):
         self._mash_phase = 'sparge'
-        #self._phase_label.set_text(_composite_label_text('Fase Mash',
-        #                                                 'sparge',
-        #                                                 23))
         self._varspace.call_driver_method(self.ctl_inst,
                                           'enter_sparge')
-        #self._varspace.call_driver_method(self.ctl_inst, 'enter_sparge')
 
     def _sparge_done(self):
-        #self._mash_phase = None
-        #self._enter_idle()
 
         current_stage = self._varspace.call_driver_method(self.ctl_inst,
                                                           'get_current_stage_data')
@@ -336,8 +273,6 @@ class ABMashScreen(ABCtlScreen):
 
     def _preheat_done(self):
         self._mash_phase = 'preheat_done'
-        #self._varspace.call_driver_method(self.ctl_inst,
-        #                                  'enter_transfer')
 
         next_stage = self._varspace.call_driver_method(self.ctl_inst,
                                                        'get_next_stage_data')
@@ -378,10 +313,6 @@ class ABMashScreen(ABCtlScreen):
 
     def _mash_step(self):
         self._mash_phase = 'mashing'
-        #self._phase_label.set_text(_composite_label_text('Fase Mash',
-        #                                                 'mash/recirc',
-        #                                                 23))
-        # self._varspace.call_driver_method(self.ctl_inst, 'enter_mash')
         self._varspace.call_driver_method(self.ctl_inst,
                                           'next_stage')
         timer_end = self._varspace.call_driver_method(self.ctl_inst,
