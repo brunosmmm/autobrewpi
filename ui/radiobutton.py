@@ -17,6 +17,14 @@ class RadioGroup(object):
     def register_btn(self, btn_uid, state_change_cb):
         self._registered_btns[btn_uid] = state_change_cb
 
+    def remove_btn(self, btn_uid):
+        if btn_uid in self._registered_btns:
+            self._registered_btns.pop(btn_uid)
+            self.select_first()
+        else:
+            print btn_uid
+            print self._registered_btns
+
     def select_btn(self, btn_uid):
         if btn_uid not in self._registered_btns:
             raise GroupError('uid not registered in this group')
