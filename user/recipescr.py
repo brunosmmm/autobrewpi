@@ -21,7 +21,7 @@ class ABRecipeScreen(ABCtlScreen):
                                 y=0,
                                 selector_radius=5,
                                 font='5x12',
-                                cols=2,
+                                cols=1,
                                 w=self._recipe_viewport.virtual_w,
                                 h=self._recipe_viewport.virtual_h)
 
@@ -37,7 +37,7 @@ class ABRecipeScreen(ABCtlScreen):
             recipe = self._recipemgr.get_recipe(recipe_id)
 
             menu_item = MenuItem(recipe_id,
-                                 recipe['abbrev'],
+                                 recipe['title'],
                                  item_action='call',
                                  callback=self._enter_recipe)
             menu_item_list.append(menu_item)
