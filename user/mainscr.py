@@ -16,25 +16,25 @@ class ABMainScreen(Screen):
 
         # lower buttons
         self._footb_l = Button(text='',
-                               font='8x8',
+                               font='6x8',
                                x=0,
                                y=self.h-self._foot_btn_height-1,
                                w=self.w/4-1,
                                h=self._foot_btn_height)
-        self._footb_ml = Button(text='',
-                                font='8x8',
+        self._footb_ml = Button(text='Receitas',
+                                font='6x8',
                                 x=self.w/4,
                                 y=self.h-self._foot_btn_height-1,
                                 w=self.w/4-1,
                                 h=self._foot_btn_height)
         self._footb_mr = Button(text='BoilCtl',
-                                font='8x8',
+                                font='6x8',
                                 x=self.w/2,
                                 y=self.h-self._foot_btn_height-1,
                                 w=self.w/4-1,
                                 h=self._foot_btn_height)
         self._footb_r = Button(text='MashCtl',
-                               font='8x8',
+                               font='6x8',
                                x=3*self.w/4,
                                y=self.h-self._foot_btn_height-1,
                                w=self.w/4-1,
@@ -53,3 +53,5 @@ class ABMainScreen(Screen):
                 self._parent.activate_screen('mash')
             if evt['data'] == '2':
                 self._parent.activate_screen('boil')
+            if evt['data'] == '1':
+                self._parent.activate_screen('recipes')
