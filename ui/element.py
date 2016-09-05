@@ -95,6 +95,14 @@ class UIElement(object):
         if self._parent is not None:
             self._parent.log_err(msg)
 
+    def collide_point(self, coordinate):
+        if coordinate.x >= self.x and coordinate.x <= self.x+self.w:
+            return True
+        if coordinate.y >= self.y and coordinate.y <= self.y+self.h:
+            return True
+
+        return False
+
     @property
     def west(self):
         return Coordinate(self.x, self.y + self.h/2)
