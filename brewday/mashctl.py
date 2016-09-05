@@ -72,9 +72,6 @@ class MashController(BrewdayController):
     def get_state(self):
         return self._state
 
-    #def start_mash(self):
-    #    self.enter_preheat()
-
     def stop_mash(self):
         self.enter_idle()
 
@@ -91,48 +88,12 @@ class MashController(BrewdayController):
         return self.__MLTTemp
 
     @rpccallable
-    def get_mash_sp(self):
-        return self._config['mash_states']['mash']['temp']
-
-    @rpccallable
-    def get_mashout_sp(self):
-        return self._config['mash_states']['mashout']['temp']
+    def get_mash_steps(self):
+        return self._config['mash_stages']
 
     @rpccallable
     def get_hyst_level(self):
         return self._config['hystctl']['level']
-
-    @rpccallable
-    def get_mash_duration(self):
-        return self._config['mash_states']['mash']['duration']
-
-    @rpccallable
-    def get_mashout_duration(self):
-        return self._config['mash_states']['mashout']['duration']
-
-    @rpccallable
-    def get_sparge_duration(self):
-        return self._config['mash_states']['sparge']['duration']
-
-    @rpccallable
-    def set_mash_sp(self, value):
-        _test_type(float, value)
-        self._config['mash_states']['mash']['temp'] = value
-
-        if self._state in ('mash', 'preheat'):
-            self.__HLTCtlEnable = False
-            self.__HLTCtlSetPoint = value
-            self.__HLTCtlEnable = True
-
-    @rpccallable
-    def set_mashout_sp(self, value):
-        _test_type(float, value)
-        self._config['mash_states']['mashout']['temp'] = value
-
-        if self._state == 'mashout':
-            self.__HLTCtlEnable = False
-            self.__HLTCtlSetPoint = value
-            self.__HLTCtlEnable = True
 
     @rpccallable
     def set_hyst_level(self, value):
@@ -146,20 +107,6 @@ class MashController(BrewdayController):
         else:
             self.__HLTCtlHystLevel = value
 
-    @rpccallable
-    def set_mash_duration(self, value):
-        _test_type(int, value)
-        self._config['mash_states']['mash']['duration'] = value
-
-    @rpccallable
-    def set_mashout_duration(self, value):
-        _test_type(int, value)
-        self._config['mash_states']['mashout']['duration'] = value
-
-    @rpccallable
-    def set_sparge_duration(self, value):
-        _test_type(int, value)
-        self._config['mash_states']['sparge']['duration'] = value
 
     def default_configuration(self):
         self.set_output_value('HLTCtlSetPoint', 0)
