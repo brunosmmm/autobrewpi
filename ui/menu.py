@@ -154,7 +154,7 @@ class Menu(Frame):
         for item in items:
             self.add_item(item)
 
-    def delete_item(self, item_index):
+    def _delete_item(self, item_index):
         item = self._items[item_index]
         if item.selector is not None:
             self.remove_element(item.selector)
@@ -165,7 +165,8 @@ class Menu(Frame):
 
     def delete_items(self):
         while len(self._items) > 0:
-            self.delete_item(0)
+            self._delete_item(0)
+        self._current_position = Coordinate(0, 0)
 
     def select_first(self):
         if self._editing:
