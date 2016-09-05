@@ -1,12 +1,13 @@
 from ui.screen import Screen
-from ui.instr import DrawInstructionGroup
 
 
 class Frame(Screen):
     def __init__(self, **kwargs):
+        if 'visible' in kwargs:
+            self.visible = kwargs.pop('visible')
+        else:
+            self.visible = False
         super(Frame, self).__init__(**kwargs)
-
-        self.visible = False
 
     def show(self):
         self.visible = True
