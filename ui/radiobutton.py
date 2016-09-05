@@ -21,9 +21,6 @@ class RadioGroup(object):
         if btn_uid in self._registered_btns:
             self._registered_btns.pop(btn_uid)
             self.select_first()
-        else:
-            print btn_uid
-            print self._registered_btns
 
     def select_btn(self, btn_uid):
         if btn_uid not in self._registered_btns:
