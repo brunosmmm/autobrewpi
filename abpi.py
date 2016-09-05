@@ -5,6 +5,7 @@ from user.mainscr import ABMainScreen
 from user.mashctlscr import ABMashScreen
 from user.boilctlscr import ABBoilScreen
 from user.splashscr import ABSplashScreen
+from user.recipescr import ABRecipeScreen
 from user.builder import SystemBuilder
 from time import sleep
 from datetime import datetime
@@ -50,7 +51,6 @@ if __name__ == "__main__":
 
     # recipe manager
     recipemgr = RecipeManager('config/recipes/')
-    recipemgr.load_recipe('snclone')
 
     def _turn_lcd_on():
         gvspace.send_gadget_command(0x05)
@@ -72,9 +72,11 @@ if __name__ == "__main__":
                                recipemgr=recipemgr)
     boil_screen = ABBoilScreen(varspace=gvspace,
                                recipemgr=recipemgr)
+    recipe_screen = ABRecipeScreen(recipemgr=recipemgr)
     buf.add_screen('main', main_screen)
     buf.add_screen('mash', mash_screen)
     buf.add_screen('boil', boil_screen)
+    buf.add_screen('recipes', recipe_screen)
 
     #start threads
     buf.start()
