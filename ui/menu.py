@@ -161,7 +161,7 @@ class Menu(Frame):
         if item.label is not None:
             self.remove_element(item.label)
 
-        self._group.remove_btn(item._id)
+        self._group.remove_btn(item.selector._uid)
         self._items.remove(item)
 
     def delete_items(self):
