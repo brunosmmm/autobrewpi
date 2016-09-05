@@ -24,12 +24,14 @@ class MenuItem(object):
         self.value_type = value_type
         self._kwargs = kwargs
         self._parent = None
+        self.selector = None
+        self.label = None
 
     def do_action(self):
         if self._action == 'call':
             if 'callback' in self._kwargs:
                 if self._kwargs['callback'] is not None:
-                    self._kwargs['callback']()
+                    self._kwargs['callback'](self._id)
         elif self._action == 'edit':
             if self._parent is not None:
                 self._parent.edit_value()
@@ -127,30 +129,43 @@ class Menu(Frame):
         item._parent = self
         self._items.append(item)
         # create widgets
-        selector = RadioButton(r=self._sel_radius,
-                               id=item.get_item_id(),
-                               group=self._group,
-                               **self._current_position)
-        label = ValueCaption(font=self._font,
-                             caption=item.get_caption(),
-                             maximum_length=self._col_max_len-1,
-                             id=item.get_item_id()+'_label',
-                             **selector.northeast+(self._sel_radius, 0))
+        item.selector = RadioButton(r=self._sel_radius,
+                                    id=item.get_item_id(),
+                                    group=self._group,
+                                    **self._current_position)
+        item.label = ValueCaption(font=self._font,
+                                  caption=item.get_caption(),
+                                  maximum_length=self._col_max_len-1,
+                                  id=item.get_item_id()+'_label',
+                                  **item.selector.northeast+(self._sel_radius, 0))
 
-        self.add_element(selector)
-        self.add_element(label)
+        self.add_element(item.selector)
+        self.add_element(item.label)
 
         # calculate next position
-        if selector.southwest.y + 2*self._sel_radius + self._sel_spacing >\
+        if item.selector.southwest.y + 2*self._sel_radius + self._sel_spacing >\
            self.h - 1:
             self._current_position.y = 0
             self._current_position.x += self.w/self._colnum
         else:
-            self._current_position = selector.southwest+(0, self._sel_spacing)
+            self._current_position = item.selector.southwest+(0, self._sel_spacing)
 
     def add_items(self, items):
         for item in items:
             self.add_item(item)
+
+    def delete_item(self, item_index):
+        item = self._items[item_index]
+        if item.selector is not None:
+            self.remove_element(item.selector)
+        if item.label is not None:
+            self.remove_element(item.label)
+
+        self._items.remove(item)
+
+    def delete_items(self):
+        while len(self._items) > 0:
+            self.delete_item(0)
 
     def select_first(self):
         if self._editing:
