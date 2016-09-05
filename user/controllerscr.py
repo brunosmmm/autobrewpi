@@ -16,6 +16,46 @@ class ABCtlScreen(Screen):
         else:
             self._varspace = None
 
+        if 'label_1s' in kwargs:
+            self._label_1s = kwargs.pop('label_1s')
+        else:
+            self._label_1s = ''
+
+        if 'label_2s' in kwargs:
+            self._label_2s = kwargs.pop('label_2s')
+        else:
+            self._label_2s = 'Inicia'
+
+        if 'label_3s' in kwargs:
+            self._label_3s = kwargs.pop('label_3s')
+        else:
+            self._label_3s = 'Config'
+
+        if 'label_4s' in kwargs:
+            self._label_4s = kwargs.pop('label_4s')
+        else:
+            self._label_4s = 'Sair'
+
+        if 'label_1c' in kwargs:
+            self._label_1c = kwargs.pop('label_1c')
+        else:
+            self._label_1c = ''
+
+        if 'label_2c' in kwargs:
+            self._label_2c = kwargs.pop('label_2c')
+        else:
+            self._label_2c = 'Edita'
+
+        if 'label_3c' in kwargs:
+            self._label_3c = kwargs.pop('label_3c')
+        else:
+            self._label_3c = 'Status'
+
+        if 'label_4c' in kwargs:
+            self._label_4c = kwargs.pop('label_4c')
+        else:
+            self._label_4c = 'Sair'
+
         self._title_text = kwargs.pop('title')
         super(ABCtlScreen, self).__init__(x=0, y=0, w=240, h=64, **kwargs)
 
@@ -30,24 +70,24 @@ class ABCtlScreen(Screen):
                              h=10)
 
         # lower buttons
-        self._footb_l = Button(text='',
+        self._footb_l = Button(text=self._label_1s,
                                font='8x8',
                                x=0, y=self.h-self._foot_btn_height-1,
                                w=self.w/4-1,
                                h=self._foot_btn_height)
-        self._footb_ml = Button(text='Inicia',
+        self._footb_ml = Button(text=self._label_2s,
                                 font='8x8',
                                 x=self.w/4,
                                 y=self.h-self._foot_btn_height-1,
                                 w=self.w/4-1,
                                 h=self._foot_btn_height)
-        self._footb_mr = Button(text='Config',
+        self._footb_mr = Button(text=self._label_3s,
                                 font='8x8',
                                 x=self.w/2,
                                 y=self.h-self._foot_btn_height-1,
                                 w=self.w/4-1,
                                 h=self._foot_btn_height)
-        self._footb_r = Button(text='Sair',
+        self._footb_r = Button(text=self._label_4s,
                                font='8x8',
                                x=3*self.w/4,
                                y=self.h-self._foot_btn_height-1,
@@ -134,16 +174,16 @@ class ABCtlScreen(Screen):
     def _show_stats(self):
         self._cfgmenu.hide()
         self._statframe.show()
-        self._footb_ml.set_text('Inicia')
-        self._footb_mr.set_text('Config')
+        self._footb_ml.set_text(self._label_2s)
+        self._footb_mr.set_text(self._label_3s)
         self._current_frame = 'stat'
 
     def _show_config(self):
         self._statframe.hide()
         self._cfgmenu.show()
         self._update_config()
-        self._footb_ml.set_text('Edita')
-        self._footb_mr.set_text('Status')
+        self._footb_ml.set_text(self._label_2c)
+        self._footb_mr.set_text(self._label_3c)
         self._current_frame = 'config'
 
     def _update_config(self):
