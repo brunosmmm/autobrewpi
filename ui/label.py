@@ -5,6 +5,10 @@ import re
 _FONT_NAME_REGEX = re.compile(r'([0-9]+)x([0-9]+)')
 
 
+def ValueCaptionError(Exception):
+    pass
+
+
 def _composite_label_text(label, value, max_len):
     label_fill = max_len - len(value)
 
@@ -149,10 +153,33 @@ class Label(UIElement):
     def h(self, value):
         pass
 
+    @property
+    def font_w(self):
+        return self._font_w
+
+    @font_w.setter
+    def font_w(self, value):
+        pass
+
+    @property
+    def font_h(self):
+        return self._font_h
+
+    @font_h.setter
+    def font_h(self, value):
+        pass
+
 
 class ValueCaption(Label):
     def __init__(self, **kwargs):
-        self._max_len = kwargs.pop('maximum_length')
+        if 'maximum_length' in kwargs:
+            self._max_len = kwargs.pop('maximum_length')
+            self._max_w = None
+        elif 'maximum_width' in kwargs:
+            self._max_w = kwargs.pop('maximum_width')
+            self._max_len = None
+        else:
+            raise KeyError('maximum_length OR maximum_width must be present')
         if 'value' in kwargs:
             self._value = kwargs.pop('value')
         else:
@@ -166,9 +193,16 @@ class ValueCaption(Label):
         self._update_text()
 
     def _update_text(self):
+        if self._max_len is not None:
+            max_len = self._max_len
+        elif self._max_w is not None:
+            max_len = self._max_w/self.font_w
+        else:
+            raise ValueCaptionError('maximum length is unknown')
+
         self.set_text(_composite_label_text(self._caption,
                                             self._value,
-                                            self._max_len))
+                                            max_len))
 
     def set_value(self, value):
         self._value = str(value)
