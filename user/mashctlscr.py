@@ -339,7 +339,10 @@ class ABMashScreen(ABCtlScreen):
             if evt['data'] == '1':
                 if self._current_frame == 'stat':
                     if self._state == 'idle':
-                        self._mash_start()
+                        if self._recipemgr.get_loaded_recipe() is not None:
+                            self._mash_start()
+                        else:
+                            self._show_msg_modal('Nenhuma receita carregada!')
                     elif self._state == 'active':
                         self._mash_pause_unpause()
                     elif self._state == 'panic':

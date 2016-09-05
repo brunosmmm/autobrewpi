@@ -45,35 +45,35 @@ class ABBoilScreen(ABCtlScreen):
                                    **self._timer_label.southwest)
 
         # hops list
-        self._hop1 = ValueCaption(caption='1',
+        self._hop1 = ValueCaption(caption='',
                                   maximum_length=11,
                                   font='5x8',
                                   **self._box_r.northwest+(2, 2))
-        self._hop2 = ValueCaption(caption='2',
+        self._hop2 = ValueCaption(caption='',
                                   maximum_length=11,
                                   font='5x8',
                                   **self._hop1.southwest)
-        self._hop3 = ValueCaption(caption='3',
+        self._hop3 = ValueCaption(caption='',
                                   maximum_length=11,
                                   font='5x8',
                                   **self._hop2.southwest)
-        self._hop4 = ValueCaption(caption='4',
+        self._hop4 = ValueCaption(caption='',
                                   maximum_length=11,
                                   font='5x8',
                                   **self._hop3.southwest)
-        self._hop5 = ValueCaption(caption='5',
+        self._hop5 = ValueCaption(caption='',
                                   maximum_length=11,
                                   font='5x8',
                                   **self._hop1.northeast)
-        self._hop6 = ValueCaption(caption='6',
+        self._hop6 = ValueCaption(caption='',
                                   maximum_length=11,
                                   font='5x8',
                                   **self._hop5.southwest)
-        self._hop7 = ValueCaption(caption='7',
+        self._hop7 = ValueCaption(caption='',
                                   maximum_length=11,
                                   font='5x8',
                                   **self._hop6.southwest)
-        self._hop8 = ValueCaption(caption='8',
+        self._hop8 = ValueCaption(caption='',
                                   maximum_length=11,
                                   font='5x8',
                                   **self._hop7.southwest)
@@ -176,7 +176,7 @@ class ABBoilScreen(ABCtlScreen):
             self._hide_hops()
             for i in range(0, len(hops)):
                 self._hop_label(i).set_caption(hops[i]['name'])
-                self._hop_label(i).set_value(hops[i]['time'])
+                self._hop_label(i).set_value("{}'".format(hops[i]['time']))
 
             boil_duration = recipe['boil']['duration']
             self._varspace.call_driver_method(self.ctl_inst,
@@ -253,4 +253,7 @@ class ABBoilScreen(ABCtlScreen):
             elif evt['data'] == '1':
                 if self._screen_state == 'idle' and\
                    self._current_frame == 'stat':
-                    self._start_boil()
+                    if self._recipemgr.get_loaded_recipe() is not None:
+                        self._start_boil()
+                    else:
+                        self._show_msg_modal('Nenhuma receita carregada!')
