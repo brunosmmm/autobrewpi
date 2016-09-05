@@ -12,22 +12,22 @@ class RecipeManager(object):
         self.recipes = {}
         self.recipe_path = recipe_path
         # find recipe files
-        self.find_recipes(self.recipe_path)
+        self.find_recipes()
 
         self.logger.info('loaded {} recipes'.format(len(self.recipes)))
 
         self._active_recipe = None
 
-    def find_recipes(self, recipe_path):
+    def find_recipes(self):
         file_list = []
-        for f in os.listdir(recipe_path):
+        for f in os.listdir(self.recipe_path):
             if f.endswith('.json') and\
                not f.startswith('.'):
                 file_list.append(f)
 
         for f in file_list:
             try:
-                with open(os.path.join(recipe_path, f), 'r') as data:
+                with open(os.path.join(self.recipe_path, f), 'r') as data:
                     recipe = json.load(data)
             except (IOError, ValueError) as e:
                 self.logger.warning('couldnt load '
