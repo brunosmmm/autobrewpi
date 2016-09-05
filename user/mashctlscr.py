@@ -1,4 +1,4 @@
-from ui.label import Label, ValueCaption, _composite_label_text
+from ui.label import ValueCaption, _composite_label_text
 from ui.box import Box
 from ui.menu import MenuItem
 from datetime import datetime
@@ -25,31 +25,36 @@ class ABMashScreen(ABCtlScreen):
                              self._foot_btn_height -
                              self._title.h - 3))
 
-        self._state_label = Label(text='STATE', font='5x12',
-                                  y=2,
-                                  x=2)
-        self._phase_label = ValueCaption(caption='Fase',
-                                         value='',
-                                         maximum_length=23,
-                                         font='5x12',
-                                         y=14,
+        self._state_label = ValueCaption(caption='Estado',
+                                         font='6x8',
+                                         maximum_width=self._box_l.w,
+                                         y=2,
                                          x=2)
-        self._timer_label = Label(text='TIMER', font='5x12',
-                                  y=26,
-                                  x=2)
+        self._phase_label = ValueCaption(caption='Fase',
+                                         maximum_width=self._box_l.w,
+                                         font='6x8',
+                                         **self._state_label.southwest+(0, 1))
+        self._timer_label = ValueCaption(caption='Timer',
+                                         font='6x8',
+                                         maximum_width=self._box_l.w,
+                                         **self._phase_label.southwest+(0, 1))
 
         # in box R, show current values
-        self._hlt_temp_label = Label(text='HLT_TEMP', font='5x12',
-                                     y=2,
-                                     x=self.w/2 + 2)
-        self._mlt_temp_label = Label(text='MLT_TEMP', font='5x12',
-                                     y=14,
-                                     x=self.w/2 + 2)
+        self._hlt_temp_label = ValueCaption(caption='Temp HLT',
+                                            font='5x12',
+                                            maximum_width=self._box_r.w,
+                                            y=2,
+                                            x=self.w/2 + 2)
+        self._mlt_temp_label = ValueCaption(caption='Temp MLT',
+                                            font='5x12',
+                                            maximum_width=self._box_r.w,
+                                            y=14,
+                                            x=self.w/2 + 2)
         self._recipe_label = ValueCaption(value='Nenhum',
                                           caption='Receita',
-                                          maximum_length=23,
-                                          font='5x12',
-                                          **self._mlt_temp_label.southwest)
+                                          maximum_width=self._box_l.w,
+                                          font='6x8',
+                                          **self._timer_label.southwest+(0, 1))
 
         self._statframe.add_element(self._box_l)
         self._statframe.add_element(self._box_r)
@@ -116,37 +121,29 @@ class ABMashScreen(ABCtlScreen):
         # change layout
         self._footb_r.set_text('Parar')
         self._footb_ml.set_text('Pausa')
-        self._state_label.set_text(_composite_label_text('Estado',
-                                                         'ativo',
-                                                         23))
+        self._state_label.set_value('ativo')
         self._state = 'active'
 
     def _enter_idle(self):
         self._footb_r.set_text('Sair')
         self._footb_ml.set_text('Inicia')
-        self._state_label.set_text(_composite_label_text('Estado',
-                                                         'ocioso',
-                                                         23))
-        self._timer_label.set_text(_composite_label_text('Timer',
-                                                         'Nenhum',
-                                                         23))
+        self._state_label.set_value('ocioso')
+        self._timer_label.set_value('Nenhum')
         self._phase_label.set_value('parado')
+        self._varspace.call_driver_method(self.ctl_inst,
+                                          'reset')
         self._state = 'idle'
 
     def _enter_paused(self):
         self._footb_ml.set_text('Retoma')
-        self._state_label.set_text(_composite_label_text('Estado',
-                                                         'pausa',
-                                                         23))
+        self._state_label.set_value('pausa')
         self._state = 'paused'
 
     def _enter_panic(self):
         if self._state == 'panic':
             return
         self._footb_ml.set_text('Retoma')
-        self._state_label.set_text(_composite_label_text('Estado',
-                                                         'panico',
-                                                         23))
+        self._state_label.set_value('panico')
         self._panic_saved_state = self._state
         self._state = 'panic'
 
@@ -232,9 +229,7 @@ class ABMashScreen(ABCtlScreen):
 
     def _sparge_wait(self):
         self._mash_phase = 'presparge'
-        self._timer_label.set_text(_composite_label_text('Timer',
-                                                         'Nenhum',
-                                                         23))
+        self._timer_label.set_value('Nenhum')
         self._show_msg_modal('Aguardando para iniciar Sparge\n'
                              'Pressione CONFIRMA para continuar')
         self._varspace.call_driver_method(self.ctl_inst,
@@ -253,8 +248,18 @@ class ABMashScreen(ABCtlScreen):
         if current_stage is None:
             self._mash_phase = None
             self._enter_idle()
+
+            recipe = self._recipemgr.get_loaded_recipe()
+            boil_sg = float(self._recipemgr.get_recipe(recipe)['parameters']['pre_boil_gravity'])
+
+            if boil_sg is not None:
+                sg = 'Gravidade esp. pre boil = {}'.format(boil_sg)
+            else:
+                sg = ''
+
             self._show_msg_modal('Fim do mash\n'
-                                 'Pressione CONFIRMA para continuar')
+                                 '{}\n'
+                                 'Pressione CONFIRMA para continuar'.format(sg))
         else:
             # illegal for now
             self.log_err('illegal transition in recipe: '
@@ -302,10 +307,6 @@ class ABMashScreen(ABCtlScreen):
 
     def _addgrains(self):
         self._mash_phase = 'addgrains'
-        #self._phase_label.set_text(_composite_label_text('Fase Mash',
-        #                                                 'ad. graos',
-        #                                                 23))
-        #self._varspace.call_driver_method(self.ctl_inst, 'enter_addgrains')
         self._varspace.call_driver_method(self.ctl_inst,
                                           'next_stage')
         self._show_msg_modal('Adicione agora os insumos\n'
@@ -317,10 +318,8 @@ class ABMashScreen(ABCtlScreen):
                                           'next_stage')
         timer_end = self._varspace.call_driver_method(self.ctl_inst,
                                                       'get_timer_end')
-        self._timer_label.set_text(_composite_label_text('Timer',
-                                                         str(timer_end -
-                                                             datetime.now()).split('.')[0],
-                                                         23))
+        self._timer_label.set_value(str(timer_end -
+                                        datetime.now()).split('.')[0])
 
     def _input_event(self, evt):
         super(ABMashScreen, self)._input_event(evt)
@@ -387,12 +386,8 @@ class ABMashScreen(ABCtlScreen):
                                                      'get_mlt_temp')
         state = self._varspace.call_driver_method(self.ctl_inst, 'get_state')
         panic = self._varspace.call_driver_method('GWatch', 'is_panic')
-        self._hlt_temp_label.set_text(_composite_label_text('HLT Temp',
-                                                            '{} C'.format(hlt_temp)
-                                                            ,23))
-        self._mlt_temp_label.set_text(_composite_label_text('MLT Temp',
-                                                            '{} C'.format(mlt_temp)
-                                                            ,23))
+        self._hlt_temp_label.set_value('{} C'.format(hlt_temp))
+        self._mlt_temp_label.set_value('{} C'.format(mlt_temp))
 
         if panic:
             self._enter_panic()
@@ -435,6 +430,4 @@ class ABMashScreen(ABCtlScreen):
             if timer_end is not None:
                 timer_time = timer_end - datetime.now()
                 if timer_time.total_seconds() > 0:
-                    self._timer_label.set_text(_composite_label_text('Timer',
-                                                                     str(timer_time).split('.')[0],
-                                                                     23))
+                    self._timer_label.set_value(str(timer_time).split('.')[0])
