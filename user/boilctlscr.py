@@ -1,4 +1,5 @@
 from ui.label import Label, _composite_label_text, ValueCaption
+from ui.button import Button
 from ui.menu import MenuItem
 from ui.box import Box
 from datetime import datetime
@@ -44,11 +45,20 @@ class ABBoilScreen(ABCtlScreen):
                                    font='5x12',
                                    **self._timer_label.southwest)
 
+        # hops
+
+        self._hop_title = Button(text='Lupulo e outros',
+                                 font='6x8',
+                                 x=self._box_r.x,
+                                 y=self._box_r.y,
+                                 w=self._box_r.w,
+                                 h=10)
+
         # hops list
         self._hop1 = ValueCaption(caption='',
                                   maximum_length=11,
                                   font='5x8',
-                                  **self._box_r.northwest+(2, 2))
+                                  **self._hop_title.southwest+(2, 2))
         self._hop2 = ValueCaption(caption='',
                                   maximum_length=11,
                                   font='5x8',
@@ -107,6 +117,7 @@ class ABBoilScreen(ABCtlScreen):
         self._statframe.add_element(self._hop6)
         self._statframe.add_element(self._hop7)
         self._statframe.add_element(self._hop8)
+        self._statframe.add_element(self._hop_title)
 
         self._screen_state = 'idle'
         self._waiting_stop = False
