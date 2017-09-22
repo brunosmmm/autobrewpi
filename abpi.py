@@ -46,8 +46,12 @@ if __name__ == "__main__":
 
     logger.info('AutoBrew loading...')
 
-    icli = ABInputClient()
-    gvspace = GadgetVariableSpace(0xff000001)
+    icli = ABInputClient('http://localhost:5556')
+    try:
+        gvspace = GadgetVariableSpace(0xff000001)
+    except IOError:
+        logger.error('Could not connect to HBUS master, shutting down...')
+        exit(0)
 
     # recipe manager
     recipemgr = RecipeManager('config/recipes/')

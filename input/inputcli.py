@@ -2,6 +2,7 @@ from util.thread import StoppableThread
 import time
 import zmq
 import uuid
+import logging
 
 _INPUT_EVENTS = {
     'encoder.cw': ('ENCODER', 0x01),
@@ -20,10 +21,12 @@ class InvalidEventError(Exception):
 
 
 class ABInputClient(StoppableThread):
-    def __init__(self):
+    def __init__(self, address):
         super(ABInputClient, self).__init__()
 
+        self.logger = logging.getLogger('AutoBrew.icli')
         self.attached_callbacks = {}
+        self._server_addr = address
 
     def attach_callback(self, event, callback):
 
@@ -37,9 +40,11 @@ class ABInputClient(StoppableThread):
 
     def run(self):
 
+        self.logger.debug('starting ABPI input client, connecting to: '
+                          '{}'.format(self._server_addr))
         context = zmq.Context()
         socket = context.socket(zmq.SUB)
-        socket.connect('tcp://localhost:5556')
+        socket.connect(self._server_addr)
         socket.setsockopt_string(zmq.SUBSCRIBE, 'KEYPAD')
         socket.setsockopt_string(zmq.SUBSCRIBE, 'ENCODER')
         socket.setsockopt_string(zmq.SUBSCRIBE, 'SWITCHES')
@@ -47,6 +52,7 @@ class ABInputClient(StoppableThread):
         while True:
 
             if self.is_stopped():
+                self.logger.debug('input client stopped')
                 exit(0)
 
             # communicate!

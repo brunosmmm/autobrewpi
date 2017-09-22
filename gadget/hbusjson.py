@@ -6,6 +6,7 @@ import uuid
 from util.thread import StoppableThread
 import signal
 from urllib.error import URLError
+import logging
 
 
 class HbusJsonServerError(Exception):
@@ -76,7 +77,7 @@ class ResponseDispatcher(StoppableThread):
 
 class HbusClient(object):
 
-    def __init__(self, server_addr='localhost', server_port=7080):
+    def __init__(self, server_addr='localhost', server_port=7080, timeout=30):
 
         # request queue
         self._wrqueue = Queue()
@@ -102,6 +103,8 @@ class HbusClient(object):
                                    self._stop_flag))
 
         self._dispatcher = ResponseDispatcher(self._asyncrespqueue)
+        self._timeout = timeout
+        self.logger = logging.getLogger('AutoBrew.HBUSCli')
 
     def start(self):
         self._task.start()
@@ -125,18 +128,23 @@ class HbusClient(object):
         response.pop('status')
         return response
 
-    def _put_req_and_wait(self, req):
+    def _put_req_and_wait(self, req, timeout=None):
 
         self._rdqueue.put(req)
         try:
-            resp = self._respqueue.get()
+            resp = self._respqueue.get(timeout=timeout)
         except QueueEmpty:
-            raise
+            self.logger.warning('request timed out')
 
+        time = 0.0
         while resp.uuid != req.uuid:
             self._respqueue.put(resp)
-            resp = self._respqueue.get()
+            resp = self._respqueue.get(timeout=timeout)
             time.sleep(0.01)
+            time += 0.01
+            if timeout is not None and time > timeout:
+                self.logger.warning('request timed out')
+                raise IOError('timeout')
 
         return resp.resp
 
@@ -150,10 +158,12 @@ class HbusClient(object):
         self._wrqueue.put(req)
 
     def get_active_busses(self):
-        return self._put_req_and_wait(HbusClientRequest('buslist', None))
+        return self._put_req_and_wait(HbusClientRequest('buslist', None),
+                                      self._timeout)
 
     def get_master_state(self):
-        return self._put_req_and_wait(HbusClientRequest('masterstate', None))
+        return self._put_req_and_wait(HbusClientRequest('masterstate', None),
+                                      self._timeout)
 
     @staticmethod
     def _get_active_busses(client):
@@ -164,7 +174,8 @@ class HbusClient(object):
         return response['list']
 
     def get_active_slave_list(self):
-        return self._put_req_and_wait(HbusClientRequest('slavelist', None))
+        return self._put_req_and_wait(HbusClientRequest('slavelist', None),
+                                      self._timeout)
 
     @staticmethod
     def _get_active_slave_list(client):
@@ -176,7 +187,8 @@ class HbusClient(object):
 
     def get_slave_info(self, slave_uid):
         return self._put_req_and_wait(HbusClientRequest('slaveinfo',
-                                                        (slave_uid,)))
+                                                        (slave_uid,)),
+                                      self._timeout)
 
     @staticmethod
     def _get_slave_info(client, slave_uid):
@@ -188,7 +200,8 @@ class HbusClient(object):
 
     def get_slave_object_list(self, slave_uid):
         return self._put_req_and_wait(HbusClientRequest('slaveobjlist',
-                                                        (slave_uid,)))
+                                                        (slave_uid,)),
+                                      self._timeout)
 
     @staticmethod
     def _get_slave_object_list(client, slave_uid):
@@ -203,7 +216,8 @@ class HbusClient(object):
         if block:
             return self._put_req_and_wait(HbusClientRequest('read',
                                                             (slave_addr,
-                                                             object_idx)))
+                                                             object_idx)),
+                                          self._timeout)
         else:
             self._put_async_req(HbusClientRequest('read',
                                                   (slave_addr, object_idx),

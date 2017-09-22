@@ -121,25 +121,39 @@ class VSpacePortDescriptor(object):
 
 class GadgetVariableSpace(StoppableThread):
 
-    _initialized = False
+    __initialized = False
 
-    def __init__(self, gadget_uid, scan_interval=1.0):
+    def __init__(self, gadget_uid, scan_interval=1.0, hbus_timeout=1.0):
 
-        super(GadgetVariableSpace, self).__init__()
+        super().__init__()
 
         self.logger = logging.getLogger('AutoBrew.GVarSpace')
 
-        self._hcli = HbusClient()
+        self._hcli = HbusClient(timeout=hbus_timeout)
         self._guid = gadget_uid
         self._scan_interval = scan_interval
         self._write_queue = deque()
 
+        self.logger.debug('starting HBUS Client')
         self._hcli.start()
         # initial server scan, wait for master to be available
-        master_state = self._hcli.get_master_state()
+        self.logger.debug('waiting for master to be ready')
+        tries = 1
+        master_state = None
+        try:
+            master_state = self._hcli.get_master_state()
+        except:
+            pass
         while master_state != 5:
             time.sleep(5)
-            master_state = self._hcli.get_master_state()
+            try:
+                master_state = self._hcli.get_master_state()
+            except:
+                tries += 1
+            if tries > 3:
+                self.logger.error('master not ready or cannot connect')
+                self._hcli.stop()
+                raise IOError('cannot connect to HBUS master')
 
         tries = 0
         while (tries < 20):
@@ -166,6 +180,7 @@ class GadgetVariableSpace(StoppableThread):
         self._global_port_counter = 0
 
         # variable space
+        print('VARSPACE')
         self._varspace = {}
 
         # parse
@@ -182,7 +197,7 @@ class GadgetVariableSpace(StoppableThread):
         self._rpcsrv = VSpaceRPCController(self.rpc_request)
         self._rpcsrv.start()
 
-        self._initialized = True
+        self.__initialized = True
 
     def stop(self):
         self._rpcsrv.stop()
@@ -283,18 +298,18 @@ class GadgetVariableSpace(StoppableThread):
                 self._scan_variable(var_name, self._hbus_read_cb)
 
     def __setattr__(self, name, value):
-        if self._initialized:
-            if name in list(self._varspace.keys()):
+        if self.__initialized:
+            if name in list(self.__getattribute__('_varspace').keys()):
                 self._write_queue.appendleft(GadgetVariableRequest(name,
                                                                    value))
                 return
-        super(GadgetVariableSpace, self).__setattr__(name, value)
+        super().__setattr__(name, value)
 
     def __getattr__(self, name):
-        if self._initialized:
-            if name in list(self._varspace.keys()):
+        if self.__initialized and name != '_varspace':
+            if name in list(self.__getattribute__('_varspace').keys()):
                 return self._varspace[name].get_value()
-        return super(GadgetVariableSpace, self).__getattribute__(name)
+        return super().__getattribute__(name)
 
     def register_driver(self, driver_class, instance_name, **kwargs):
 
