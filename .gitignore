@@ -1,4 +1,6 @@
+*.log
 *.pyc
 *.*~
 *.o
 *.bak
+venv/
