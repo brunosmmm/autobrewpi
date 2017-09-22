@@ -47,7 +47,7 @@ class RecipeManager(object):
         return self._active_recipe
 
     def get_recipe_list(self):
-        return self.recipes.keys()
+        return list(self.recipes.keys())
 
     def get_recipe(self, recipe_id):
         return self.recipes[recipe_id]

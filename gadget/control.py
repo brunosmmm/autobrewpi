@@ -188,7 +188,7 @@ class GadgetVariableSpace(StoppableThread):
         self._rpcsrv.stop()
         self._rpcsrv.join()
         # send shutdown events to all drivers
-        for driver in self._drivers.values():
+        for driver in list(self._drivers.values()):
             driver.shutdown()
         super(GadgetVariableSpace, self).stop()
 
@@ -229,7 +229,7 @@ class GadgetVariableSpace(StoppableThread):
         self.__Gadget_CTL = int(command)
 
     def get_variable_names(self):
-        return self._varspace.keys()
+        return list(self._varspace.keys())
 
     def _hbus_read_cb(self, data, user_data):
         # got data!
@@ -278,13 +278,13 @@ class GadgetVariableSpace(StoppableThread):
                 var._old = True
 
     def _scan_values(self, obj_idx_list=None):
-        for var_name, var in self._varspace.iteritems():
+        for var_name, var in list(self._varspace.items()):
             if obj_idx_list is None or var._idx in obj_idx_list:
                 self._scan_variable(var_name, self._hbus_read_cb)
 
     def __setattr__(self, name, value):
         if self._initialized:
-            if name in self._varspace.keys():
+            if name in list(self._varspace.keys()):
                 self._write_queue.appendleft(GadgetVariableRequest(name,
                                                                    value))
                 return
@@ -292,7 +292,7 @@ class GadgetVariableSpace(StoppableThread):
 
     def __getattr__(self, name):
         if self._initialized:
-            if name in self._varspace.keys():
+            if name in list(self._varspace.keys()):
                 return self._varspace[name].get_value()
         return super(GadgetVariableSpace, self).__getattribute__(name)
 
@@ -320,7 +320,7 @@ class GadgetVariableSpace(StoppableThread):
     def _process_driver_ports(self, driver_object):
         self.logger.debug('processing driver ports')
         self.logger.debug('Inputs:')
-        for inp_name, inp_obj in driver_object._inputs.iteritems():
+        for inp_name, inp_obj in list(driver_object._inputs.items()):
             self.logger.debug('input_name: {}'.format(inp_name))
             #W T F
             port_id = self._new_port_added()
@@ -336,7 +336,7 @@ class GadgetVariableSpace(StoppableThread):
             self._process_space_port_matrix[port_id] = port
 
         self.logger.debug('Outputs:')
-        for out_name, out_obj in driver_object._outputs.iteritems():
+        for out_name, out_obj in list(driver_object._outputs.items()):
             self.logger.debug('output_name: {}'.format(out_name))
             port_id = self._new_port_added()
             self.logger.debug('assigning port number {} to port {}.{}'.format(port_id,
@@ -448,7 +448,7 @@ class GadgetVariableSpace(StoppableThread):
         else:
             space = self._process_space_port_matrix
 
-        for port_id, port_object in space.iteritems():
+        for port_id, port_object in list(space.items()):
             if port_object.get_linked_instance_name() == instance_name:
                 if port_object._dir == 'input':
                     inputs[port_id] = port_object
@@ -528,33 +528,33 @@ class GadgetVariableSpace(StoppableThread):
         ret = {'gadget': {},
                'process': {}}
 
-        for port_id, port_object in self._process_space_port_matrix.iteritems():
+        for port_id, port_object in list(self._process_space_port_matrix.items()):
             ret['process'][port_id] = port_object._connection_list
-        for port_id, port_object in self._gadget_space_port_matrix.iteritems():
+        for port_id, port_object in list(self._gadget_space_port_matrix.items()):
             ret['gadget'][port_id] = port_object._connection_list
 
         return ret
 
     def _debug_dump_port_list(self):
-        print 'Port list dump'
-        print 'Process Space:'
-        for port_id, port_object in self._process_space_port_matrix.iteritems():
-            print '{}: {}.{} ({}), connects to: {}'.format(port_id,
+        print('Port list dump')
+        print('Process Space:')
+        for port_id, port_object in list(self._process_space_port_matrix.items()):
+            print(('{}: {}.{} ({}), connects to: {}'.format(port_id,
                                                            port_object.get_linked_instance_name(),
                                                            port_object.get_linked_port_name(),
                                                            port_object._dir,
-                                                           port_object._connection_list)
-        print 'Gadget Space:'
-        for port_id, port_object in self._gadget_space_port_matrix.iteritems():
-            print '{}: {}.{} ({}), connects to: {}'.format(port_id,
+                                                           port_object._connection_list)))
+        print('Gadget Space:')
+        for port_id, port_object in list(self._gadget_space_port_matrix.items()):
+            print(('{}: {}.{} ({}), connects to: {}'.format(port_id,
                                                            port_object.get_linked_instance_name(),
                                                            port_object.get_linked_port_name(),
                                                            port_object._dir,
-                                                           port_object._connection_list)
+                                                           port_object._connection_list)))
 
     def find_driver_by_classname(self, classname):
         instance_list = []
-        for instance_name, instance_object in self._drivers.iteritems():
+        for instance_name, instance_object in list(self._drivers.items()):
             if instance_object.__class__.__name__ == classname:
                 instance_list.append(instance_name)
 
@@ -597,8 +597,8 @@ class GadgetVariableSpace(StoppableThread):
 
     def rpc_request(self, request, *args, **kwargs):
         if request == 'portlist':
-            return {'gadget': self._gadget_space_port_matrix.keys(),
-                    'process': self._process_space_port_matrix.keys()}
+            return {'gadget': list(self._gadget_space_port_matrix.keys()),
+                    'process': list(self._process_space_port_matrix.keys())}
         if request == 'findport':
             try:
                 return self.find_port_id(**kwargs)
@@ -658,7 +658,7 @@ class GadgetVariableSpace(StoppableThread):
                         raise GadgetVariableError('could not set variable value')
 
             #execute driver cycles
-            for driver in self._drivers.values():
+            for driver in list(self._drivers.values()):
                 try:
                     driver.cycle()
                 except Exception:

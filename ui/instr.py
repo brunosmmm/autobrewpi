@@ -11,7 +11,7 @@ class DrawInstruction(object):
     def translate(self, x, y):
         """Translate draw coordinates using general regex
         """
-        for kwarg_name, kwarg_val in self.kwargs.iteritems():
+        for kwarg_name, kwarg_val in self.kwargs.items():
             m = re.match(_COORDINATE_REGEX, kwarg_name)
 
             if m is not None:

@@ -18,14 +18,14 @@ usleep = lambda x: sleep(x/1000000.0)
 if __name__ == "__main__":
 
     def _handle_signal(*args):
-        print "Shutting down..."
+        print("Shutting down...")
         buf.stop()
         buf.join()
         gvspace.stop()
         gvspace.join()
         icli.stop()
         icli.join()
-        print "Done"
+        print("Done")
         exit(0)
 
     def shutdown():

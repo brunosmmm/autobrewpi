@@ -199,9 +199,9 @@ class VSpaceDriver(object):
         self._outputs = output_copy
 
         # link ports to driver
-        for port_name, port_object in self._inputs.iteritems():
+        for port_name, port_object in self._inputs.items():
             port_object.set_parent(self)
-        for port_name, port_object in self._outputs.iteritems():
+        for port_name, port_object in self._outputs.items():
             port_object.set_parent(self)
 
         # flags
@@ -310,22 +310,22 @@ class VSpaceDriver(object):
         pass
 
     def port_connected(self, port_id, connected_to_id):
-        for port_name, port_obj in self._inputs.iteritems():
+        for port_name, port_obj in self._inputs.items():
             if port_obj.get_global_port_id() == port_id:
                 port_obj.set_connected()
                 return
 
-        for port_name, port_obj in self._outputs.iteritems():
+        for port_name, port_obj in self._outputs.items():
             if port_obj.get_global_port_id() == port_id:
                 port_obj.set_connected()
 
     def port_disconnected(self, port_id):
-        for port_name, port_obj in self._inputs.iteritems():
+        for port_name, port_obj in self._inputs.items():
             if port_obj.get_global_port_id() == port_id:
                 port_obj.set_disconnected()
                 return
 
-        for port_name, port_obj in self._outputs.iteritems():
+        for port_name, port_obj in self._outputs.items():
             if port_obj.get_global_port_id() == port_id:
                 port_obj.set_disconnected()
 

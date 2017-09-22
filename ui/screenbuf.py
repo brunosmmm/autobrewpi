@@ -174,7 +174,7 @@ class ScreenBuffer(StoppableThread):
             font_w = self._fmgr.get_font_width(font_name)
             font_h = self._fmgr.get_font_height(font_name)
         except Exception as e:
-            print 'error getting font char: {}'.format(e.message)
+            print(('error getting font char: {}'.format(e.message)))
             return
 
         row_data = char_data.tolist()
@@ -230,7 +230,7 @@ class ScreenBuffer(StoppableThread):
         return self._width
 
     def get_fonts(self):
-        return self._fmgr._fonts.keys()
+        return list(self._fmgr._fonts.keys())
 
     def draw_ui_element(self, element):
 
@@ -361,7 +361,7 @@ class ScreenBuffer(StoppableThread):
 
             # process recurrent calls
             if self._pause_calls is False:
-                for rc in self.recurrent_calls.values():
+                for rc in list(self.recurrent_calls.values()):
                     td = datetime.now() - rc._last_called
                     if td.total_seconds > rc.interval:
                         if rc.cb is not None:

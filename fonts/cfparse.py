@@ -1,6 +1,6 @@
 import re
 from array import array
-from fontarr import FontArray
+from fonts.fontarr import FontArray
 
 
 class CFontParser(object):
@@ -24,7 +24,7 @@ class CFontParser(object):
         return msb
 
     def _list_chunks(self, l, size):
-        for i in xrange(0, len(l), size):
+        for i in range(0, len(l), size):
             yield l[i:i+size]
 
     def parse(self):
@@ -85,6 +85,6 @@ class CFontParser(object):
         if self.parsed is False:
             self.parse()
 
-        font_data = [array('L', x) for x in self.font_map.values()]
+        font_data = [array('L', x) for x in list(self.font_map.values())]
 
         return FontArray(font_data, self.font_w, self.font_h)

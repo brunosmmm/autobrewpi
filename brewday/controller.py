@@ -34,7 +34,7 @@ class BrewdayController(VSpaceDriver):
         self._state = 'inactive'
 
     def disconnect_ports(self):
-        for port_name, port_object in self._inputs.iteritems():
+        for port_name, port_object in self._inputs.items():
             if port_object.get_connected():
                 port_id = port_object.get_global_port_id()
 
@@ -43,7 +43,7 @@ class BrewdayController(VSpaceDriver):
                 for connected_port in connects_to:
                     self._gvarspace.disconnect_pspace_ports(port_id,
                                                             connected_port)
-        for port_name, port_object in self._outputs.iteritems():
+        for port_name, port_object in self._outputs.items():
             if port_object.get_connected():
                 port_id = port_object.get_global_port_id()
 
@@ -56,7 +56,7 @@ class BrewdayController(VSpaceDriver):
     def connect_ports(self):
         # make connections if configuration present
         for (port_name,
-             connect_to) in self._config['connections'].iteritems():
+             connect_to) in self._config['connections'].items():
             if connect_to is None:
                 continue
 

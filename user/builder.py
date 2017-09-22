@@ -18,7 +18,7 @@ class SystemBuilder(object):
 
         # load drivers
         for (instance_name,
-             driver_type) in config_contents['driver_instances'].iteritems():
+             driver_type) in config_contents['driver_instances'].items():
             try:
                 # try to load class
                 driver_class = config_contents['driver_classes'][driver_type]

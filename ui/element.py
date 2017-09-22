@@ -61,7 +61,7 @@ class UIElement(object):
 
         # super is object, so check for stray kwargs
         if len(kwargs) > 0:
-            err_txt = 'unknown arguments: {}'.format(','.join(kwargs.keys()))
+            err_txt = 'unknown arguments: {}'.format(','.join(list(kwargs.keys())))
             raise ElementArgumentError(err_txt)
         super(UIElement, self).__init__(*args, **kwargs)
 

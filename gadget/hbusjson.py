@@ -1,11 +1,11 @@
 from pyjsonrpc import HttpClient, JsonRpcError
 from multiprocessing import Process, Queue, Event
-from Queue import Empty as QueueEmpty
+from queue import Empty as QueueEmpty
 import time
 import uuid
 from util.thread import StoppableThread
 import signal
-from urllib2 import URLError
+from urllib.error import URLError
 
 
 class HbusJsonServerError(Exception):

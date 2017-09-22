@@ -1,4 +1,4 @@
-from cfparse import CFontParser
+from fonts.cfparse import CFontParser
 import json
 import re
 import logging
@@ -24,7 +24,7 @@ class FontManager(object):
         if font_config is not None:
             # load fonts
 
-            for font_name, font_desc in font_config['load_fonts'].iteritems():
+            for font_name, font_desc in font_config['load_fonts'].items():
 
                 m = re.match(r'.*\.cfont$', font_desc['path'])
                 font_data = None

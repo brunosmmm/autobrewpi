@@ -27,7 +27,7 @@ class RadioGroup(object):
             raise GroupError('uid not registered in this group')
 
         self._selected_btn = btn_uid
-        for uid, cb in self._registered_btns.iteritems():
+        for uid, cb in self._registered_btns.items():
             if cb is not None:
                 if uid == self._selected_btn:
                     cb('pressed')
@@ -36,7 +36,7 @@ class RadioGroup(object):
 
     def select_index(self, index):
         if abs(index) < len(self._registered_btns):
-            self.select_btn(self._registered_btns.keys()[index])
+            self.select_btn(list(self._registered_btns.keys())[index])
 
     def select_first(self):
         self.select_index(0)
@@ -45,9 +45,9 @@ class RadioGroup(object):
         if self._selected_btn is None:
             return
 
-        selected_index = self._registered_btns.keys().index(self._selected_btn)
+        selected_index = list(self._registered_btns.keys()).index(self._selected_btn)
         if selected_index < len(self._registered_btns) - 1:
-            self.select_btn(self._registered_btns.keys()[selected_index + 1])
+            self.select_btn(list(self._registered_btns.keys())[selected_index + 1])
         else:
             self.select_first()
 
@@ -55,9 +55,9 @@ class RadioGroup(object):
         if self._selected_btn is None:
             return
 
-        selected_index = self._registered_btns.keys().index(self._selected_btn)
+        selected_index = list(self._registered_btns.keys()).index(self._selected_btn)
         if selected_index > 0:
-            self.select_btn(self._registered_btns.keys()[selected_index - 1])
+            self.select_btn(list(self._registered_btns.keys())[selected_index - 1])
         else:
             self.select_index(-1)
 
@@ -65,7 +65,7 @@ class RadioGroup(object):
         if self._selected_btn is None:
             return None
 
-        return self._registered_btns.keys().index(self._selected_btn)
+        return list(self._registered_btns.keys()).index(self._selected_btn)
 
 
 class RadioButton(CheckBox):

@@ -40,9 +40,9 @@ class ABInputClient(StoppableThread):
         context = zmq.Context()
         socket = context.socket(zmq.SUB)
         socket.connect('tcp://localhost:5556')
-        socket.setsockopt_string(zmq.SUBSCRIBE, u'KEYPAD')
-        socket.setsockopt_string(zmq.SUBSCRIBE, u'ENCODER')
-        socket.setsockopt_string(zmq.SUBSCRIBE, u'SWITCHES')
+        socket.setsockopt_string(zmq.SUBSCRIBE, 'KEYPAD')
+        socket.setsockopt_string(zmq.SUBSCRIBE, 'ENCODER')
+        socket.setsockopt_string(zmq.SUBSCRIBE, 'SWITCHES')
 
         while True:
 
@@ -55,7 +55,7 @@ class ABInputClient(StoppableThread):
 
                 unit, kind, data = string.split(' ')
 
-                for event_type, conditions in _INPUT_EVENTS.iteritems():
+                for event_type, conditions in _INPUT_EVENTS.items():
                     if conditions[0] == unit and conditions[1] == int(kind):
                         try:
                             for cb in self.attached_callbacks[event_type]:
