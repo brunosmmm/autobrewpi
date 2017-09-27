@@ -1,7 +1,7 @@
 #ifndef MCP23016_H
 #define MCP23016_H
 
-#include <python2.7/Python.h>
+#include <python3.5m/Python.h>
 
 #define MCP_DIRECTION_IN 0x00
 #define MCP_DIRECTION_OUT 0x01

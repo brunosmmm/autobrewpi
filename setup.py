@@ -28,7 +28,7 @@ setup(
     packages=find_packages(),
     package_dir={'': '.'},
     package_data={'abpi': ['data/fonts/*',
-                           'lcd/screen.so',
+                           'lcd/screen.lib',
                            'data/drivers/*']},
     dependency_links=['git+https://github.com/brunosmmm/hbussd.git'],
     install_requires=['pyzmq>=17.0.0'],

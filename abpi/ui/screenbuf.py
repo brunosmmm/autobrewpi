@@ -11,7 +11,7 @@ import pkg_resources
 
 
 SCREENBUF_SO_PATH = pkg_resources.resource_filename('autobrew',
-                                                    'lcd/screen.so')
+                                                    'lcd/screen.lib')
 
 
 class RecurrentCall(object):

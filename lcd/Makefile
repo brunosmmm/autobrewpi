@@ -1,4 +1,4 @@
-TARGET = screen.so
+TARGET = screen.lib
 LIBS = -lm
 CC = gcc
 CFLAGS = -fPIC -Wall
