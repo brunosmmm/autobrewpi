@@ -2,6 +2,7 @@ TARGET = ab_user
 LIBS = -lm -lpthread -lzmq -lwiringPi
 CC = gcc
 CFLAGS = -Wall
+CFLAGS_TARGET=
 
 .PHONY: default all clean
 
@@ -17,7 +18,7 @@ HEADERS = $(wildcard *.h)
 .PRECIOUS: $(TARGET) $(OBJECTS)
 
 $(TARGET): $(OBJECTS)
-	$(CC) $(LIBS) -o $@ $(OBJECTS)
+	$(CC) $(LIBS) $(CFLAGS_TARGET) -o $@ $(OBJECTS)
 
 clean:
 	-rm -f *.o
