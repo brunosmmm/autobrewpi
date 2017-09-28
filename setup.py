@@ -36,5 +36,5 @@ setup(
     author_email="brunosmmm@gmail.com",
     description="AutoBrew",
     cmdclass={'install': ABPIInstall},
-    scripts=['io/ab_user']
+    scripts=['io/ab_user', 'autobrew']
 )
