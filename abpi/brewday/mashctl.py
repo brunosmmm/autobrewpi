@@ -2,6 +2,9 @@ from abpi.vspace import VSpaceOutput, VSpaceInput, rpccallable
 from abpi.brewday.controller import BrewdayController, _test_type
 import logging
 from datetime import datetime, timedelta
+import os.path
+
+SYS_CONFIG_DIR = '/etc/autobrew/brewday'
 
 
 class MashController(BrewdayController):
@@ -23,7 +26,13 @@ class MashController(BrewdayController):
     }
 
     def __init__(self, **kwargs):
-        kwargs['config_file'] = 'config/brewday/mashconfig.json'
+        if os.path.isfile('config/brewday/mashconfig.json'):
+            kwargs['config_file'] = 'config/brewday/mashconfig.json'
+        elif os.path.isfile(os.path.join(SYS_CONFIG_DIR, 'mashconfig.json')):
+            kwargs['config_file'] = os.path.join(SYS_CONFIG_DIR,
+                                                 'mashconfig.json')
+        else:
+            raise IOError('cannot find mash configuration file')
         super(MashController, self).__init__(**kwargs)
 
         self.logger = logging.getLogger('AutoBrew.mashctl')

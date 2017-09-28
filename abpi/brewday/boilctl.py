@@ -1,6 +1,9 @@
 from abpi.vspace import VSpaceOutput, VSpaceInput, rpccallable
 from abpi.brewday.controller import BrewdayController, _test_type
 from datetime import datetime, timedelta
+import os.path
+
+SYS_CONFIG_DIR = '/etc/autobrew/brewday'
 
 
 class BoilController(BrewdayController):
@@ -17,7 +20,13 @@ class BoilController(BrewdayController):
     }
 
     def __init__(self, **kwargs):
-        kwargs['config_file'] = 'config/brewday/boilconfig.json'
+        if os.path.isfile('config/brewday/boilconfig.json'):
+            kwargs['config_file'] = 'config/brewday/boilconfig.json'
+        elif os.path.isfile(os.path.join(SYS_CONFIG_DIR, 'boilconfig.json')):
+            kwargs['config_file'] = os.path.join(SYS_CONFIG_DIR,
+                                                 'boilconfig.json')
+        else:
+            raise IOError('cannot find boil configuration file')
         super(BoilController, self).__init__(**kwargs)
 
         self._boil_start_timer = None
