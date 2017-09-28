@@ -2,6 +2,7 @@ from abpi.fonts.cfparse import CFontParser
 import json
 import re
 import logging
+import pkg_resources
 
 
 class FontManager(object):
@@ -33,13 +34,17 @@ class FontManager(object):
                     # load
                     parser = None
                     try:
-                        with open(font_desc['path'], 'r') as f:
+                        font_path =\
+                            pkg_resources.resource_filename('abpi',
+                                                            font_desc['path'])
+                        with open(font_path, 'r') as f:
                             parser = CFontParser(f.readlines(),
                                                  int(font_desc['dsize']))
                     except IOError:
                         # ignore font, couldnt load
                         self.logger.warning('could not load font: {}, '
-                                            'ignored'.format(font_desc['path']))
+                                            'ignored'
+                                            .format(font_desc['path']))
 
                         continue
 

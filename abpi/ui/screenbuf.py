@@ -10,7 +10,7 @@ import uuid
 import pkg_resources
 
 
-SCREENBUF_SO_PATH = pkg_resources.resource_filename('autobrew',
+SCREENBUF_SO_PATH = pkg_resources.resource_filename('abpi',
                                                     'lcd/screen.lib')
 
 
@@ -51,7 +51,9 @@ class ScreenBuffer(StoppableThread):
             screen_on_hook()
 
         # font manager
-        self._fmgr = FontManager()
+        font_conf = pkg_resources.resource_filename('abpi',
+                                                    'data/fonts/fontcfg.json')
+        self._fmgr = FontManager(font_conf)
 
         # screen manager
         self._screens = {}
