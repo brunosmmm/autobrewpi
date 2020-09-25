@@ -1,16 +1,19 @@
+"""Screen."""
 from abpi.ui.element import UIElement
 
 
 class ScreenError(Exception):
-    pass
+    """Screen error."""
 
 
 class Screen(UIElement):
-    def __init__(self, **kwargs):
-        if 'w' not in kwargs or 'h' not in kwargs:
-            raise ScreenError('width and/or height not specified!')
+    """Screen."""
 
-        super(Screen, self).__init__(**kwargs)
+    def __init__(self, **kwargs):
+        if "w" not in kwargs or "h" not in kwargs:
+            raise ScreenError("width and/or height not specified!")
+
+        super().__init__(**kwargs)
         self._children = []
         self.uids = {}
 
