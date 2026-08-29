@@ -1,7 +1,7 @@
 # Brew-day dataflow worker — design
 
 **Date:** 2026-08-29  
-**Status:** Draft for review  
+**Status:** Ready for review  
 **Heritage:** New development in the spirit of `autobrewpi` (vspace drivers, port wiring, logic-controlled brew states). Legacy LCD UI, HBUS gadget stack, and in-process-only variable space are not carried forward.
 
 ## Goals
@@ -122,6 +122,43 @@ Example (illustrative):
 - Master drives the worker only through **`SetPort` / `SetParam`** on `master.*` (and deploy of the low-level graph).
 - On link loss: local loops keep last setpoints; **stage/recipe progress pauses** until the master is back.
 - Recipes and stage config are master-side; worker never interprets mash stages in v1.
+
+## Three workstreams (how this branches)
+
+These are **parallel product tracks**, not alternate architectures. Simulation is the glue that lets (a) and (b) develop without hardware.
+
+```
+                    ┌─────────────────────────────┐
+                    │  (c) Simulation / mock HAL  │
+                    │  plant stub, inject, UI     │
+                    └──────────────┬──────────────┘
+           enables early           │
+           integration             ▼
+  ┌────────────────┐      ┌──────────────────────┐
+  │ (b) New worker │◄────►│ (a) New master       │
+  │ graph runtime  │ gRPC │ brew-day + web API   │
+  │ plugins, HAL   │      │ (spirit of old abpi) │
+  └────────────────┘      └──────────────────────┘
+```
+
+| Track | What it is | Relationship to old repo | v1 outcome |
+|-------|------------|--------------------------|------------|
+| **(b) Worker** | **Brand-new** edge runtime: program load, cycle, plugins, HAL, gRPC server | Inspired by `vspace` + driver wiring; **no code reuse required** | Runs `hlt-loop` graph against mock HAL standalone |
+| **(a) Master** | **Rewrite of the brew-day / control concept**: mash/boil FSMs, recipes, observability, UI API | Domain from `brewday/*` + “controller drives setpoints”; **new code**, old UI/HBUS dropped | Talks to worker over gRPC; drives `master.*` ports; simple web UI |
+| **(c) Simulation** | **First delivery mode**, not a third product: mock HAL + optional plant stub + UI inject | Replaces need for HBUS/gadget during development | Full dry-run on one machine with zero hardware |
+
+**Ordering for implementation**
+
+1. **(b) + (c)** together — worker that only knows `mock` HAL; unit/integration tests without master.
+2. **gRPC surface** on the worker — deploy, set ports, telemetry (still mock).
+3. **(a)** master client + thin brew/manual controls + web UI, still against mock.
+4. Later: swap mock → live GPIO HAL on a real board; (a)/(b) contracts unchanged.
+
+**What we are *not* doing**
+
+- Incrementally refactoring `abpi/` into the new master/worker.
+- A separate “simulator app” that bypasses the worker — simulation **is** the worker with `HAL=mock`.
+- Shipping live hardware support before the sim loop works end-to-end.
 
 ## Simulation-first (v1 delivery focus)
 
