@@ -1,0 +1,15 @@
+[project]
+name = "brew-worker"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "grpcio>=1.62",
+  "protobuf>=5.0",
+]
+
+[project.scripts]
+brew-worker = "brew_worker.__main__:main"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

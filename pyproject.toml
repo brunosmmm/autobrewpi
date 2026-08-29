@@ -1,0 +1,10 @@
+[project]
+name = "autobrewpi-workspace"
+version = "0.0.0"
+requires-python = ">=3.11"
+
+[tool.uv.workspace]
+members = ["packages/worker"]
+
+[dependency-groups]
+dev = ["pytest>=8.0", "grpcio-tools>=1.62"]

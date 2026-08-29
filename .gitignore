@@ -4,3 +4,12 @@
 *.o
 *.bak
 venv/
+.venv/
+__pycache__/
+.pytest_cache/
+.mypy_cache/
+.uv/
+uv.lock
+*.egg-info/
+dist/
+build/
