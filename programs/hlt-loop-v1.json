@@ -1,0 +1,22 @@
+{
+  "id": "hlt-loop-v1",
+  "cycle_ms": 100,
+  "blocks": [
+    {
+      "name": "Hyst",
+      "type": "Hysteresis",
+      "params": {"hyst_type": "updown", "level": 2.0}
+    },
+    {
+      "name": "HeatOut",
+      "type": "GpioOut",
+      "params": {"channel": "hal.gpio.heater_hlt"}
+    }
+  ],
+  "wires": [
+    {"from": "hal.adc.temp_c", "to": "Hyst.CurrTemp"},
+    {"from": "master.Hyst.SetPoint", "to": "Hyst.SetPoint"},
+    {"from": "master.Hyst.Enabled", "to": "Hyst.Enabled"},
+    {"from": "Hyst.CtlOut", "to": "HeatOut.Value"}
+  ]
+}

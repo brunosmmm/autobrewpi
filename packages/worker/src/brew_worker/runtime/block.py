@@ -4,9 +4,6 @@ from abc import ABC, abstractmethod
 from typing import Any, ClassVar
 
 
-REGISTRY: dict[str, type[Block]] = {}
-
-
 class Block(ABC):
     type_name: ClassVar[str]
     inputs: ClassVar[dict[str, str]] = {}
@@ -42,3 +39,6 @@ class Block(ABC):
     @abstractmethod
     def cycle(self) -> None:
         raise NotImplementedError
+
+
+REGISTRY: dict[str, type[Block]] = {}
