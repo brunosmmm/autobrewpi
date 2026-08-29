@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AutoBrew Sim</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>AutoBrew Sim</h1>
+    <div id="banner" class="banner hidden">Worker offline / stale</div>
+  </header>
+
+  <main>
+    <section>
+      <h2>Worker</h2>
+      <dl id="worker-status"></dl>
+      <button id="btn-deploy">Deploy sample + start</button>
+    </section>
+
+    <section>
+      <h2>Live</h2>
+      <dl id="live"></dl>
+    </section>
+
+    <section>
+      <h2>Mock temperature</h2>
+      <label>temp_c <input id="temp" type="number" step="0.1" value="50" /></label>
+      <button id="btn-temp">Inject</button>
+    </section>
+
+    <section>
+      <h2>Manual hysteresis</h2>
+      <label>setpoint_c <input id="setpoint" type="number" step="0.1" value="66" /></label>
+      <label><input id="enabled" type="checkbox" /> enabled</label>
+      <button id="btn-manual">Apply</button>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+[project]
+name = "brew-master"
+version = "0.1.0"
+requires-python = ">=3.11"
+dependencies = [
+  "brew-worker",
+  "fastapi>=0.110",
+  "uvicorn[standard]>=0.27",
+  "grpcio>=1.62",
+]
+
+[project.scripts]
+brew-master = "brew_master.__main__:main"
+
+[tool.uv.sources]
+brew-worker = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
