@@ -164,7 +164,7 @@ git commit -m "feat(master): worker supervisor with reconnect and stale flags"
   - `inject_temp(self, temp_c: float) -> None` — `set_hal_channel("hal.adc.temp_c", ...)`
   - `state(self) -> dict` — `{mode: "manual", enabled, setpoint_c, worker: supervisor.snapshot()}`
 
-No full mash stage machine in this task (YAGNI for sim console). Leave a `TODO` comment only if you also add a stub `class MashSession` with `idle` state and `start(setpoint, minutes)` that sets ports and tracks a timer in-process — optional; if included, cover with one test.
+No full mash stage machine in this task (YAGNI for sim console). Do not add a mash session class here; manual enable/setpoint is enough for the sim console.
 
 - [ ] **Step 1: Failing test for `set_manual` + `inject_temp` against in-process worker**
 
