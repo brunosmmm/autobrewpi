@@ -45,7 +45,8 @@ Build order preference: worker+mock → gRPC → master/UI → later live HAL.
 uv sync --all-packages
 uv run pytest tests/ -v
 ./scripts/gen_proto.sh          # after editing proto/worker/v1/worker.proto
-./scripts/sim_smoke.sh          # worker+master mock e2e
+./scripts/sim_smoke.sh          # quick worker+master mock e2e (exits)
+./scripts/sim_run.sh            # leave sim up for UI inspection (Ctrl+C)
 
 uv run brew-worker --port 50051
 uv run brew-master --worker 127.0.0.1:50051 --port 8000
