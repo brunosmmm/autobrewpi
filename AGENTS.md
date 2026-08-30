@@ -47,6 +47,7 @@ uv run pytest tests/ -v
 ./scripts/gen_proto.sh          # after editing proto/worker/v1/worker.proto
 ./scripts/sim_smoke.sh          # quick worker+master mock e2e (exits)
 ./scripts/sim_run.sh            # leave sim up for UI inspection (Ctrl+C)
+./scripts/operator_run.sh       # operator+sim on 0.0.0.0 (Ctrl+C); UI at / and /sim
 # Ports: BREW_MASTER_PORT / BREW_WORKER_PORT, or --master-port / --worker-port.
 # Busy defaults auto-bump to the next free port.
 

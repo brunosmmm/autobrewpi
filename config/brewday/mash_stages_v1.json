@@ -1,0 +1,38 @@
+{
+  "temp_port": "hal.adc.temp_c",
+  "setpoint_port": "master.Hyst.SetPoint",
+  "enable_port": "master.Hyst.Enabled",
+  "temp_tolerance_c": 0.5,
+  "stages": [
+    {
+      "type": "preheat",
+      "label": "Preheat HLT",
+      "target_temp": 72.0,
+      "use_pump": false
+    },
+    {
+      "type": "ack",
+      "label": "Dough-in / confirm mash ready",
+      "use_pump": false
+    },
+    {
+      "type": "timed",
+      "label": "Conversion mash",
+      "target_temp": 66.0,
+      "time_min": 1.0,
+      "use_pump": false
+    },
+    {
+      "type": "timed",
+      "label": "Mashout",
+      "target_temp": 75.0,
+      "time_min": 1.0,
+      "use_pump": false
+    },
+    {
+      "type": "idle",
+      "label": "Mash complete",
+      "use_pump": false
+    }
+  ]
+}

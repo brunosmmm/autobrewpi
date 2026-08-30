@@ -1,7 +1,7 @@
 ---
 id: AUTOBREW-0001
 title: Master brew-day operator UI (not the sim harness)
-status: accepted
+status: done
 owner: bmorais
 created: 2026-08-30
 updated: 2026-08-30
@@ -94,15 +94,15 @@ Supplements (does not supersede) `docs/superpowers/specs/2026-08-29-brewday-data
 
 ## Acceptance criteria
 
-- [ ] Operator can open the master’s default URL (`/`) and run a mash session (start / pause / resume / advance / stop) with visible phase, stage list, timer, and worker online/stale — without using the Sim page.
-- [ ] Visiting `/` shows an **operator** console (not branded primarily as Sim) with phase/stage/timer/worker status.
-- [ ] `/sim` still provides mock temp inject and manual hysteresis controls.
-- [ ] A fixed JSON mash stage list can be started, paused, resumed, advanced (for `ack` stages), and stopped from the operator UI; master writes worker setpoints/enables accordingly when the worker is online.
-- [ ] `GET /api/operator/state` (or equivalent) exposes enough for the UI without scraping sim-only fields.
-- [ ] Ensure-graph action can load the standard sample program when none is running.
-- [ ] On worker disconnect, UI shows offline/stale and session does not advance stages.
-- [ ] Automated tests cover session transitions (at least idle→preheat→ack or timed→idle) without requiring a browser.
-- [ ] Existing worker/master tests (`uv run pytest tests/`) still pass.
+- [x] Operator can open the master’s default URL (`/`) and run a mash session (start / pause / resume / advance / stop) with visible phase, stage list, timer, and worker online/stale — without using the Sim page.
+- [x] Visiting `/` shows an **operator** console (not branded primarily as Sim) with phase/stage/timer/worker status.
+- [x] `/sim` still provides mock temp inject and manual hysteresis controls.
+- [x] A fixed JSON mash stage list can be started, paused, resumed, advanced (for `ack` stages), and stopped from the operator UI; master writes worker setpoints/enables accordingly when the worker is online.
+- [x] `GET /api/operator/state` (or equivalent) exposes enough for the UI without scraping sim-only fields.
+- [x] Ensure-graph action can load the standard sample program when none is running.
+- [x] On worker disconnect, UI shows offline/stale and session does not advance stages.
+- [x] Automated tests cover session transitions (at least idle→preheat→ack or timed→idle) without requiring a browser.
+- [x] Existing worker/master tests (`uv run pytest tests/`) still pass.
 
 ## Test plan
 
@@ -120,21 +120,16 @@ Supplements (does not supersede) `docs/superpowers/specs/2026-08-29-brewday-data
 
 CLOCK-IN: [2026-08-30 Sun 12:04]
 CLOCK-OUT: [2026-08-30 Sun 12:10]
-
-## Rollout / migration
-
-1. Implement session module + API behind feature-complete tests.
-2. Add operator static page; move sim to `/sim`.
-3. Update `AGENTS.md` / `scripts/sim_run.sh` help text to mention `/` vs `/sim`.
-4. No data migration; stage JSON is new checked-in config.
+CLOCK-IN: [2026-08-30 12:07]
+CLOCK-OUT: [2026-08-30 12:20]
 
 ## Definition of done
 
-- [ ] Acceptance criteria all met.
-- [ ] Test plan executed; automated tests pass (`uv run pytest`); manual steps performed.
-- [ ] No regressions.
-- [ ] Spec body updated to match what shipped.
-- [ ] Portable status set to `done` in target repo; `wt spec pull-status AUTOBREW-0001` when closing the loop.
+- [x] Acceptance criteria all met.
+- [x] Test plan executed; automated tests pass (`uv run pytest`); manual smoke via `operator_run.sh`.
+- [x] No regressions.
+- [x] Spec body updated to match what shipped.
+- [ ] Portable status set to `done` in target repo; `wt spec pull-status AUTOBREW-0001` when closing the loop (wt-side).
 
 ## Open questions
 

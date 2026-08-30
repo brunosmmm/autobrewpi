@@ -60,7 +60,9 @@ $("btn-manual").onclick = async () => {
   );
 };
 
-const ws = new WebSocket(`${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws/telemetry`);
+const ws = new WebSocket(
+  `${location.protocol === "https:" ? "wss" : "ws"}://${location.host}/ws/telemetry`
+);
 ws.onmessage = (ev) => {
   try {
     renderState(JSON.parse(ev.data));

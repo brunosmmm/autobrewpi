@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>AutoBrew Operator</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>AutoBrew Operator</h1>
+    <p class="sub"><a href="/sim">Sim / mock HAL</a></p>
+    <div id="banner" class="banner hidden">Worker offline / stale</div>
+  </header>
+
+  <main>
+    <section>
+      <h2>Session</h2>
+      <dl id="session"></dl>
+      <div class="row">
+        <button id="btn-ensure">Ensure graph loaded</button>
+        <button id="btn-start">Start</button>
+        <button id="btn-pause">Pause</button>
+        <button id="btn-resume">Resume</button>
+        <button id="btn-advance">Advance</button>
+        <button id="btn-stop">Stop</button>
+      </div>
+    </section>
+
+    <section>
+      <h2>Stages</h2>
+      <ol id="stages"></ol>
+    </section>
+
+    <section>
+      <h2>Live</h2>
+      <dl id="live"></dl>
+    </section>
+  </main>
+
+  <script src="/static/operator.js"></script>
+</body>
+</html>
